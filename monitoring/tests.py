@@ -149,7 +149,7 @@ class MobileApiTests(TestCase):
         self.assertEqual(response.status_code, 204)
         self.assertEqual(response['Access-Control-Allow-Origin'], 'http://localhost:8081')
 
-    def test_resident_can_register_and_use_authenticated_endpoint(self):
+    def test_new_resident_must_verify_email_before_signing_in(self):
         response = self.client.post(
             '/api/mobile/auth/register/',
             data=json.dumps({
@@ -164,16 +164,22 @@ class MobileApiTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 201)
-        token = response.json()['token']
-        profile = self.client.get('/api/mobile/me/', HTTP_AUTHORIZATION=f'Bearer {token}')
-        self.assertEqual(profile.status_code, 200)
-        self.assertEqual(profile.json()['user']['email'], 'ada@example.com')
+        self.assertNotIn('token', response.json())
+        self.assertFalse(response.json()['user']['email_verified'])
+        login = self.client.post(
+            '/api/mobile/auth/login/',
+            data=json.dumps({'email': 'ada@example.com', 'password': 'safe-password-123'}),
+            content_type='application/json',
+        )
+        self.assertEqual(login.status_code, 403)
+        self.assertIn('verify your email', login.json()['message'].lower())
 
     def test_historical_hotspots_include_official_boundary_coordinates(self):
         UserAccount.objects.create_user(
             username='map@example.com', email='map@example.com',
             password='safe-password-123', role='RESIDENT',
             account_status='APPROVED', assigned_barangay=self.barangay,
+            email_verified=True,
         )
         login = self.client.post(
             '/api/mobile/auth/login/',
@@ -216,6 +222,7 @@ class MobileApiTests(TestCase):
             password='safe-password-123', role='RESIDENT',
             account_status='APPROVED', assigned_barangay=self.barangay,
             first_name='Original', last_name='Resident', address='Old address',
+            email_verified=True,
         )
         login = self.client.post(
             '/api/mobile/auth/login/',
@@ -280,7 +287,7 @@ class ChwSuspectedCaseWorkflowTests(TestCase):
             'patient_age': '28', 'patient_sex': 'Female', 'patient_blood_type': 'O+',
             'date_reported': '2026-10-06', 'barangay_id': str(self.barangay.pk),
             'purok_id': str(self.purok.pk), 'location_details': 'Near the covered court',
-            'symptoms': 'Fever, headache, and body pain', 'remarks': 'Follow-up requested',
+            'remarks': 'Follow-up requested',
         }
 
     def test_chw_can_save_a_draft_then_send_it_to_cho(self):
@@ -295,7 +302,7 @@ class ChwSuspectedCaseWorkflowTests(TestCase):
         self.assertRedirects(response, '/chw/suspected-cases/')
         report.refresh_from_db()
         self.assertEqual(report.case_status, 'Pending')
-        self.assertEqual(report.symptoms, self.payload['symptoms'])
+        self.assertFalse(report.symptoms)
         self.assertEqual(report.location_details, self.payload['location_details'])
         self.assertTrue(ReportAuditLog.objects.filter(
             dengue_case=report, actor=self.chw, action='SUBMITTED'
@@ -465,11 +472,15 @@ class ChoAuthorityTests(TestCase):
         self.client.force_login(self.cho)
         created = self.client.post('/cho/alerts/create/', {
             'title': 'Prevent standing water', 'message': 'Remove standing water around homes.', 'risk_level': 'HIGH',
+            'cho_review_confirmed': 'on',
+            'cho_review_note': 'Reviewed verified reports and approved prevention guidance.',
         })
         self.assertRedirects(created, '/cho/alerts/')
         alert = Alert.objects.get()
         self.assertEqual(alert.created_by, self.cho)
         self.assertTrue(alert.is_active)
+        self.assertTrue(alert.cho_review_confirmed)
+        self.assertEqual(alert.cho_reviewed_by, self.cho)
 
         withdrawn = self.client.post(f'/cho/alerts/{alert.pk}/toggle/')
         self.assertRedirects(withdrawn, '/cho/alerts/')
@@ -536,6 +547,7 @@ class NotificationWorkflowTests(TestCase):
         self.resident = UserAccount.objects.create_user(
             username='notification_resident', password='safe-password-123', role='RESIDENT',
             account_status='APPROVED', assigned_barangay=self.barangay, assigned_purok=self.purok,
+            email_verified=True,
         )
         self.bhw = UserAccount.objects.create_user(
             username='notification_bhw', password='safe-password-123', role='BHW', account_status='APPROVED'
@@ -584,6 +596,8 @@ class NotificationWorkflowTests(TestCase):
             'message': 'Please remove standing water around your home.',
             'risk_level': 'HIGH',
             'barangay_id': self.barangay.pk,
+            'cho_review_confirmed': 'on',
+            'cho_review_note': 'Reviewed verified reports and approved prevention guidance.',
         })
 
         self.assertRedirects(response, '/cho/alerts/')

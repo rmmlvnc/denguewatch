@@ -1,0 +1,80 @@
+
+1 --- | -DENGUEWATCH:  AN  AI-ASSISTED  PREDICTIVE  DENGUE  SURVEILLANCE | AND | HOTSPOT
+2 ---
+3 --- | Chapter  1   PROBLEM  AND  ITS  SETTING    Introduction | Dengue  is  mainly  spread  by  Aedes  aegypti  mosquitoes,  which  breed  more | faster
+4 --- | 2 | is  a  major  issue.  Reports  of  dengue  cases  are  delayed,  and  health  data  is | manually
+5 --- | 3 | To  solve  these  problem,  a  data-driven  dengue  monitoring  and  prediction | system
+6 --- | 4 | Statement  of  the  Problem | Dengue  monitoring  and  prevention  in  Iligan  City  continue  to  face
+7 --- | 5 | Objective  of  the  Study | The  system  will  help  monitor  dengue  cases,  predict  possible  hotspot  areas,
+8 --- | 6 | Scope  and  Limitation | This  capstone  project  focuses  on  the  development  of  DengueWatch:  An
+9 --- | 7 | dengue  surveillance  in  the  city,  and  enable  a  rapid  response  to  dengue  outbreaks | in
+10 --- | 8 | Significance  of  the  Study | The  following  entities  that  will  benefit  from  this  study  are:
+11 --- | 9 | make  evidence-based  decisions  for  dengue   prevention  and  response,  the  study | supports
+12 --- | 10 | Definition  of  Terms | Aedes  aegypti.  A  type  of  mosquito  that  mainly  spreads  the  dengue  virus.  It  is
+13 --- | 11 | Hotspot  Area.  A  place  identified  as  having  a  high  number  of  dengue  cases  or  a | high
+14 --- | Chapter  2   RELATED  LITERATURE  AND  RELATED  STUDIES | This  chapter  presents  the  related  literature  and  related  studies  that | support
+15 --- | 13 | waste  management  create  favorable  conditions  for  mosquito  breeding | throughout
+16 --- | 14 | outbreaks.  Recent  studies  have  shown  that  digital  surveillance  systems | significantly
+17 --- | 15 | outbreak  patterns  that  cannot  easily  be  identified  through  traditional  statistical | reports
+18 --- | 16 | of  artificial  intelligence  into  dengue  monitoring  systems  enhances  the  ability  of | local
+19 --- | 17 | Early  warning  systems  (EWS)  for  dengue  are  designed  to  detect  and | predict
+20 --- | 18 | absolute  error,  mean  squared  error,  and  root  mean-square  deviation.  Moreover, | the
+21 --- | 19 | dengue  prediction.  Dengue  is  a  serious  public  health  problem,  the  research  says, | because
+22 --- | 20 | revealed  more  virus  activity  than  passive  human  case  reporting.  According  to  the | study,
+23 --- | 21 | Table  2             Table  2 | Related  Studies
+24 --- | 22 | Research  Synthesis  Matrix  (Continuation) | Table  2  Table  2
+25 --- | 23 | Research  Synthesis  Matrix  (Continuation) | Table  2
+26 --- | 24 | Research  Synthesis  Matrix  (Continuation) | Table  2      Table  2
+27 --- | 25 | Research  Synthesis  Matrix  (Continuation) | Table  2
+28 --- | 26 | Figure  1.  Summary  of  Related  Studies    In  conclusion,  the  related  studies  show  that  dengue  surveillance, | monitoring,
+29 --- | Chapter  3   RESEARCH  METHODS     This  chapter  presents  the  methodology  used  in  developing  DengueWatch: | An | AI-Assisted
+30 --- | 28 | systems,  GIS  mapping,  and  machine  learning  to  help  decide  what  the  system | needed.
+31 --- | 29 | The  system  was  also  designed  so  that  different  users  can  access  features | based
+32 --- | 30 | The  next  step  in  the  process  is  the  preprocessing  of  the  collected  data.  In | this
+33 --- | 31 | The  predicted  hotspot  locations,  with  their  respective  risk  levels,  are  input | into
+34 --- | 32 | Data  Feasibility  Plan | 1.  Available  Dengue  Data  and  Observation  Counts
+35 --- | 33 | Variables  and  units | Monthly  precipitation  sum  (mm);  monthly  mean  temperature  (degrees  C);  mean  of  available  hourly  relative  humidity  values  (%).
+36 --- | 34 | Figure  3.4  Data  Flow  Diagram | Figure  3.4  shows  the  Data  Flow  Diagram  (DFD)  of  DengueWatch:  An
+37 --- | 35 | authenticated,  users  are  granted  access  to  the  system  according  to  their  assigned | roles.
+38 --- | 36 | variables  such  as  rainfall,  temperature,  and  humidity.  Based  on  the  identified | patterns,
+39 --- | 37 | analysis  reports,  weather  reports,  surveillance  reports,  planning  reports,  and | decision
+40 --- | 38 | Figure  3.5  Resident  Process  Flow  Diagram
+41 --- | 39 | Figure  3.5  shows  how  residents  use  the  DengueWatch  mobile  application. | The
+42 --- | 40 | System  Design | Figure  3.6  Process  Flow  Chart
+43 --- | 41 | 1.  Combined  Dataset | The  Combined  Dataset,  which  combines  data  from  different  sources  used
+44 --- | 42 | The  risk  levels  are  classified  as  follows: | ●  Low  Risk:  1–5  reported  cases
+45 --- | 43 | The  algorithm  may  anticipate  possible  dengue  hotspot  areas  and | associated
+46 --- | 44 | ●  Analytics  and  statistical  information  to  assist  prompt | decision-making
+47 --- | 45 | ●  Residents  –  use  the  mobile  application  to  view  dengue  hotspot  maps, | receive
+48 --- | 46 | the  Google  Maps  API.  The  Weather  Dataset  includes  environmental  information | such
+49 --- | 47 | (51–100  cases)  indicates  a  higher  risk  of  an  outbreak  and  requires  immediate | attention.
+50 --- | 48 | The  Age,  Sex,  and  Blood  Type  variables  are  encoded  together  with | historical
+51 --- | 49 | parameters  and  retrains  the  model.  This  process  is  repeated  until  the  model | reaches
+52 --- | 50 | 1.  Forecast  Horizon,  Geographic  Unit,  and  Target | -
+53 --- | 51 | planning  threshold,  not  an  official  DOH  outbreak  definition | Forecast  origin  A  documented  issue  date  and  cutoff.  The  primary  model  evaluation  uses  completed  input  months.  Operational  month-to-date  updates,  if  displayed,  are  marked  prov
+54 --- | 52 | 1.  Order  observations  by  time.  Construct  monthly  barangay  rows,  including | verified
+55 --- | 53 | threshold  and  clarify  that  the  flag  supports  planning;  it  is  not  a  confirmed | outbreak
+56 --- | 54 | The  User  Accounts  table  stores  the  information  of  all  registered  users, | including
+57 --- | 55 | processed  dataset  is  used  as  the  input  for  the  Random  Forest  machine  learning | model.
+58 --- | 56 | Table  3.1  User  Accounts | Table  3.1  User  Accounts  table  stores  the  personal  information  and  login
+59 --- | 57 | assigned  responsibilities.  It  is  also  linked  to  the  Purok  table  to  identify  the  user's | location.
+60 --- | 58 | Table  3.3  Purok | Table  3.3  the  Purok  table  contains  the  list  of  puroks  within  each  barangay.
+61 --- | 59 | Table  3.4  Dengue  Case | Attributes  Type  Length  Description
+62 --- | 60 | Table  3.4  the  Dengue  Case  table  stores  all  reported  dengue  case | information
+63 --- | 61 | Table  3.6  Integrated  Dengue  Dataset | Table  3.6  the  Integrated  Dengue  Dataset  table  stores  the  processed
+64 --- | 62 | Table  3.7  Hotspot  Prediction | Table  3.7  the  Hotspot  Prediction  table  stores  the  prediction  results
+65 --- | 63 | Table  3.8  Report | Table  3.8  the  Report  table  stores  the  reports  generated  from  the  hotspot
+66 --- | 64 | The  researchers  will  use  these  hardware  specifications  for  developing  the | DengueWatch:
+67 --- | 65 | The  system  will  be  built  using  Python  3.12  and  a  framework  called  Django | as
+68 --- | 66 | Performance  Metrics | The  study  will  employ  usability  testing  to  evaluate  the  DengueWatch
+69 --- | 67 | 3.  A  usability  testing  plan  will  be  developed  to  lead  the  participants  during | testing
+70 --- | 68 | 2.  Barangay  Health  Workers  and  City  Health  Workers  will  make  information | on
+71 --- | 69 | 5.  All  collected  observations  and  recordings  will  be  utilized  to  evaluate  the | system's
+72 --- | 70 | c.  Satisfaction  –  determined  by  System  Usability  Scale  (SUS)  scores  and | feedback
+73 --- | 71 | PScale.  The  scale  ratings  shall  be  read  as  follows;  5  –  Excellent,  4  –  Good,  3  –  Fair, | 2
+74 --- | 72 | mean  score  of  4.20  to  5.00  is  Very  Acceptable,  indicating  great  usability  and  a | very
+75 --- | 73 | The   DengueWatch:  An  AI-Assisted  Predictive  Dengue  Surveillance  and | Hotspot
+76 --- | 74 | [1]       World  Health  Organization.  (n.d.).  Dengue  and  severe  dengue. | https://www.who.int/health-topics/dengue-and-severe-dengue
+77 --- | 75 | [11]  IBM.  (n.d.).  What  is  data-driven  decision-making? | https://www.ibm.com/think/topics/data-driven-decision-making
+78 --- | 76 | [22]  Georgia  Institute  of  Technology.  (n.d.).  Predictive  modeling.  Big  Data  in    Healthcare.  https://sites.gatech.edu/bigdata-healthcare/  predictive-modeling/   [23]    “predictive,”  Merriam-Webster  Dictionary.  May  16,  2026   [Online].    Available
+79 --- | 77 | 8th  R10  Humanitarian  Technology  Conference  (HTC) ,  1–6.   https://ieeexplore.ieee.org/abstract/document/9357035   [33]  GulMohamed,  R.  B.,  Hetany,  W.,  Almaimani,  H.  A.,  &  Khiery,  F.  A.  S. | (2026).

@@ -10,8 +10,10 @@ import pandas as pd
 
 try:
     from .train_model import FEATURES
+    from .definition import RISK_LEVEL_MODERATE_THRESHOLD
 except ImportError:  # Direct script execution
     from train_model import FEATURES
+    from definition import RISK_LEVEL_MODERATE_THRESHOLD
 
 
 def risk_level(predicted_cases: float) -> str:
@@ -19,7 +21,7 @@ def risk_level(predicted_cases: float) -> str:
         return 'Critical'
     if predicted_cases >= 51:
         return 'High'
-    if predicted_cases >= 6:
+    if predicted_cases >= RISK_LEVEL_MODERATE_THRESHOLD:
         return 'Moderate'
     return 'Low'
 

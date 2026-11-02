@@ -1,0 +1,5 @@
+# Candidate contains small-area weekly surveillance counts; keep it local until CHO data-governance review.
+/datasets/weekly_feasibility_candidate.csv
+# Local credentials and machine-specific environment settings.
+.env
+.env.local

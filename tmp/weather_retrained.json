@@ -1,0 +1,221 @@
+{
+  "source": "Cached Open-Meteo historical values (per-barangay representative points)",
+  "weather_source_status": "live_archive_unavailable_cached_per_barangay_archive_used",
+  "source_url": "local integrated_monthly.csv weather cache",
+  "locations": {
+    "Abuno": {
+      "latitude": 8.174136088444694,
+      "longitude": 124.25020716740542
+    },
+    "Bonbonon": {
+      "latitude": 8.261544521038376,
+      "longitude": 124.30123314490696
+    },
+    "Bunawan": {
+      "latitude": 8.307105064392141,
+      "longitude": 124.31829452514656
+    },
+    "Buru-un": {
+      "latitude": 8.185648311268237,
+      "longitude": 124.18546225807894
+    },
+    "Dalipuga": {
+      "latitude": 8.30977197126914,
+      "longitude": 124.26671184193006
+    },
+    "Digkilaan": {
+      "latitude": 8.250695511146873,
+      "longitude": 124.3442467583551
+    },
+    "Hinaplanon": {
+      "latitude": 8.248546361923253,
+      "longitude": 124.26154518127449
+    },
+    "Kabacsanan": {
+      "latitude": 8.2833822568258,
+      "longitude": 124.32804150051551
+    },
+    "Kiwalan": {
+      "latitude": 8.284322611490916,
+      "longitude": 124.28822530110683
+    },
+    "Mahayahay": {
+      "latitude": 8.221306800842333,
+      "longitude": 124.24847539265956
+    },
+    "Mainit": {
+      "latitude": 8.290997141883519,
+      "longitude": 124.38698287237263
+    },
+    "Mandulog": {
+      "latitude": 8.232532453537038,
+      "longitude": 124.31781501770027
+    },
+    "Maria Cristina": {
+      "latitude": 8.169740460135749,
+      "longitude": 124.20304419777617
+    },
+    "Palao": {
+      "latitude": 8.22110827763884,
+      "longitude": 124.25722630818687
+    },
+    "Poblacion": {
+      "latitude": 8.23146002633231,
+      "longitude": 124.23800005231591
+    },
+    "Puga-an": {
+      "latitude": 8.219309414134363,
+      "longitude": 124.28438568115243
+    },
+    "Rogongon": {
+      "latitude": 8.226787274883682,
+      "longitude": 124.47516459803431
+    },
+    "Santa Elena": {
+      "latitude": 8.191352939605741,
+      "longitude": 124.22731781005862
+    },
+    "Santa Filomena": {
+      "latitude": 8.266160011291547,
+      "longitude": 124.27082302695831
+    },
+    "Suarez": {
+      "latitude": 8.187879244486526,
+      "longitude": 124.21252543131514
+    },
+    "Tambacan": {
+      "latitude": 8.220141053199804,
+      "longitude": 124.23376846313482
+    },
+    "Saray": {
+      "latitude": 8.237005805969272,
+      "longitude": 124.23998107910163
+    },
+    "Tipanoy": {
+      "latitude": 8.196644732826691,
+      "longitude": 124.26809009752783
+    },
+    "Tomas L. Cabili": {
+      "latitude": 8.204928821987615,
+      "longitude": 124.2285266452366
+    },
+    "Upper Tominobo": {
+      "latitude": 8.166291300455793,
+      "longitude": 124.2247685750326
+    },
+    "Tubod": {
+      "latitude": 8.210534413655674,
+      "longitude": 124.24139065212681
+    },
+    "Bagong Silang": {
+      "latitude": 8.24224114418032,
+      "longitude": 124.25595283508306
+    },
+    "Del Carmen": {
+      "latitude": 8.230888938903831,
+      "longitude": 124.25790786743173
+    },
+    "Dulag": {
+      "latitude": 8.196484057108595,
+      "longitude": 124.38559163411463
+    },
+    "San Miguel": {
+      "latitude": 8.237598776817315,
+      "longitude": 124.24661159515391
+    },
+    "Santiago": {
+      "latitude": 8.24635219573986,
+      "longitude": 124.24246978759766
+    },
+    "Santo Rosario": {
+      "latitude": 8.24736499786379,
+      "longitude": 124.24678802490239
+    },
+    "Tibanga": {
+      "latitude": 8.240893205006993,
+      "longitude": 124.2427762349447
+    },
+    "Acmac-Mariano Badelles Sr.": {
+      "latitude": 8.275412831987726,
+      "longitude": 124.27211434500563
+    },
+    "Ditucalan": {
+      "latitude": 8.170220136642499,
+      "longitude": 124.1943505605063
+    },
+    "Hindang": {
+      "latitude": 8.300606387002185,
+      "longitude": 124.36267798287534
+    },
+    "Kalilangan": {
+      "latitude": 8.177176952362114,
+      "longitude": 124.44726991653445
+    },
+    "Lanipao": {
+      "latitude": 8.215323311942013,
+      "longitude": 124.3358917236329
+    },
+    "Luinab": {
+      "latitude": 8.242332458496143,
+      "longitude": 124.2758321762086
+    },
+    "Panoroganan": {
+      "latitude": 8.15495128631597,
+      "longitude": 124.52063446044924
+    },
+    "San Roque": {
+      "latitude": 8.25642585754397,
+      "longitude": 124.2704598563059
+    },
+    "Ubaldo Laya": {
+      "latitude": 8.211097478866648,
+      "longitude": 124.25786304473883
+    },
+    "Upper Hinaplanon": {
+      "latitude": 8.254895973205612,
+      "longitude": 124.2815185546876
+    },
+    "Villa Verde": {
+      "latitude": 8.225093722343495,
+      "longitude": 124.24242496490486
+    }
+  },
+  "generated_at_utc": "2026-10-22T04:22:51.930074+00:00",
+  "weather_retrieved_at_utc": null,
+  "weather_scope": "One representative point per barangay; adjacent barangays may share weather grid cells.",
+  "weather_model_resolution_note": "The archive may combine ECMWF IFS (9 km), ERA5 (~25 km), and ERA5-Land (~11 km) depending on period/model selection. Requested coordinates are saved with the API-returned grid coordinates so shared grid cells can be audited; model resolution is not forced to one product.",
+  "limitations": "Open-Meteo archive values are reanalysis/model estimates and are not direct barangay station observations. Validate against PAGASA or other authorized station records before treating them as locally verified. If live retrieval fails, legacy city-point cache is retained and labeled as non-local fallback.",
+  "location_scope": "44 official City of Iligan barangays (PSGC)",
+  "psgc_source": "https://psa.gov.ph/classification/psgc/barangays/1030900000",
+  "rows": 4532,
+  "weather_retrieval_note": "Live weather retrieval failed; reused available local values: <urlopen error [Errno 11001] getaddrinfo failed>. All requested months have cached weather.",
+  "weather_missing_model_rows": 1056,
+  "weather_locations_requested": 44,
+  "weather_grid_cells_returned": 8,
+  "weather_missing_periods": [
+    "2018-01",
+    "2018-02",
+    "2018-03",
+    "2018-04",
+    "2018-05",
+    "2018-06",
+    "2018-07",
+    "2018-08",
+    "2018-09",
+    "2018-10",
+    "2018-11",
+    "2018-12",
+    "2019-01",
+    "2019-02",
+    "2019-03",
+    "2019-04",
+    "2019-05",
+    "2019-06",
+    "2019-07",
+    "2019-08",
+    "2019-09",
+    "2019-10",
+    "2019-11",
+    "2019-12"
+  ]
+}

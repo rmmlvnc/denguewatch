@@ -1,0 +1,18 @@
+{
+  "status": "complete_for_modeling_scope",
+  "source": "CHO-provided dengue case line-list datasets for 2018-2019 and consolidated 2020-2026 source",
+  "confirmed_by": "Project team confirmation that active dengue datasets are CHO-verified and complete for covered months",
+  "confirmation_method": "Project team confirmation in this conversation on 2026-10-19.",
+  "coverage_start": "2018-01",
+  "coverage_end": "2026-07",
+  "geographic_scope": "44 official Iligan City barangays represented in the monthly modeling grid",
+  "no_case_rows_mean_confirmed_zero": true,
+  "zero_interpretation": "Within the stated complete dataset coverage, a barangay-month with no case line-list records is treated as zero cases rather than a missing report.",
+  "limitations": [
+    "Dataset provenance and completeness are confirmed by the project team based on CHO verification. A separate monthly zero-report register is not included in the application files.",
+    "Records without a valid admission date or official barangay remain excluded from barangay-month case counts and are separately reported in the data-quality inventory.",
+    "Exact duplicate rows are retained and flagged because no stable case identifier is present.",
+    "Some 2018-2019 barangay names do not match the official Iligan list and are excluded from official barangay aggregates pending mapping.",
+    "The source does not provide report-received dates or a documented case-definition version."
+  ]
+}

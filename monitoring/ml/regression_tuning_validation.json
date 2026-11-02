@@ -1,0 +1,70 @@
+{
+  "analysis_type": "exploratory_chronological_validation_only",
+  "validation_reference_month_start": "2023-02",
+  "validation_reference_month_end": "2024-09",
+  "validation_rows": 880,
+  "validation_rows_partitioned_by_whole_reference_month": true,
+  "preprocessing_fit_policy": "Each candidate's imputer and encoder are fitted on training rows only.",
+  "later_period_holdout_loaded_or_scored": false,
+  "validation_previously_used_for_model_selection": true,
+  "interpretation": "Exploratory comparison only. Do not use these results as an independent performance claim or to promise improved future holdout performance. The live model and its recorded holdout metrics are not modified by this script.",
+  "results": [
+    {
+      "name": "Persistence baseline (current month count)",
+      "mae": 2.6614,
+      "rmse": 4.4734
+    },
+    {
+      "name": "Current Random Forest",
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 300,
+        "criterion": "squared_error",
+        "min_samples_leaf": 2,
+        "max_features": 0.8
+      },
+      "mae": 2.4065,
+      "rmse": 4.1355,
+      "beats_persistence_both_metrics": true
+    },
+    {
+      "name": "Absolute error, max_features 0.8",
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 200,
+        "criterion": "absolute_error",
+        "min_samples_leaf": 3,
+        "max_features": 0.8
+      },
+      "mae": 2.4174,
+      "rmse": 4.1595,
+      "beats_persistence_both_metrics": true
+    },
+    {
+      "name": "Absolute error, max_features 0.6",
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 200,
+        "criterion": "absolute_error",
+        "min_samples_leaf": 3,
+        "max_features": 0.6
+      },
+      "mae": 2.424,
+      "rmse": 4.1711,
+      "beats_persistence_both_metrics": true
+    },
+    {
+      "name": "Absolute error, max_features 0.5",
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 200,
+        "criterion": "absolute_error",
+        "min_samples_leaf": 3,
+        "max_features": 0.5
+      },
+      "mae": 2.407,
+      "rmse": 4.1615,
+      "beats_persistence_both_metrics": true
+    }
+  ]
+}

@@ -603,8 +603,9 @@
 
 
                         <p>
-                            Total Dengue Cases
+                            Dengue Dataset Records
                         </p>
+                        {% if dataset_quality %}<small class="text-muted">Source rows include repeats and incomplete records.</small>{% endif %}
 
                     </div>
 
@@ -1030,7 +1031,7 @@
                                     class="text-muted small mb-0"
                                 >
 
-                                    Random Forest-based
+                                    Tree-ensemble-based
                                     analysis for identifying
                                     possible dengue hotspots.
 

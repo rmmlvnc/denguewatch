@@ -15,6 +15,8 @@ RAW_COLUMNS = [
     "rainfall_mm",
     "temperature_c",
     "humidity_pct",
+    "requested_latitude",
+    "requested_longitude",
     *BLOOD_TYPE_COLUMNS,
 ]
 
@@ -26,30 +28,30 @@ FEATURES = [
     "rainfall_mm",
     "temperature_c",
     "humidity_pct",
+    "requested_latitude",
+    "requested_longitude",
 ] + [
     "cases_lag_1",
-    "cases_lag_2",
-    "cases_lag_3",
-    "cases_lag_6",
-    "cases_lag_12",
-    "cases_roll_3",
-    "cases_roll_6",
+    "rainfall_lag_1",
+    "temperature_lag_1",
+    "humidity_lag_1",
     "month_sin",
     "month_cos",
-] + [f"{column}_lag_1" for column in BLOOD_TYPE_COLUMNS]
+]
 
 
 def validate_monthly_data(data: pd.DataFrame) -> pd.DataFrame:
     """Validate and normalize barangay-month input data."""
 
-    missing = sorted(set(RAW_COLUMNS) - set(data.columns))
+    optional_columns = {"requested_latitude", "requested_longitude"}
+    missing = sorted((set(RAW_COLUMNS) - optional_columns) - set(data.columns))
 
     if missing:
         raise ValueError(
             f"Missing required columns: {', '.join(missing)}"
         )
 
-    frame = data[RAW_COLUMNS].copy()
+    frame = data.reindex(columns=RAW_COLUMNS).copy()
 
     frame["barangay"] = (
         frame["barangay"]
@@ -132,11 +134,20 @@ def engineer_features(
     for lag in (1, 2, 3, 6, 12):
         frame[f"cases_lag_{lag}"] = grouped_cases.shift(lag)
 
-    # Patient blood types are aggregated to barangay-month proportions and
-    # shifted one period. This prevents current/future patient data from
-    # leaking into a next-month case-count forecast.
-    for column in BLOOD_TYPE_COLUMNS:
-        frame[f"{column}_lag_1"] = frame.groupby("barangay", sort=False)[column].shift(1)
+    # Candidate trend signal: change between the two most recent completed
+    # case months at issue month t. Kept out of FEATURES by default so the
+    # deployed model changes only after a validation-based comparison.
+    frame["case_momentum"] = frame["cases_lag_1"] - frame["cases_lag_2"]
+
+    # Weather observed in month t is available when forecasting t+1. Include
+    # both current and previous month conditions; unavailable periods are
+    # handled by the training-fitted imputer.
+    for source, feature in (
+        ("rainfall_mm", "rainfall_lag_1"),
+        ("temperature_c", "temperature_lag_1"),
+        ("humidity_pct", "humidity_lag_1"),
+    ):
+        frame[feature] = frame.groupby("barangay", sort=False)[source].shift(1)
 
     frame["cases_roll_3"] = grouped_cases.transform(
         lambda values: (

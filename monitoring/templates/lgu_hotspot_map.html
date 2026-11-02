@@ -386,6 +386,11 @@
             gap: 15px;
         }
 
+        .stats-note {
+            grid-column: 1 / -1;
+            margin: 0;
+        }
+
 
         .stat-icon {
 
@@ -671,6 +676,102 @@
             font-weight: 700;
         }
 
+        .map-info-facts {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin: 14px 0 18px;
+        }
+
+        .map-info-fact {
+            padding: 11px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 9px;
+            background: #f8fafc;
+        }
+
+        .map-info-fact small {
+            display: block;
+            color: #6b7280;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .map-info-fact strong {
+            display: block;
+            margin-top: 3px;
+            color: #1f2937;
+            font-size: 15px;
+        }
+
+        .map-info-subheading {
+            margin: 16px 0 9px;
+            color: #374151;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .map-risk-key {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .map-risk-key-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 9px;
+            border: 1px solid #eef0f2;
+            border-radius: 8px;
+            color: #374151;
+            font-size: 12px;
+        }
+
+        .map-risk-key-item strong {
+            margin-left: auto;
+            color: #6b7280;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .map-risk-dot {
+            width: 10px;
+            height: 10px;
+            flex: 0 0 10px;
+            border-radius: 50%;
+        }
+
+        .map-risk-dot.low { background: #16a34a; }
+        .map-risk-dot.moderate { background: #eab308; }
+        .map-risk-dot.high { background: #f97316; }
+        .map-risk-dot.critical { background: #dc2626; }
+
+        .map-info-howto {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            padding: 11px 12px;
+            border-radius: 9px;
+            background: #e8f5f2;
+            color: #0f514a;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .map-info-howto i {
+            margin-top: 2px;
+            color: #0f766e;
+        }
+
+        @media (max-width: 700px) {
+            .map-info-facts { grid-template-columns: 1fr; }
+            .map-risk-key { grid-template-columns: 1fr; }
+        }
+
 
         .area-row {
 
@@ -687,6 +788,49 @@
         .area-row:last-child {
 
             border-bottom: none;
+        }
+
+        .area-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .area-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .area-summary:focus-visible {
+            outline: 2px solid #0f766e;
+            outline-offset: 4px;
+            border-radius: 4px;
+        }
+
+        .area-summary-main {
+            min-width: 0;
+        }
+
+        .area-overview {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .area-chevron {
+            color: #6b7280;
+            transition: transform 160ms ease;
+        }
+
+        .area-row[open] .area-chevron {
+            transform: rotate(180deg);
+        }
+
+        .area-details {
+            padding: 4px 2px 2px;
         }
 
 
@@ -1152,7 +1296,7 @@
                     </h3>
 
                     <p>
-                        Total Dataset Cases
+                        Historical Dataset Records
                     </p>
 
                 </div>
@@ -1184,6 +1328,28 @@
 
             </div>
 
+            {% if dataset_quality %}
+            <div class="stats-note">
+                <p class="small fw-semibold text-success mb-1">Case source: {{ dataset_quality.active_case_source_status }} · 2018–2026 consolidated line list.</p>
+                <details class="small mt-2">
+                    <summary class="fw-semibold">View CHO data verification checks</summary>
+                    <div class="mt-2">
+                        <ul class="mb-2">
+                            <li><strong>Case definition:</strong> {{ dataset_quality.case_definition_status }}</li>
+                            <li><strong>Dates:</strong> {{ dataset_quality.valid_admission_date_rows }} records have valid admission dates ({{ dataset_quality.admission_date_range.0 }} to {{ dataset_quality.admission_date_range.1 }}); {{ dataset_quality.missing_admission_date_rows }} are missing dates, and {{ dataset_quality.admission_year_mismatches }} have a Year/admission-date mismatch.</li>
+                            <li><strong>Barangay match:</strong> {{ dataset_quality.rows_without_official_barangay }} records do not match an official Iligan barangay and are excluded from barangay mapping and model aggregation pending resolution.</li>
+                            <li><strong>City scope:</strong> {{ dataset_quality.outside_iligan_city_rows }} source records name a city outside Iligan and are excluded from Iligan summaries, maps, and training.</li>
+                            <li><strong>Year values:</strong> {{ dataset_quality.application_year_policy }}</li>
+                            <li><strong>Duplicates:</strong> {{ dataset_quality.exact_duplicate_extra_rows }} exact-repeat extra rows and {{ dataset_quality.potential_duplicate_matches }} possible duplicate matches are flagged. {{ dataset_quality.duplicate_policy }}</li>
+                            <li><strong>Reporting delay:</strong> {{ dataset_quality.reporting_delay_status }}</li>
+                            <li><strong>Zero-count months:</strong> {{ dataset_quality.zero_month_cells }} barangay-month rows have zero counts. {{ dataset_quality.zero_month_interpretation }}</li>
+                            <li><strong>Synthetic records:</strong> {{ dataset_quality.synthetic_rows_excluded }} explicitly synthetic demonstration rows are excluded from official totals, maps, and model evaluation.</li>
+                        </ul>
+                        <p class="text-muted mb-0">The source is identified as CHO-verified based on project-team confirmation. Data-quality flags are retained for review; the system does not silently delete or correct source rows.</p>
+                    </div>
+                </details>
+            </div>
+            {% endif %}
 
         </div>
 
@@ -1213,6 +1379,7 @@
                     <p>
                         Historical dengue case map: {{ historical_case_period }}. Selected: {{ selected_year_label }}. Barangay boundaries are colored according to recorded case volume, not AI forecasts.
                     </p>
+                    <p><a href="{% url 'lgu_ai_predictions' %}"><i class="fa-solid fa-chart-line"></i> View next-month potential hotspot predictions</a></p>
 
                 </div>
 
@@ -1416,13 +1583,12 @@
                     "
                 >
 
-                    This map uses historical dengue records
-                    from the loaded CSV datasets plus
-                    CHO-confirmed web case reports.
-
-                    Each record is grouped according to
-                    its reported Barangay and
-                    Sitio / Purok / Street Name.
+                    This is a historical case map. It combines dengue
+                    records from the loaded datasets with CHO-confirmed
+                    reports entered in DengueWatch. Records are grouped by
+                    reported barangay and, when available, sitio, purok, or
+                    street name. Counts represent source records, not
+                    necessarily unique people.
 
                 </p>
 
@@ -1435,13 +1601,10 @@
                     "
                 >
 
-                    The map uses official barangay
-                    boundaries for geographic
-                    visualization.
-
-                    Individual Sitio / Purok /
-                    Street locations are displayed
-                    in the barangay popup.
+                    Official barangay boundaries show where recorded cases
+                    are distributed. Select a barangay to view its reported
+                    sitio / purok / street details. Records without an
+                    official Iligan barangay match are not shown on the map.
 
                 </p>
 
@@ -1454,12 +1617,31 @@
                     "
                 >
 
-                    Risk levels are based on case-volume
-                    thresholds used by this dashboard.
-                    They are not an official DOH
-                    epidemiological classification.
+                    Use the year and risk filters to explore the selected
+                    historical records. Boundary colors reflect recorded
+                    case volume for that selection, not AI forecasts. Risk
+                    labels use DengueWatch dashboard thresholds; they are
+                    not official DOH classifications or individual risk
+                    assessments.
 
                 </p>
+
+                <div class="map-info-facts" aria-label="Current map summary">
+                    <div class="map-info-fact"><small>Year shown</small><strong>{{ selected_year_label }}</strong></div>
+                    <div class="map-info-fact"><small>Case records</small><strong>{{ total_cases|default:"0" }}</strong></div>
+                    <div class="map-info-fact"><small>Barangays with records</small><strong>{{ monitored_barangays|default:"0" }}</strong></div>
+                </div>
+
+                <div class="map-info-subheading">Case-count color key</div>
+                <div class="map-risk-key" aria-label="Map risk-level thresholds">
+                    <div class="map-risk-key-item"><span class="map-risk-dot low"></span><span>Low</span><strong>0–5 cases</strong></div>
+                    <div class="map-risk-key-item"><span class="map-risk-dot moderate"></span><span>Moderate</span><strong>6–50 cases</strong></div>
+                    <div class="map-risk-key-item"><span class="map-risk-dot high"></span><span>High</span><strong>51–100 cases</strong></div>
+                    <div class="map-risk-key-item"><span class="map-risk-dot critical"></span><span>Critical</span><strong>101+ cases</strong></div>
+                </div>
+                <p class="small text-muted mt-2 mb-0">These bands describe recorded cases in the selected period. They are separate from the AI planning flag ({{ predicted_hotspot_threshold|default:"2" }} or more estimated cases) and the model evaluation label ({{ observed_hotspot_threshold|default:"2" }} or more observed cases). A planning flag can therefore appear within the Low band. These are internal thresholds, not official DOH classifications.</p>
+
+                <div class="map-info-howto"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><div><strong>How to explore:</strong> choose a year and risk filter, select a barangay on the map or in the list, then expand it to view sitio / purok / street counts and levels.</div></div>
 
 
             </div>
@@ -1487,198 +1669,43 @@
 
 
             {% for area in hotspots %}
-
-
-                <div class="area-row">
-
-
-                    <div
-                        class="
-                            d-flex
-                            justify-content-between
-                            align-items-start
-                            gap-3
-                        "
-                    >
-
-
-                        <div style="width:100%;">
-
-
-                            <div class="area-name">
-
-                                {{ area.barangay }}
-
-                            </div>
-
-
-                            <div class="area-purok">
-
-                                {{ area.city }}
-
-                                —
-
-                                {{ area.case_count }}
-
-                                dengue cases
-
-                            </div>
-
-
-                            <table
-                                class="purok-table"
-                            >
-
-                                <thead>
-
-                                    <tr>
-
-                                        <th>
-                                            Sitio / Purok /
-                                            Street Name
-                                        </th>
-
-                                        <th
-                                            style="
-                                                width:80px;
-                                                text-align:right;
-                                            "
-                                        >
-                                            Cases
-                                        </th>
-
-                                        <th
-                                            style="
-                                                width:100px;
-                                                text-align:right;
-                                            "
-                                        >
-                                            Level
-                                        </th>
-
-                                    </tr>
-
-                                </thead>
-
-
-                                <tbody>
-
-
-                                    {% for purok in area.puroks %}
-
-
-                                        <tr>
-
-                                            <td>
-
-                                                {{ purok.purok }}
-
-                                            </td>
-
-
-                                            <td
-                                                style="
-                                                    text-align:right;
-                                                "
-                                            >
-
-                                                {{ purok.case_count }}
-
-                                            </td>
-
-
-                                            <td
-                                                style="
-                                                    text-align:right;
-                                                "
-                                            >
-
-                                                <span
-                                                    class="
-                                                        risk
-                                                        risk-{{ purok.risk_level|lower }}
-                                                    "
-                                                >
-
-                                                    {{ purok.risk_level }}
-
-                                                </span>
-
-                                            </td>
-
-                                        </tr>
-
-
-                                    {% empty %}
-
-
-                                        <tr>
-
-                                            <td
-                                                colspan="3"
-                                                class="text-muted"
-                                            >
-
-                                                No
-                                                Sitio /
-                                                Purok /
-                                                Street
-                                                information.
-
-                                            </td>
-
-                                        </tr>
-
-
-                                    {% endfor %}
-
-
-                                </tbody>
-
-                            </table>
-
-
+                <details class="area-row">
+                    <summary class="area-summary">
+                        <div class="area-summary-main">
+                            <div class="area-name">{{ area.barangay }}</div>
+                            <div class="area-purok">{{ area.city }} — {{ area.case_count }} dengue cases · {{ area.puroks|length }} recorded locations</div>
                         </div>
-
-
-                        <div class="text-end">
-
-                            <strong>
-                                {{ area.case_count }}
-                            </strong>
-
-                            <br>
-
-                            <span
-                                class="
-                                    risk
-                                    risk-{{ area.risk_level|lower }}
-                                "
-                            >
-
-                                {{ area.risk_level }}
-
-                            </span>
-
+                        <div class="area-overview">
+                            <strong class="area-cases">{{ area.case_count }}</strong>
+                            <span class="risk risk-{{ area.risk_level|lower }}">{{ area.risk_level }}</span>
+                            <i class="fa-solid fa-chevron-down area-chevron" aria-hidden="true"></i>
                         </div>
-
-
+                    </summary>
+                    <div class="area-details">
+                        <table class="purok-table">
+                            <thead>
+                                <tr>
+                                    <th>Sitio / Purok / Street Name</th>
+                                    <th style="width:80px;text-align:right;">Cases</th>
+                                    <th style="width:100px;text-align:right;">Level</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for purok in area.puroks %}
+                                <tr>
+                                    <td>{{ purok.purok }}</td>
+                                    <td style="text-align:right;">{{ purok.case_count }}</td>
+                                    <td style="text-align:right;"><span class="risk risk-{{ purok.risk_level|lower }}">{{ purok.risk_level }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-muted">No Sitio / Purok / Street information.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-
-
-                </div>
-
-
+                </details>
             {% empty %}
-
-
-                <p class="text-muted">
-
-                    No dengue records found.
-
-                </p>
-
-
+                <p class="text-muted">No dengue records found.</p>
             {% endfor %}
 
 
@@ -3068,14 +3095,16 @@ document
               - highest-case barangays
               - Sitio / Purok / Street counts
 
-            Keep any other query-string values, but update/remove `year`.
+            Keep other query-string values and set `year` explicitly so the
+            2026 default does not override an All Years selection.
             */
 
             const url = new URL(window.location.href);
 
             if (chosenYear === "all") {
 
-                url.searchParams.delete("year");
+                // The page defaults to 2026, so keep "all" explicit in the URL.
+                url.searchParams.set("year", "all");
 
             }
             else {
@@ -3176,7 +3205,7 @@ legend.onAdd =
                 ></span>
 
                 Low
-                (1–5)
+                (0–5)
 
             </div>
 

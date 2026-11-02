@@ -10,6 +10,23 @@ from pathlib import Path
 import os
 
 
+# Load local development settings without adding a runtime dependency. Values
+# already provided by the hosting environment take precedence over .env.
+_local_env = Path(__file__).resolve().parent.parent / '.env'
+if _local_env.exists():
+    for _line in _local_env.read_text(encoding='utf-8-sig').splitlines():
+        _line = _line.strip()
+        if not _line or _line.startswith('#') or '=' not in _line:
+            continue
+        _key, _value = _line.split('=', 1)
+        _key = _key.strip()
+        _value = _value.strip()
+        if _value.startswith(('"', "'")) and _value.endswith(_value[0]):
+            _value = _value[1:-1]
+        if _key:
+            os.environ.setdefault(_key, _value)
+
+
 # ============================================================
 # BASE DIRECTORY
 # ============================================================
@@ -36,10 +53,9 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
-# A development server is commonly reached by an Expo app on another device on
-# the same Wi-Fi network.  Keep production host validation explicit, while
-# allowing that local development workflow without a code edit.
-if DEBUG and not os.environ.get('DJANGO_ALLOWED_HOSTS'):
+# Expo Go reaches the development server through a changing LAN IP. Production
+# deployments must set DEBUG=False and an explicit allowed-host list.
+if DEBUG:
     ALLOWED_HOSTS = ['*']
 
 
@@ -194,7 +210,8 @@ USE_TZ = True
 # STATIC FILES
 # ============================================================
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+SERVE_STATIC_FILES = os.environ.get('DJANGO_SERVE_STATIC_FILES', 'True').lower() == 'true'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -212,7 +229,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # MEDIA FILES
 # ============================================================
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -288,8 +305,34 @@ DENGUE_RISK_LEVELS = {
 # EMAIL SETTINGS
 # ============================================================
 
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+SITE_BASE_URL = os.environ.get('SITE_BASE_URL', 'http://127.0.0.1:8000').rstrip('/')
+# Stay in console mode until a Gmail address and Google App Password are set.
 EMAIL_BACKEND = (
-    'django.core.mail.backends.console.EmailBackend'
+    'django.core.mail.backends.smtp.EmailBackend'
+    if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
+    else 'django.core.mail.backends.console.EmailBackend'
+)
+
+# Deep link opened by the installed DengueWatch mobile app.
+MOBILE_ALERT_LINK_BASE = os.environ.get(
+    'MOBILE_ALERT_LINK_BASE', 'denguewatch://alert'
+).rstrip('/')
+MOBILE_NOTIFICATIONS_LINK = os.environ.get(
+    'MOBILE_NOTIFICATIONS_LINK', 'denguewatch://alerts'
+).rstrip('/')
+MOBILE_VERIFICATION_LINK_BASE = os.environ.get(
+    'MOBILE_VERIFICATION_LINK_BASE', 'denguewatch://verify-email'
+).rstrip('/')
+EMAIL_DELIVERY_ENABLED = bool(
+    EMAIL_HOST_USER
+    and EMAIL_HOST_PASSWORD
+    and EMAIL_BACKEND.endswith('smtp.EmailBackend')
 )
 
 

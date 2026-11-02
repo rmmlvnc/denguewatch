@@ -1,0 +1,135 @@
+{
+  "status": "synthetic_unverified_demo_only",
+  "source_owner_assertion": "Submitted filenames explicitly identify the files as synthetic; they are not CHO-verified observations.",
+  "replacement_sources": [
+    "WILBUR_DSO_dengue_2018_UPDATED_SYNTHETIC_8_COLUMNS.csv",
+    "WILBUR_DSO_dengue_2019_UPDATED_SYNTHETIC_8_COLUMNS.csv"
+  ],
+  "requested_row_counts": {
+    "2018": 1826,
+    "2019": 1894
+  },
+  "total_rows": 3720,
+  "datasets": [
+    {
+      "project_file": "WILBUR_DSO_dengue_2018_SYNTHETIC.csv",
+      "submitted_file": "WILBUR_DSO_dengue_2018_UPDATED_SYNTHETIC_8_COLUMNS.csv",
+      "year": 2018,
+      "rows": 1826,
+      "expected_rows_confirmed": true,
+      "headers": [
+        "Sex",
+        "AgeYears",
+        "(Current Address) City / Municipality",
+        "(Current Address) Barangay",
+        "(Current Address) Sitio / Purok / Street Name",
+        "DAdmit",
+        "Year",
+        "BloodType"
+      ],
+      "blank_values_by_required_field": {
+        "Sex": 0,
+        "AgeYears": 0,
+        "(Current Address) City / Municipality": 0,
+        "(Current Address) Barangay": 0,
+        "(Current Address) Sitio / Purok / Street Name": 0,
+        "DAdmit": 0,
+        "Year": 0,
+        "BloodType": 0
+      },
+      "valid_date_range": [
+        "2018-01-01",
+        "2018-12-28"
+      ],
+      "invalid_dates": 0,
+      "dates_with_year_mismatch": 0,
+      "exact_duplicate_extra_rows": 0,
+      "complete_8_field_rows": 1826,
+      "official_iligan_barangays_matched": 43,
+      "official_iligan_barangays_total": 44,
+      "rows_with_official_barangay_match": 1815,
+      "rows_with_unmatched_barangay": 11,
+      "unmatched_barangay_names": [
+        "Balagatasa",
+        "Gadongan",
+        "Labuay",
+        "Minaulon",
+        "Montay",
+        "Patag",
+        "Upper Malubog"
+      ],
+      "invalid_age_rows": 0,
+      "invalid_sex_rows": 0,
+      "invalid_blood_type_rows": 0,
+      "sha256": "19e0551f76c994b8bd7ee495d4c92e7538830ba031598b254c94f1c49f170651"
+    },
+    {
+      "project_file": "WILBUR_DSO_dengue_2019_SYNTHETIC.csv",
+      "submitted_file": "WILBUR_DSO_dengue_2019_UPDATED_SYNTHETIC_8_COLUMNS.csv",
+      "year": 2019,
+      "rows": 1894,
+      "expected_rows_confirmed": true,
+      "headers": [
+        "Sex",
+        "AgeYears",
+        "(Current Address) City / Municipality",
+        "(Current Address) Barangay",
+        "(Current Address) Sitio / Purok / Street Name",
+        "DAdmit",
+        "Year",
+        "BloodType"
+      ],
+      "blank_values_by_required_field": {
+        "Sex": 0,
+        "AgeYears": 0,
+        "(Current Address) City / Municipality": 0,
+        "(Current Address) Barangay": 0,
+        "(Current Address) Sitio / Purok / Street Name": 0,
+        "DAdmit": 0,
+        "Year": 0,
+        "BloodType": 0
+      },
+      "valid_date_range": [
+        "2019-01-01",
+        "2019-12-28"
+      ],
+      "invalid_dates": 0,
+      "dates_with_year_mismatch": 0,
+      "exact_duplicate_extra_rows": 0,
+      "complete_8_field_rows": 1894,
+      "official_iligan_barangays_matched": 43,
+      "official_iligan_barangays_total": 44,
+      "rows_with_official_barangay_match": 1886,
+      "rows_with_unmatched_barangay": 8,
+      "unmatched_barangay_names": [
+        "Balagatasa",
+        "Gusa",
+        "Montay",
+        "Old Poblacion",
+        "Poblacion West",
+        "Tambo"
+      ],
+      "invalid_age_rows": 0,
+      "invalid_sex_rows": 0,
+      "invalid_blood_type_rows": 0,
+      "sha256": "90287875e142a17bb233a4cdddefd69db91e960df0f02d4400d7dd6a6559ddf2"
+    }
+  ],
+  "synthetic_provenance_note": "These are the earlier synthetic demonstration copies only. The subsequently submitted 2018-2019 CSVs are different records, attributed to CHO by the user, and are stored separately in datasets/cho_historical and included in the active consolidated source.",
+  "system_policy": {
+    "included_in_project_as": "separate synthetic supplement for traceability and development/demo use",
+    "included_in_official_case_totals": false,
+    "included_in_historical_hotspot_maps": false,
+    "included_in_alerts": false,
+    "included_in_training_or_model_validation": false,
+    "reason": "Synthetic records cannot establish real case trends or model accuracy; several barangay values do not match the official Iligan list."
+  },
+  "latest_submission_review": {
+    "submitted_files": [
+      "WILBUR_DSO_dengue_2018.csv",
+      "WILBUR_DSO_dengue_2019.csv"
+    ],
+    "result": "The latest submission has 1,792 rows for 2018 and 1,898 rows for 2019, and does not match the earlier synthetic copies.",
+    "decision": "Latest CHO-verified files are integrated in datasets/WILBUR_DSO_dengue_2018_2026_authoritative.csv. The earlier synthetic copies remain archived and excluded."
+  }
+}

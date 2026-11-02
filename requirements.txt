@@ -30,6 +30,7 @@ narwhals==2.24.0
 numpy==2.5.2
 pandas==3.0.6
 openpyxl==3.1.5
+Pillow==12.3.0
 proto-plus==1.28.3
 protobuf==7.35.1
 pyasn1==0.6.4

@@ -1,0 +1,275 @@
+{
+  "generated_from": [
+    "WILBUR_DSO_dengue_2018_2026_authoritative.csv"
+  ],
+  "consolidated_case_source_lineage": {
+    "authoritative_file": "WILBUR_DSO_dengue_2018_2026_authoritative.csv",
+    "original_dataset_files": [
+      "WILBUR_DSO_dengue_2018_2026_authoritative.csv"
+    ],
+    "original_dataset_file_count": 1,
+    "quality_audit_source_rows": 14071,
+    "authoritative_source_rows": 14071,
+    "row_count_matches_quality_audit": true,
+    "all_source_rows_retained": true,
+    "historical_2018_2019_sources": {
+      "2018": {
+        "source_file": "WILBUR_DSO_dengue_2018_2026_authoritative.csv",
+        "rows": 1781,
+        "rows_by_admission_date": 1781,
+        "rows_by_year_column": 1781,
+        "exact_duplicate_extra_rows": 0,
+        "rows_with_unmatched_barangay": 1,
+        "sha256": "e6d874eceaa29518e8a86d9fee9e034b42e4f2d387d4ee891e0477275e71d8f4",
+        "invalid_admission_dates_not_in_year_count": true
+      },
+      "2019": {
+        "source_file": "WILBUR_DSO_dengue_2018_2026_authoritative.csv",
+        "rows": 1888,
+        "rows_by_admission_date": 1888,
+        "rows_by_year_column": 1888,
+        "exact_duplicate_extra_rows": 0,
+        "rows_with_unmatched_barangay": 0,
+        "sha256": "e6d874eceaa29518e8a86d9fee9e034b42e4f2d387d4ee891e0477275e71d8f4",
+        "invalid_admission_dates_not_in_year_count": true
+      }
+    },
+    "note": "The active consolidated line list contains the 2018-2019 and 2020-2026 dengue datasets, confirmed by the project team as CHO-verified. Earlier explicitly synthetic 2018-2019 demo copies remain separately archived and excluded."
+  },
+  "active_case_source_verification": "The project team confirms all active 2018-2026 dengue case datasets were verified by CHO. Earlier files explicitly marked synthetic remain excluded.",
+  "synthetic_supplement": {
+    "status": "synthetic_unverified_demo_only",
+    "source_owner_assertion": "Submitted filenames explicitly identify the files as synthetic; they are not CHO-verified observations.",
+    "replacement_sources": [
+      "WILBUR_DSO_dengue_2018_UPDATED_SYNTHETIC_8_COLUMNS.csv",
+      "WILBUR_DSO_dengue_2019_UPDATED_SYNTHETIC_8_COLUMNS.csv"
+    ],
+    "requested_row_counts": {
+      "2018": 1826,
+      "2019": 1894
+    },
+    "total_rows": 3720,
+    "datasets": [
+      {
+        "project_file": "WILBUR_DSO_dengue_2018_SYNTHETIC.csv",
+        "submitted_file": "WILBUR_DSO_dengue_2018_UPDATED_SYNTHETIC_8_COLUMNS.csv",
+        "year": 2018,
+        "rows": 1826,
+        "expected_rows_confirmed": true,
+        "headers": [
+          "Sex",
+          "AgeYears",
+          "(Current Address) City / Municipality",
+          "(Current Address) Barangay",
+          "(Current Address) Sitio / Purok / Street Name",
+          "DAdmit",
+          "Year",
+          "BloodType"
+        ],
+        "blank_values_by_required_field": {
+          "Sex": 0,
+          "AgeYears": 0,
+          "(Current Address) City / Municipality": 0,
+          "(Current Address) Barangay": 0,
+          "(Current Address) Sitio / Purok / Street Name": 0,
+          "DAdmit": 0,
+          "Year": 0,
+          "BloodType": 0
+        },
+        "valid_date_range": [
+          "2018-01-01",
+          "2018-12-28"
+        ],
+        "invalid_dates": 0,
+        "dates_with_year_mismatch": 0,
+        "exact_duplicate_extra_rows": 0,
+        "complete_8_field_rows": 1826,
+        "official_iligan_barangays_matched": 43,
+        "official_iligan_barangays_total": 44,
+        "rows_with_official_barangay_match": 1815,
+        "rows_with_unmatched_barangay": 11,
+        "unmatched_barangay_names": [
+          "Balagatasa",
+          "Gadongan",
+          "Labuay",
+          "Minaulon",
+          "Montay",
+          "Patag",
+          "Upper Malubog"
+        ],
+        "invalid_age_rows": 0,
+        "invalid_sex_rows": 0,
+        "invalid_blood_type_rows": 0,
+        "sha256": "19e0551f76c994b8bd7ee495d4c92e7538830ba031598b254c94f1c49f170651"
+      },
+      {
+        "project_file": "WILBUR_DSO_dengue_2019_SYNTHETIC.csv",
+        "submitted_file": "WILBUR_DSO_dengue_2019_UPDATED_SYNTHETIC_8_COLUMNS.csv",
+        "year": 2019,
+        "rows": 1894,
+        "expected_rows_confirmed": true,
+        "headers": [
+          "Sex",
+          "AgeYears",
+          "(Current Address) City / Municipality",
+          "(Current Address) Barangay",
+          "(Current Address) Sitio / Purok / Street Name",
+          "DAdmit",
+          "Year",
+          "BloodType"
+        ],
+        "blank_values_by_required_field": {
+          "Sex": 0,
+          "AgeYears": 0,
+          "(Current Address) City / Municipality": 0,
+          "(Current Address) Barangay": 0,
+          "(Current Address) Sitio / Purok / Street Name": 0,
+          "DAdmit": 0,
+          "Year": 0,
+          "BloodType": 0
+        },
+        "valid_date_range": [
+          "2019-01-01",
+          "2019-12-28"
+        ],
+        "invalid_dates": 0,
+        "dates_with_year_mismatch": 0,
+        "exact_duplicate_extra_rows": 0,
+        "complete_8_field_rows": 1894,
+        "official_iligan_barangays_matched": 43,
+        "official_iligan_barangays_total": 44,
+        "rows_with_official_barangay_match": 1886,
+        "rows_with_unmatched_barangay": 8,
+        "unmatched_barangay_names": [
+          "Balagatasa",
+          "Gusa",
+          "Montay",
+          "Old Poblacion",
+          "Poblacion West",
+          "Tambo"
+        ],
+        "invalid_age_rows": 0,
+        "invalid_sex_rows": 0,
+        "invalid_blood_type_rows": 0,
+        "sha256": "90287875e142a17bb233a4cdddefd69db91e960df0f02d4400d7dd6a6559ddf2"
+      }
+    ],
+    "synthetic_provenance_note": "These are the earlier synthetic demonstration copies only. The subsequently submitted 2018-2019 CSVs are different records, attributed to CHO by the user, and are stored separately in datasets/cho_historical and included in the active consolidated source.",
+    "system_policy": {
+      "included_in_project_as": "separate synthetic supplement for traceability and development/demo use",
+      "included_in_official_case_totals": false,
+      "included_in_historical_hotspot_maps": false,
+      "included_in_alerts": false,
+      "included_in_training_or_model_validation": false,
+      "reason": "Synthetic records cannot establish real case trends or model accuracy; several barangay values do not match the official Iligan list."
+    },
+    "latest_submission_review": {
+      "submitted_files": [
+        "WILBUR_DSO_dengue_2018.csv",
+        "WILBUR_DSO_dengue_2019.csv"
+      ],
+      "result": "The latest submission has 1,792 rows for 2018 and 1,898 rows for 2019, and does not match the earlier synthetic copies.",
+      "decision": "Latest CHO-verified files are integrated in datasets/WILBUR_DSO_dengue_2018_2026_authoritative.csv. The earlier synthetic copies remain archived and excluded."
+    }
+  },
+  "generated_at_utc": "2026-10-22T14:44:08.709023+00:00",
+  "privacy": "Aggregate inventory only; no patient-level data is included.",
+  "patient_line_list": {
+    "source_rows": 14071,
+    "usable_rows_with_valid_admission_date_and_official_barangay": 14068,
+    "rows_missing_or_unmatched_barangay": 1,
+    "rows_missing_or_invalid_admission_date": 2,
+    "admission_date_range": [
+      "2018-01-01",
+      "2026-11-23"
+    ],
+    "official_barangays_present": 44,
+    "potential_duplicate_matches": 0,
+    "exact_duplicate_extra_rows": 0,
+    "rows_with_one_or_more_missing_requested_fields": 4,
+    "rows_without_official_iligan_barangay_match": 1,
+    "admission_date_year_mismatch_rows": 0,
+    "duplicate_policy": "Retain and flag for CHO review; no stable case identifier is present, so demographic/location matches are not automatically removed.",
+    "record_type": "Individual case line list; rows with valid DAdmit and official barangay are aggregated for model input.",
+    "case_definition": "DAdmit and current-address barangay are present; confirmation criteria and case-definition version are not represented in the source workbook.",
+    "reporting_delay": "Cannot be calculated; source has admission date but no received/entered date."
+  },
+  "monthly_model_dataset": {
+    "file": "integrated_monthly.csv",
+    "rows": 4532,
+    "barangays": 44,
+    "periods": 103,
+    "period_start": "2018-01",
+    "period_end": "2026-07",
+    "duplicate_barangay_period_rows": 0,
+    "cells_with_no_source_records": 1368,
+    "cells_with_zero_under_user_completeness_confirmation": 1368,
+    "cells_with_zero_vs_missing_unverified": 0,
+    "zero_semantics": "Based on the project-team confirmation of CHO data completeness for the CHO-sourced dataset, covered barangay-months with no line-list rows are treated as zero cases.",
+    "training_gate": "Zero-versus-missing ambiguity cleared by the recorded completeness confirmation; retraining is permitted, with remaining case-definition, duplicate, and reporting-delay limitations disclosed."
+  },
+  "weekly_feasibility_candidate": {
+    "file": "weekly_feasibility_candidate.csv",
+    "rows": 20460,
+    "week_start": "2018-01-01",
+    "week_end": "2026-11-23",
+    "barangays": 44,
+    "weeks": 465,
+    "barangay_weeks_with_cases_present": 7650,
+    "barangay_weeks_with_no_records_unverified": 0,
+    "barangay_weeks_with_zero_under_user_completeness_confirmation": 12810,
+    "zero_policy": "No-case weeks within the CHO-sourced dataset are treated as zero based on the project-team confirmation of CHO data completeness; a separate CHO zero-report register was not supplied."
+  },
+  "weather": {
+    "source": "Open-Meteo Historical Weather API ERA5 for gap-filled rows; existing per-barangay archive values retained for other periods",
+    "source_status": "archive_fetched_per_barangay",
+    "source_url": "https://archive-api.open-meteo.com/v1/archive (ERA5 gap-fill retained in local weather cache)",
+    "coordinates": null,
+    "scope": "One boundary-derived representative point per official barangay; modeled grid-cell estimates, and adjacent barangays may share grid cells.",
+    "variables_and_units": {
+      "temperature_c": "monthly mean temperature, degrees Celsius",
+      "rainfall_mm": "monthly precipitation sum, millimeters",
+      "humidity_pct": "monthly mean of daily mean relative humidity, percent"
+    },
+    "matching": "One boundary-derived representative point per official barangay; modeled grid-cell estimates, and adjacent barangays may share grid cells.",
+    "model_resolution_note": "ERA5 reanalysis (approximately 0.25 degrees / 25 km) was requested explicitly for missing historical values because it provides all three required variables, including precipitation. ERA5-Land does not provide precipitation in this archive. Requested coordinates and API-returned grid coordinates are saved to audit shared grid cells.",
+    "limitations": "Open-Meteo archive values are reanalysis/model estimates and are not direct barangay station observations. Validate against PAGASA or other authorized station records before treating them as locally verified. If live retrieval fails, legacy city-point cache is retained and labeled as non-local fallback.",
+    "locations_requested": 44,
+    "distinct_grid_cells_returned": 10,
+    "missing_barangay_month_weather_rows": 0,
+    "missing_periods": [],
+    "weather_retrieval_note": null
+  },
+  "model_weather_compatibility": {
+    "compatible": true,
+    "training_weather_scope": "One boundary-derived representative point per official barangay; modeled grid-cell estimates, and adjacent barangays may share grid cells.",
+    "current_weather_scope": "One boundary-derived representative point per official barangay; modeled grid-cell estimates, and adjacent barangays may share grid cells.",
+    "note": "The saved model was retrained using the current Open-Meteo historical monthly weather at one representative point per barangay."
+  },
+  "governance_gaps": [
+    "Document CHO authorization, access roles, retention, and approved transfer/storage method for source records.",
+    "Obtain the CHO case definition/version and identify which records are confirmed versus suspected.",
+    "Capture report-received dates and maintain the completeness confirmation for future data updates.",
+    "Obtain a stable de-identified case key so true duplicate records can be resolved safely.",
+    "Validate barangay representative-point reanalysis estimates against PAGASA or another authorized station source before operational use."
+  ],
+  "modeling_decision": "Monthly forecasting is enabled using the recorded completeness confirmation and the updated per-barangay weather inputs. Scores remain provisional because the source does not document the CHO case definition, report-received dates, or stable identifiers for resolving duplicate records; final test performance must beat simple baselines.",
+  "case_reporting_completeness_confirmation": {
+    "status": "complete_for_modeling_scope",
+    "source": "CHO-provided dengue case line-list datasets for 2018-2019 and consolidated 2020-2026 source",
+    "confirmed_by": "Project team confirmation that active dengue datasets are CHO-verified and complete for covered months",
+    "confirmation_method": "Project team confirmation in this conversation on 2026-10-19.",
+    "coverage_start": "2018-01",
+    "coverage_end": "2026-07",
+    "geographic_scope": "44 official Iligan City barangays represented in the monthly modeling grid",
+    "no_case_rows_mean_confirmed_zero": true,
+    "zero_interpretation": "Within the stated complete dataset coverage, a barangay-month with no case line-list records is treated as zero cases rather than a missing report.",
+    "limitations": [
+      "Dataset provenance and completeness are confirmed by the project team based on CHO verification. A separate monthly zero-report register is not included in the application files.",
+      "Records without a valid admission date or official barangay remain excluded from barangay-month case counts and are separately reported in the data-quality inventory.",
+      "Exact duplicate rows are retained and flagged because no stable case identifier is present.",
+      "Some 2018-2019 barangay names do not match the official Iligan list and are excluded from official barangay aggregates pending mapping.",
+      "The source does not provide report-received dates or a documented case-definition version."
+    ]
+  }
+}

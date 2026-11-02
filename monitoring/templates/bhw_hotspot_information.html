@@ -412,6 +412,11 @@
         }
 
         .risk-high {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .risk-critical {
             background: #fee2e2;
             color: #b91c1c;
         }
@@ -524,7 +529,7 @@
         .legend-grid {
             display: grid;
             grid-template-columns:
-                repeat(3, minmax(0, 1fr));
+                repeat(4, minmax(0, 1fr));
             gap: 15px;
             margin-top: 18px;
         }
@@ -576,7 +581,8 @@
 
         @media (max-width: 1100px) {
 
-            .stats {
+            .stats,
+            .legend-grid {
                 grid-template-columns:
                     repeat(2, 1fr);
             }
@@ -796,8 +802,7 @@
 
                 {% endif %}.
 
-                This page does not provide city-wide hotspot
-                administration access.
+                Case totals combine the CHO historical dataset and new CHO-confirmed system records. Counts and locations are limited to this assigned area; they are records, not necessarily unique people.
 
             </div>
 
@@ -822,8 +827,13 @@
                         </h3>
 
                         <p>
-                            Recorded Dengue Cases
+                            Cases in Assigned Area
                         </p>
+
+                        <small class="text-muted">
+                            {{ historical_case_count|default:"0" }} historical ·
+                            {{ new_confirmed_case_count|default:"0" }} new CHO-confirmed
+                        </small>
 
                     </div>
 
@@ -1326,10 +1336,7 @@
 
 
                 <p class="card-subtitle">
-
-                    Risk classification is based on recorded
-                    dengue case volume.
-
+                    DengueWatch count bands for recorded cases in this area. They are for surveillance context, not official DOH classifications or individual risk assessments. The model's review flag is separate: an estimate of 3 or more cases is flagged for planning review, while model evaluation labels 2 or more observed cases as a hotspot.
                 </p>
 
 
@@ -1346,11 +1353,7 @@
 
                         </h6>
 
-                        <p>
-
-                            0 to 5 recorded dengue cases.
-
-                        </p>
+                        <p>0 to 5 recorded cases.</p>
 
                     </div>
 
@@ -1365,11 +1368,7 @@
 
                         </h6>
 
-                        <p>
-
-                            6 to 15 recorded dengue cases.
-
-                        </p>
+                        <p>6 to 50 recorded cases.</p>
 
                     </div>
 
@@ -1384,11 +1383,22 @@
 
                         </h6>
 
-                        <p>
+                        <p>51 to 100 recorded cases.</p>
 
-                            16 or more recorded dengue cases.
+                    </div>
 
-                        </p>
+
+                    <div class="legend-card">
+
+                        <h6>
+
+                            <span class="risk-badge risk-critical">
+                                Critical
+                            </span>
+
+                        </h6>
+
+                        <p>101 or more recorded cases.</p>
 
                     </div>
 

@@ -1,201 +1,179 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>DengueWatch | User Management</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management | DengueWatch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #f4f7f9; color: #1f2937; }
+        .resident-topbar { min-height: 75px; background: #fff; border-bottom: 1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 28px; }
+        .resident-topbar h1 { margin:0; font-size:20px; font-weight:700; }
+        .resident-topbar small { color:#6b7280; }
+        .resident-identity { display:flex; align-items:center; gap:12px; }
+        .resident-identity-text { text-align:right; line-height:1.15; }
+        .resident-identity-text strong { display:block; font-size:14px; }
+        .resident-role { color:#0f766e; background:#e6f4f1; padding:5px 10px; border-radius:20px; font-size:11px; }
+        .resident-avatar { width:36px; height:36px; display:grid; place-items:center; border-radius:50%; color:#0f766e; background:#e6f4f1; }
+        .resident-content { padding:28px; }
+        .resident-page-title { margin-bottom:22px; }
+        .resident-page-title h2 { margin:0 0 5px; font-size:24px; font-weight:700; }
+        .resident-page-title p { margin:0; color:#6b7280; font-size:13px; }
+        .resident-notice { padding:15px 18px; margin-bottom:22px; border-left:4px solid #0f766e; border-radius:8px; background:#e6f4f1; font-size:13px; }
+        .resident-notice strong { color:#0f766e; }
+        .resident-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; margin-bottom:22px; }
+        .resident-stat { display:flex; align-items:center; gap:15px; min-width:0; padding:20px; border:1px solid #e5e7eb; border-radius:10px; background:white; }
+        .resident-stat-icon { width:45px; height:45px; flex:0 0 45px; display:grid; place-items:center; border-radius:9px; background:#e6f4f1; color:#0f766e; font-size:18px; }
+        .resident-stat h3 { margin:0; font-size:23px; font-weight:700; }
+        .resident-stat p { margin:2px 0 0; color:#6b7280; font-size:12px; }
+        .resident-card { padding:22px; margin-bottom:22px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+        .resident-card-title { display:flex; align-items:center; gap:8px; margin-bottom:5px; font-size:16px; font-weight:700; }
+        .resident-card-title i { color:#0f766e; }
+        .resident-card-subtitle { margin-bottom:18px; color:#6b7280; font-size:12px; }
+        .resident-toolbar { display:flex; justify-content:space-between; align-items:end; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+        .resident-count { color:#64748b; white-space:nowrap; }
+        .resident-filters { display:flex; align-items:end; gap:8px; flex-wrap:wrap; }
+        .resident-filters .search-field { width:min(340px,42vw); }
+        .resident-table { width:100%; min-width:920px; border-collapse:collapse; }
+        .resident-table th { padding:12px; border-bottom:1px solid #e5e7eb; background:#f8fafc; color:#6b7280; font-size:11px; white-space:nowrap; }
+        .resident-table td { padding:12px; border-bottom:1px solid #f1f1f1; vertical-align:middle; font-size:12px; }
+        .resident-table tbody tr:hover { background:#f9fafb; }
+        .resident-name { color:#172b3c; font-weight:700; }
+        .resident-email { display:block; color:#64748b; overflow-wrap:anywhere; }
+        .resident-actions { min-width:160px; }
+        .resident-details-row td { padding:16px; background:#f8fafc; }
+        .resident-details-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px 20px; }
+        .resident-details-grid span { display:block; color:#64748b; font-size:11px; }
+        .resident-details-grid strong { display:block; color:#1f2937; font-size:13px; overflow-wrap:anywhere; }
+        .resident-pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding-top:16px; }
+        .resident-empty { padding:48px 20px; color:#6b7280; text-align:center; }
+        .resident-empty i { display:block; margin-bottom:12px; color:#0f766e; font-size:32px; }
+        @media (max-width:1100px) { .resident-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media (max-width:700px) {
+            .resident-content { padding:16px; }
+            .resident-topbar { padding:12px 16px; }
+            .resident-role { display:none; }
+            .resident-stats { grid-template-columns:1fr; gap:10px; }
+            .resident-toolbar { align-items:stretch; }
+            .resident-filters { width:100%; }
+            .resident-filters .search-field { width:100%; flex:1 1 100%; }
+            .filter-actions { display:flex; gap:6px; }
+            .resident-card { padding:16px; }
+            .resident-details-grid { grid-template-columns:1fr; }
+        }
+    </style>
 </head>
-
 <body>
-
-<div class="container py-5">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
-        <div>
-
-            <h2>
-                User Management
-            </h2>
-
-            <p class="text-muted">
-                Review DengueWatch personnel registrations.
-            </p>
-
+{% include 'includes/role_sidebar.html' %}
+<main class="main-content">
+    <header class="resident-topbar">
+        <div><h1>User Management</h1><small>DengueWatch User Administration</small></div>
+        <div class="resident-identity">
+            <div class="resident-identity-text"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><span class="resident-role">{{ request.user.get_role_display }}</span></div>
+            <span class="resident-avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
         </div>
+    </header>
 
-        <a
-            href="{% url 'cho_dashboard' %}"
-            class="btn btn-secondary"
-        >
-            Back to Dashboard
-        </a>
+    <div class="resident-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
 
-    </div>
+        <section class="resident-page-title">
+            <h2>Resident Accounts</h2>
+            <p>Review resident contact details, email verification, and account approval status.</p>
+        </section>
 
+        <section class="resident-notice">
+            <strong><i class="fa-solid fa-shield-halved"></i> City Health Office Account Review</strong><br>
+            Manage resident registrations and check email verification before sending resident alerts.
+        </section>
 
-    {% if messages %}
+        <section class="resident-stats" aria-label="Resident account summary">
+            <div class="resident-stat"><div class="resident-stat-icon"><i class="fa-solid fa-users"></i></div><div><h3>{{ resident_count }}</h3><p>Total Residents</p></div></div>
+            <div class="resident-stat"><div class="resident-stat-icon"><i class="fa-solid fa-user-clock"></i></div><div><h3>{{ resident_pending }}</h3><p>Pending Approval</p></div></div>
+            <div class="resident-stat"><div class="resident-stat-icon"><i class="fa-solid fa-user-check"></i></div><div><h3>{{ resident_approved }}</h3><p>Approved Accounts</p></div></div>
+            <div class="resident-stat"><div class="resident-stat-icon"><i class="fa-solid fa-envelope-circle-check"></i></div><div><h3>{{ resident_verified }}</h3><p>Email Verified</p></div></div>
+        </section>
 
-        {% for message in messages %}
+        <section class="resident-card">
+            <div class="resident-card-title"><i class="fa-solid fa-users"></i> Resident Accounts</div>
+            <div class="resident-card-subtitle">Resident accounts currently registered in DengueWatch.</div>
 
-            <div class="alert alert-{{ message.tags }}">
-
-                {{ message }}
-
+            <div class="resident-toolbar">
+                <div class="resident-count"><strong class="text-dark">{{ filtered_resident_count }}</strong> matching resident accounts</div>
+                <form method="get" class="resident-filters">
+                    <div class="search-field"><label class="form-label mb-1" for="resident-search">Search residents</label><input id="resident-search" class="form-control" type="search" name="search" value="{{ search }}" placeholder="Name, email, phone, address"></div>
+                    <div class="filter-actions"><button class="btn btn-success" type="submit"><i class="fa-solid fa-filter"></i> Filter</button> <a class="btn btn-outline-secondary" href="{% url 'user_management' %}">Clear</a></div>
+                </form>
             </div>
 
-        {% endfor %}
-
-    {% endif %}
-
-
-    <div class="card">
-
-        <div class="card-body">
-
+            {% if users %}
             <div class="table-responsive">
-
-                <table class="table table-hover">
-
-                    <thead>
-
-                        <tr>
-
-                            <th>Name</th>
-
-                            <th>Username</th>
-
-                            <th>Email</th>
-
-                            <th>Requested Role</th>
-
-                            <th>Status</th>
-
-                            <th>Action</th>
-
-                        </tr>
-
-                    </thead>
-
-
+                <table class="resident-table">
+                    <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Contact</th><th>Address</th><th>Email Verification</th><th>Status</th><th>Action</th></tr></thead>
                     <tbody>
-
                     {% for user in users %}
-
                         <tr>
-
-                            <td>
-                                {{ user.get_full_name }}
-                            </td>
-
-                            <td>
-                                {{ user.username }}
-                            </td>
-
-                            <td>
-                                {{ user.email }}
-                            </td>
-
-                            <td>
-                                {{ user.get_role_display }}
-                            </td>
-
-                            <td>
-
+                            <td><span class="resident-name">{{ user.get_full_name|default:user.username }}</span></td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email|default:"Not provided" }}</td>
+                            <td>{{ user.contact_number|default:"Not provided" }}</td>
+                            <td>{{ user.address|default:"Not provided"|truncatechars:70 }}</td>
+                            <td>{% if user.email_verified %}<span class="badge bg-success">Verified</span>{% else %}<span class="badge bg-secondary">Not verified</span>{% endif %}</td>
+                            <td>{% if user.account_status == 'PENDING' %}<span class="badge bg-warning text-dark">Pending</span>{% elif user.account_status == 'APPROVED' %}<span class="badge bg-success">Approved</span>{% else %}<span class="badge bg-danger">Rejected</span>{% endif %}</td>
+                            <td class="resident-actions">
                                 {% if user.account_status == 'PENDING' %}
-
-                                    <span class="badge bg-warning text-dark">
-                                        Pending
-                                    </span>
-
-                                {% elif user.account_status == 'APPROVED' %}
-
-                                    <span class="badge bg-success">
-                                        Approved
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="badge bg-danger">
-                                        Rejected
-                                    </span>
-
-                                {% endif %}
-
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <button class="btn btn-outline-primary btn-sm" type="button" aria-expanded="false" aria-controls="resident-details-{{ user.pk }}" onclick="toggleResidentDetails(this, 'resident-details-{{ user.pk }}')"><i class="fa-solid fa-eye"></i> View</button>
+                                        <form method="post" action="{% url 'approve_user' user.id %}">{% csrf_token %}<button class="btn btn-success btn-sm" type="submit"><i class="fa-solid fa-check"></i> Approve</button></form>
+                                        <form method="post" action="{% url 'reject_user' user.id %}" onsubmit="return confirm('Reject this resident account?')">{% csrf_token %}<button class="btn btn-danger btn-sm" type="submit"><i class="fa-solid fa-xmark"></i> Reject</button></form>
+                                    </div>
+                                {% else %}<button class="btn btn-outline-primary btn-sm" type="button" aria-expanded="false" aria-controls="resident-details-{{ user.pk }}" onclick="toggleResidentDetails(this, 'resident-details-{{ user.pk }}')"><i class="fa-solid fa-eye"></i> View</button>{% endif %}
                             </td>
-
-                            <td>
-
-                                {% if user.account_status == 'PENDING' %}
-
-                                    <a
-                                        href="{% url 'approve_user' user.id %}"
-                                        class="btn btn-success btn-sm"
-                                    >
-                                        Approve
-                                    </a>
-
-                                    <a
-                                        href="{% url 'reject_user' user.id %}"
-                                        class="btn btn-danger btn-sm"
-                                    >
-                                        Reject
-                                    </a>
-
-                                {% else %}
-
-                                    <span class="text-muted">
-                                        No action
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
                         </tr>
-
-                    {% empty %}
-
-                        <tr>
-
-                            <td
-                                colspan="6"
-                                class="text-center text-muted"
-                            >
-
-                                No registered personnel.
-
-                            </td>
-
+                        <tr id="resident-details-{{ user.pk }}" class="resident-details-row" hidden>
+                            <td colspan="8"><div class="resident-details-grid">
+                                <div><span>Full name</span><strong>{{ user.get_full_name|default:user.username }}</strong></div>
+                                <div><span>Email address</span><strong>{{ user.email|default:"Not provided" }}</strong></div>
+                                <div><span>Contact number</span><strong>{{ user.contact_number|default:"Not provided" }}</strong></div>
+                                <div><span>Address</span><strong>{{ user.address|default:"Not provided" }}</strong></div>
+                                <div><span>Barangay</span><strong>{{ user.assigned_barangay.barangay_name|default:"Not provided" }}</strong></div>
+                                <div><span>Registered</span><strong>{{ user.date_joined|date:"M d, Y g:i a" }}</strong></div>
+                            </div></td>
                         </tr>
-
                     {% endfor %}
-
                     </tbody>
-
                 </table>
-
             </div>
-
-        </div>
-
+            {% else %}
+            <div class="resident-empty"><i class="fa-solid fa-user-check"></i><strong>No resident accounts found</strong><div>Try changing your search or status filter.</div></div>
+            {% endif %}
+            {% if users_page.paginator.num_pages > 1 %}
+            <nav class="resident-pagination" aria-label="Resident account pages">
+                <span class="resident-count">Showing {{ users_page.start_index }}–{{ users_page.end_index }} of {{ filtered_resident_count }}</span>
+                <div class="btn-group" role="group" aria-label="Pagination controls">
+                    {% if users_page.has_previous %}<a class="btn btn-outline-secondary btn-sm" href="?{% if users_querystring %}{{ users_querystring }}&amp;{% endif %}page={{ users_page.previous_page_number }}"><i class="fa-solid fa-chevron-left"></i> Previous</a>{% else %}<span class="btn btn-outline-secondary btn-sm disabled">Previous</span>{% endif %}
+                    <span class="btn btn-light btn-sm disabled">Page {{ users_page.number }} of {{ users_page.paginator.num_pages }}</span>
+                    {% if users_page.has_next %}<a class="btn btn-outline-secondary btn-sm" href="?{% if users_querystring %}{{ users_querystring }}&amp;{% endif %}page={{ users_page.next_page_number }}">Next <i class="fa-solid fa-chevron-right"></i></a>{% else %}<span class="btn btn-outline-secondary btn-sm disabled">Next</span>{% endif %}
+                </div>
+            </nav>
+            {% endif %}
+        </section>
     </div>
-
-</div>
-
+</main>
+<script>
+    function toggleResidentDetails(button, rowId) {
+        const row = document.getElementById(rowId);
+        if (!row) return;
+        row.hidden = !row.hidden;
+        button.setAttribute('aria-expanded', String(!row.hidden));
+    }
+</script>
 </body>
-
 </html>

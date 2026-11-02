@@ -1,3 +1,252 @@
 {% load static %}
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>DengueWatch | CHW Case Verification</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><link rel="stylesheet" href="{% static 'css/style.css' %}"><style>body{margin:0;background:#f4f7f9;color:#1f2937;font-family:"Segoe UI",Arial,sans-serif}.layout{min-height:100vh;display:flex}.sidebar{width:260px;min-height:100vh;background:#0f766e;color:#fff;position:fixed;inset:0 auto 0 0;padding:25px 18px;overflow-y:auto}.sidebar a{color:#fff;padding:12px;border-radius:8px;margin-bottom:5px;font-size:14px}.sidebar a:hover,.sidebar a.active{background:rgba(255,255,255,.18)}.main{margin-left:260px;width:calc(100% - 260px)}.topbar{min-height:75px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:14px 35px}.topbar h5{margin:0;font-weight:700}.content{max-width:1250px;padding:35px}.subtitle,.meta{color:#6b7280}.notice{background:#e6f4f1;border-left:4px solid #0f766e;border-radius:8px;padding:15px 18px;margin:22px 0}.report{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:22px;margin-bottom:16px}.label{font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.04em}.value{white-space:pre-wrap}.status{background:#fef3c7;color:#92400e;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:700}.audit{background:#f8fafc;border-radius:8px;padding:10px;margin-top:14px}textarea{min-height:88px}@media(max-width:900px){.sidebar{width:220px}.main{margin-left:220px;width:calc(100% - 220px)}}@media(max-width:700px){.layout{display:block}.sidebar{position:static;width:100%;min-height:auto}.main{margin:0;width:100%}.topbar,.content{padding-left:20px;padding-right:20px}}</style></head>
-<body><div class="layout">{% include 'includes/role_sidebar.html' %}<main class="main"><header class="topbar"><div><h5>CHW Case Verification</h5><small class="subtitle">Final CHO review of suspected dengue-case reports</small></div><div class="text-end"><strong>{{ current_user_name }}</strong><br><small class="subtitle">{{ current_user_role }}</small></div></header><div class="content"><h1 class="h3 mb-1">Suspected cases awaiting verification</h1><p class="subtitle">Confirm only after reviewing the information and applying CHO procedures. Rejection requires a response that the CHW can see.</p><div class="notice"><strong><i class="fa-solid fa-user-doctor"></i> CHO final decision</strong><div>CHWs collect and validate the completeness of location and symptom information. Only CHO can confirm or reject a submitted suspected case.</div></div>{% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}{% for report in reports %}<article class="report"><div class="d-flex justify-content-between gap-3"><div><h2 class="h5 mb-1">Suspected case #{{ report.dengue_case_id }} <span class="status">Awaiting verification</span></h2><p class="meta mb-0">Submitted by {{ report.user_account.get_full_name|default:report.user_account.username }} · {{ report.date_reported }}</p></div><div class="text-end meta">{{ report.barangay.barangay_name }}{% if report.purok %}<br>{{ report.purok.purok_name }}{% endif %}</div></div><div class="row g-3 mt-2"><div class="col-md-3"><div class="label">Age / sex</div><div>{{ report.patient_age }} / {{ report.patient_sex }}</div></div><div class="col-md-3"><div class="label">Blood type</div><div>{{ report.patient_blood_type|default:'Not reported' }}</div></div><div class="col-md-6"><div class="label">Exact location / landmark</div><div class="value">{{ report.location_details }}</div></div><div class="col-12"><div class="label">Symptoms</div><div class="value">{{ report.symptoms }}</div></div>{% if report.remarks %}<div class="col-12"><div class="label">CHW notes</div><div class="value">{{ report.remarks }}</div></div>{% endif %}</div><div class="audit"><strong>Audit trail</strong>{% for audit in report.audit_logs.all %}<div class="meta mt-1">{{ audit.created_at|date:"M d, Y g:i a" }} · {{ audit.get_action_display }} by {{ audit.actor.get_full_name|default:audit.actor.username|default:"System" }}{% if audit.details %}: {{ audit.details }}{% endif %}</div>{% empty %}<div class="meta mt-1">No audit events recorded.</div>{% endfor %}</div><form method="post" action="{% url 'review_chw_case_report' report.dengue_case_id %}" class="mt-3">{% csrf_token %}<label class="form-label" for="note-{{ report.dengue_case_id }}">CHO review note (visible to CHW)</label><textarea id="note-{{ report.dengue_case_id }}" class="form-control" name="cho_review_note" required placeholder="State the verification result or reason for rejection."></textarea><button class="btn btn-success mt-2" name="decision" value="Confirmed"><i class="fa-solid fa-check"></i> Confirm case</button><button class="btn btn-danger mt-2 ms-1" name="decision" value="Rejected"><i class="fa-solid fa-xmark"></i> Reject case</button></form></article>{% empty %}<div class="report text-center subtitle py-4">No CHW suspected cases are awaiting CHO verification.</div>{% endfor %}</div></main></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHW Case Verification | DengueWatch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #f4f7f9; color: #1f2937; }
+        .review-topbar { min-height: 75px; background: #fff; border-bottom: 1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 28px; }
+        .review-topbar h1 { margin:0; font-size:20px; font-weight:700; }
+        .review-topbar small { color:#6b7280; }
+        .review-identity { display:flex; align-items:center; gap:12px; }
+        .review-identity-text { text-align:right; line-height:1.15; }
+        .review-identity-text strong { display:block; font-size:14px; }
+        .review-role { color:#0f766e; background:#e6f4f1; padding:5px 10px; border-radius:20px; font-size:11px; }
+        .review-avatar { width:40px; height:40px; display:grid; place-items:center; border-radius:50%; color:#0f766e; background:#e6f4f1; border:1px solid #cbe7df; font-weight:700; }
+        .review-content { padding:28px; }
+        .review-page-title { margin-bottom:22px; }
+        .review-page-title h2 { margin:0 0 5px; font-size:24px; font-weight:700; }
+        .review-page-title p { margin:0; color:#6b7280; font-size:13px; }
+        .review-notice { padding:15px 18px; margin-bottom:22px; border-left:4px solid #0f766e; border-radius:8px; background:#e6f4f1; font-size:13px; }
+        .review-notice strong { color:#0f766e; }
+        .review-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; margin-bottom:22px; }
+        .review-stat { display:flex; align-items:center; gap:15px; min-width:0; padding:20px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+        button.review-stat { width:100%; color:inherit; text-align:left; font:inherit; cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+        button.review-stat:hover, button.review-stat:focus-visible { border-color:#0f766e; box-shadow:0 4px 14px rgba(15,118,110,.12); transform:translateY(-1px); outline:none; }
+        .review-stat-icon { width:45px; height:45px; flex:0 0 45px; display:grid; place-items:center; border-radius:9px; background:#e6f4f1; color:#0f766e; font-size:18px; }
+        .review-stat h3 { margin:0; font-size:23px; font-weight:700; }
+        .review-stat p { margin:2px 0 0; color:#6b7280; font-size:12px; }
+        .review-card { padding:22px; margin-bottom:22px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+        .review-card-title { display:flex; align-items:center; gap:8px; margin-bottom:5px; font-size:16px; font-weight:700; }
+        .review-card-title i { color:#0f766e; }
+        .review-card-subtitle { margin-bottom:18px; color:#6b7280; font-size:12px; }
+        .review-toolbar { display:flex; justify-content:space-between; align-items:end; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+        .review-count { color:#64748b; white-space:nowrap; }
+        .review-filters { display:flex; align-items:end; gap:8px; flex-wrap:wrap; }
+        .review-filters .search-field { width:min(370px,42vw); }
+        .review-table { width:100%; min-width:760px; border-collapse:collapse; }
+        .review-table th { padding:12px; border-bottom:1px solid #e5e7eb; background:#f8fafc; color:#6b7280; font-size:11px; white-space:nowrap; }
+        .review-table td { padding:12px; border-bottom:1px solid #f1f1f1; vertical-align:middle; font-size:12px; }
+        .review-table tbody tr:hover { background:#f9fafb; }
+        .review-case-name { color:#172b3c; font-weight:700; }
+        .review-muted { color:#64748b; }
+        .review-actions { min-width:205px; }
+        .review-details-row td { padding:16px; background:#f8fafc; }
+        .review-details-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px 20px; }
+        .review-details-grid span { display:block; color:#64748b; font-size:11px; }
+        .review-details-grid strong { display:block; color:#1f2937; font-size:13px; white-space:pre-wrap; overflow-wrap:anywhere; }
+        .review-audit { margin-top:16px; padding:14px; border-radius:8px; background:#fff; border:1px solid #e5e7eb; }
+        .review-audit-title { margin-bottom:6px; font-weight:700; }
+        .review-empty { padding:48px 20px; color:#6b7280; text-align:center; }
+        .review-empty i { display:block; margin-bottom:12px; color:#0f766e; font-size:32px; }
+        .review-pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding-top:16px; }
+        @media (max-width:1100px) { .review-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media (max-width:700px) {
+            .review-content { padding:16px; }
+            .review-topbar { padding:12px 16px; }
+            .review-role { display:none; }
+            .review-stats { grid-template-columns:1fr; gap:10px; }
+            .review-toolbar { align-items:stretch; }
+            .review-filters { width:100%; }
+            .review-filters .search-field { width:100%; flex:1 1 100%; }
+            .review-card { padding:16px; }
+            .review-details-grid { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+{% include 'includes/role_sidebar.html' %}
+<main class="main-content">
+    <header class="review-topbar">
+        <div><h1>CHW Case Verification</h1><small>Final review of suspected dengue-case reports</small></div>
+        <div class="review-identity">
+            <div class="review-identity-text"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><span class="review-role">{{ request.user.get_role_display }}</span></div>
+            <span class="review-avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</span>
+        </div>
+    </header>
+
+    <div class="review-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <section class="review-page-title">
+            <h2>Suspected cases awaiting verification</h2>
+            <p>Review the submitted patient and location information before making the CHO’s final decision.</p>
+        </section>
+
+        <section class="review-notice">
+            <strong><i class="fa-solid fa-user-doctor"></i> CHO final decision</strong><br>
+            CHWs collect and validate case information. Only CHO can confirm or reject a submitted suspected case.
+        </section>
+
+        <section class="review-stats" aria-label="Case verification summary">
+            <button class="review-stat" type="button" data-summary-status="pending" data-bs-toggle="modal" data-bs-target="#submissionSummaryModal" aria-label="View {{ pending_count }} cases awaiting verification">
+                <span class="review-stat-icon"><i class="fa-solid fa-user-clock"></i></span><span><h3>{{ pending_count }}</h3><p>Awaiting verification</p></span>
+            </button>
+            <button class="review-stat" type="button" data-summary-status="confirmed" data-bs-toggle="modal" data-bs-target="#submissionSummaryModal" aria-label="View {{ confirmed_count }} cases confirmed by CHO">
+                <span class="review-stat-icon"><i class="fa-solid fa-user-check"></i></span><span><h3>{{ confirmed_count }}</h3><p>Confirmed by CHO</p></span>
+            </button>
+            <button class="review-stat" type="button" data-summary-status="rejected" data-bs-toggle="modal" data-bs-target="#submissionSummaryModal" aria-label="View {{ rejected_count }} cases rejected by CHO">
+                <span class="review-stat-icon"><i class="fa-solid fa-user-xmark"></i></span><span><h3>{{ rejected_count }}</h3><p>Rejected by CHO</p></span>
+            </button>
+            <button class="review-stat" type="button" data-summary-status="all" data-bs-toggle="modal" data-bs-target="#submissionSummaryModal" aria-label="View all {{ total_count }} CHW submissions">
+                <span class="review-stat-icon"><i class="fa-solid fa-folder-open"></i></span><span><h3>{{ total_count }}</h3><p>Total CHW submissions</p></span>
+            </button>
+        </section>
+
+        <div class="modal fade" id="submissionSummaryModal" tabindex="-1" aria-labelledby="submissionSummaryTitle" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div><h2 class="modal-title fs-5" id="submissionSummaryTitle">CHW submissions</h2><p class="review-muted small mb-0" id="submissionSummaryDescription">Case reports in this category.</p></div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="review-table">
+                                <thead><tr><th>Case / status</th><th>Submitted by</th><th>Age / sex / blood type</th><th>Birthdate</th><th>Barangay / purok</th><th>Reported</th><th>Location and notes</th></tr></thead>
+                                <tbody data-summary-body="pending" hidden>
+                                    {% for report in modal_pending_reports %}{% include "includes/cho_submission_summary_row.html" with report=report status_label="Awaiting verification" %}{% empty %}<tr><td colspan="7" class="review-empty">No cases are awaiting verification.</td></tr>{% endfor %}
+                                </tbody>
+                                <tbody data-summary-body="confirmed" hidden>
+                                    {% for report in modal_confirmed_reports %}{% include "includes/cho_submission_summary_row.html" with report=report status_label="Confirmed by CHO" %}{% empty %}<tr><td colspan="7" class="review-empty">No cases have been confirmed by CHO.</td></tr>{% endfor %}
+                                </tbody>
+                                <tbody data-summary-body="rejected" hidden>
+                                    {% for report in modal_rejected_reports %}{% include "includes/cho_submission_summary_row.html" with report=report status_label="Rejected by CHO" %}{% empty %}<tr><td colspan="7" class="review-empty">No cases have been rejected by CHO.</td></tr>{% endfor %}
+                                </tbody>
+                                <tbody data-summary-body="all" hidden>
+                                    {% for report in modal_pending_reports %}{% include "includes/cho_submission_summary_row.html" with report=report status_label="Awaiting verification" %}{% endfor %}
+                                    {% for report in modal_confirmed_reports %}{% include "includes/cho_submission_summary_row.html" with report=report status_label="Confirmed by CHO" %}{% endfor %}
+                                    {% for report in modal_rejected_reports %}{% include "includes/cho_submission_summary_row.html" with report=report status_label="Rejected by CHO" %}{% endfor %}
+                                    {% if not total_count %}<tr><td colspan="7" class="review-empty">No CHW submissions have been recorded.</td></tr>{% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button></div>
+                </div>
+            </div>
+        </div>
+
+        <section class="review-card">
+            <div class="review-card-title"><i class="fa-solid fa-clipboard-check"></i> Suspected Case Reports</div>
+            <div class="review-card-subtitle">CHW submissions currently awaiting a final CHO decision.</div>
+
+            <div class="review-toolbar">
+                <div class="review-count"><strong class="text-dark">{{ filtered_count }}</strong> matching pending cases</div>
+                <form method="get" class="review-filters">
+                    <div class="search-field"><label class="form-label mb-1" for="case-search">Search cases</label><input id="case-search" class="form-control" type="search" name="search" value="{{ search }}" placeholder="Case ID, CHW, barangay, location"></div>
+                    <div class="d-flex gap-2"><button class="btn btn-success" type="submit"><i class="fa-solid fa-filter"></i> Filter</button><a class="btn btn-outline-secondary" href="{% url 'cho_suspected_case_reviews' %}">Clear</a></div>
+                </form>
+            </div>
+
+            {% if reports %}
+            <div class="table-responsive">
+                <table class="review-table">
+                    <thead><tr><th>Case</th><th>Submitted by</th><th>Age / sex</th><th>Barangay / purok</th><th>Date reported</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for report in reports %}
+                        <tr>
+                            <td><span class="review-case-name">#{{ report.dengue_case_id }}</span><br><span class="badge bg-warning text-dark mt-1">Awaiting verification</span></td>
+                            <td><span class="review-case-name">{{ report.user_account.get_full_name|default:report.user_account.username }}</span><br><span class="review-muted">{{ report.user_account.username }}</span></td>
+                            <td>{{ report.patient_age }} / {{ report.patient_sex }}</td>
+                            <td>{{ report.barangay.barangay_name|default:"Not provided" }}{% if report.purok %}<br><span class="review-muted">{{ report.purok.purok_name }}</span>{% endif %}</td>
+                            <td>{{ report.date_reported|date:"M d, Y" }}</td>
+                            <td class="review-actions"><button class="btn btn-outline-primary btn-sm" type="button" aria-expanded="false" aria-controls="case-details-{{ report.pk }}" onclick="toggleCaseDetails(this, 'case-details-{{ report.pk }}')"><i class="fa-solid fa-eye"></i> View details</button></td>
+                        </tr>
+                        <tr id="case-details-{{ report.pk }}" class="review-details-row" hidden>
+                            <td colspan="6">
+                                <div class="review-details-grid">
+                                    <div><span>Case ID</span><strong>#{{ report.dengue_case_id }}</strong></div>
+                                    <div><span>Patient age / sex</span><strong>{{ report.patient_age }} / {{ report.patient_sex }}</strong></div>
+                                    <div><span>Birthdate</span><strong>{{ report.patient_birth_date|date:"M d, Y"|default:"Not provided" }}</strong></div>
+                                    <div><span>Blood type</span><strong>{{ report.patient_blood_type|default:"Not reported" }}</strong></div>
+                                    <div><span>Barangay</span><strong>{{ report.barangay.barangay_name|default:"Not provided" }}</strong></div>
+                                    <div><span>Purok / sitio</span><strong>{{ report.purok.purok_name|default:"Not provided" }}</strong></div>
+                                    <div><span>Exact location / landmark</span><strong>{{ report.location_details|default:"Not provided" }}</strong></div>
+                                    <div><span>CHW notes</span><strong>{{ report.remarks|default:"None provided" }}</strong></div>
+                                    <div><span>Date reported</span><strong>{{ report.date_reported|date:"M d, Y" }}</strong></div>
+                                </div>
+                                <div class="review-audit">
+                                    <div class="review-audit-title">Audit trail</div>
+                                    {% for audit in report.audit_logs.all %}
+                                        <div class="review-muted mt-1">{{ audit.created_at|date:"M d, Y g:i a" }} · {{ audit.get_action_display }} by {{ audit.actor.get_full_name|default:audit.actor.username|default:"System" }}{% if audit.details %}: {{ audit.details }}{% endif %}</div>
+                                    {% empty %}
+                                        <div class="review-muted">No audit events recorded.</div>
+                                    {% endfor %}
+                                </div>
+                                <form method="post" action="{% url 'review_chw_case_report' report.dengue_case_id %}" class="d-flex flex-wrap gap-2 mt-3">
+                                    {% csrf_token %}
+                                    <button class="btn btn-success" name="decision" value="Confirmed" onclick="return confirm('Confirm suspected case #{{ report.dengue_case_id }}?')"><i class="fa-solid fa-check"></i> Confirm case</button>
+                                    <button class="btn btn-danger" name="decision" value="Rejected" onclick="return confirm('Reject suspected case #{{ report.dengue_case_id }}?')"><i class="fa-solid fa-xmark"></i> Reject case</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div class="review-empty"><i class="fa-solid fa-clipboard-check"></i><strong>No pending case reports found</strong><div>{% if search %}Try a different search term or clear the filter.{% else %}There are no CHW-submitted cases awaiting CHO verification.{% endif %}</div></div>
+            {% endif %}
+
+            {% if reports_page.paginator.num_pages > 1 %}
+            <nav class="review-pagination" aria-label="Case report pages">
+                <span class="review-count">Showing {{ reports_page.start_index }}–{{ reports_page.end_index }} of {{ filtered_count }}</span>
+                <div class="btn-group" role="group" aria-label="Pagination controls">
+                    {% if reports_page.has_previous %}<a class="btn btn-outline-secondary btn-sm" href="?{% if search %}search={{ search|urlencode }}&amp;{% endif %}page={{ reports_page.previous_page_number }}"><i class="fa-solid fa-chevron-left"></i> Previous</a>{% else %}<span class="btn btn-outline-secondary btn-sm disabled">Previous</span>{% endif %}
+                    <span class="btn btn-light btn-sm disabled">Page {{ reports_page.number }} of {{ reports_page.paginator.num_pages }}</span>
+                    {% if reports_page.has_next %}<a class="btn btn-outline-secondary btn-sm" href="?{% if search %}search={{ search|urlencode }}&amp;{% endif %}page={{ reports_page.next_page_number }}">Next <i class="fa-solid fa-chevron-right"></i></a>{% else %}<span class="btn btn-outline-secondary btn-sm disabled">Next</span>{% endif %}
+                </div>
+            </nav>
+            {% endif %}
+        </section>
+    </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const summaryTitles = {
+        pending: ['Awaiting verification', 'CHW case reports waiting for a final CHO decision.'],
+        confirmed: ['Confirmed by CHO', 'Case reports confirmed by CHO.'],
+        rejected: ['Rejected by CHO', 'Case reports rejected by CHO.'],
+        all: ['All CHW submissions', 'Every CHW case report, including its current review status.']
+    };
+    document.querySelectorAll('[data-summary-status]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const status = button.dataset.summaryStatus;
+            const [title, description] = summaryTitles[status] || summaryTitles.all;
+            document.getElementById('submissionSummaryTitle').textContent = title;
+            document.getElementById('submissionSummaryDescription').textContent = description;
+            document.querySelectorAll('[data-summary-body]').forEach((body) => {
+                body.hidden = body.dataset.summaryBody !== status;
+            });
+        });
+    });
+
+    function toggleCaseDetails(button, rowId) {
+        const row = document.getElementById(rowId);
+        if (!row) return;
+        row.hidden = !row.hidden;
+        button.setAttribute('aria-expanded', String(!row.hidden));
+    }
+</script>
+</body>
+</html>

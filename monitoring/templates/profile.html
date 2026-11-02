@@ -1,919 +1,122 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>DengueWatch | My Profile</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="{% static 'css/style.css' %}"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | DengueWatch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-
-        body {
-            margin: 0;
-            background: #f4f7f9;
-            font-family: "Segoe UI", Arial, sans-serif;
-            color: #1f2937;
-        }
-
-
-        .profile-wrapper {
-            min-height: 100vh;
-            display: flex;
-        }
-
-
-        /* =========================================
-           SIDEBAR
-        ========================================= */
-
-        .sidebar {
-            width: 260px;
-            min-height: 100vh;
-            background: #0f766e;
-            color: white;
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            padding: 25px 18px;
-            z-index: 1000;
-        }
-
-
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px 25px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            margin-bottom: 25px;
-        }
-
-
-        .sidebar-brand i {
-            font-size: 32px;
-        }
-
-
-        .sidebar-brand h4 {
-            margin: 0;
-            font-weight: 700;
-        }
-
-
-        .sidebar-brand small {
-            font-size: 11px;
-            opacity: 0.75;
-        }
-
-
-        .nav-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.65;
-            margin: 20px 12px 8px;
-        }
-
-
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: white;
-            text-decoration: none;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-
-        .sidebar a:hover {
-            background: rgba(255,255,255,0.12);
-        }
-
-
-        .sidebar a.active {
-            background: rgba(255,255,255,0.20);
-        }
-
-
-        .sidebar a i {
-            width: 20px;
-            text-align: center;
-        }
-
-
-        .logout-link {
-            margin-top: 25px;
-            border-top: 1px solid rgba(255,255,255,0.2);
-            padding-top: 20px !important;
-        }
-
-
-        /* =========================================
-           MAIN
-        ========================================= */
-
-        .main-content {
-            margin-left: 260px;
-            width: calc(100% - 260px);
-        }
-
-
-        /* =========================================
-           TOPBAR
-        ========================================= */
-
-        .topbar {
-            height: 75px;
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 30px;
-        }
-
-
-        .topbar h4 {
-            margin: 0;
-            font-weight: 700;
-        }
-
-
-        .topbar small {
-            color: #6b7280;
-        }
-
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-
-        .role-badge {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-
-        .top-profile-picture {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #d1fae5;
-        }
-
-
-        .default-user-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: #e6f4f1;
-            color: #0f766e;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-
-        /* =========================================
-           CONTENT
-        ========================================= */
-
-        .content {
-            padding: 30px;
-        }
-
-
-        .profile-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 1000px;
-            margin: auto;
-        }
-
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-            padding-bottom: 25px;
-            margin-bottom: 25px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-
-        .profile-picture {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #d1fae5;
-        }
-
-
-        .default-profile {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: #e6f4f1;
-            color: #0f766e;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 45px;
-        }
-
-
-        .profile-name {
-            margin: 0;
-            font-weight: 700;
-        }
-
-
-        .profile-role {
-            color: #0f766e;
-            font-weight: 600;
-        }
-
-
-        .section-title {
-            font-size: 17px;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-
-
-        .form-label {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-
-        /* =========================================
-           BUTTONS
-        ========================================= */
-
-        .btn-save {
-            background: #0f766e;
-            color: white;
-            border: none;
-            padding: 11px 22px;
-            border-radius: 8px;
-        }
-
-
-        .btn-save:hover {
-            background: #115e59;
-            color: white;
-        }
-
-
-        .btn-clear {
-            background: #dc2626;
-            color: white;
-            border: none;
-            padding: 11px 22px;
-            border-radius: 8px;
-        }
-
-
-        .btn-clear:hover {
-            background: #b91c1c;
-            color: white;
-        }
-
-
-        .picture-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-
-
-        .picture-help {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 7px;
-        }
-
-
-        /* =========================================
-           RESPONSIVE
-        ========================================= */
-
-        @media (max-width: 768px) {
-
-            .sidebar {
-                position: relative;
-                width: 100%;
-                min-height: auto;
-            }
-
-            .main-content {
-                margin-left: 0;
-                width: 100%;
-            }
-
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-            }
-
-        }
-
+        * { box-sizing:border-box; }
+        body { margin:0; font-family:"Segoe UI",Arial,sans-serif; background:#f4f7f9; color:#1f2937; }
+        .review-topbar { min-height:75px; background:#fff; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 28px; }
+        .review-topbar h1 { margin:0; font-size:20px; font-weight:700; }
+        .review-topbar small { color:#6b7280; }
+        .review-identity { display:flex; align-items:center; gap:12px; }
+        .review-identity-text { text-align:right; line-height:1.15; }
+        .review-identity-text strong { display:block; font-size:14px; }
+        .review-role { color:#0f766e; background:#e6f4f1; padding:5px 10px; border-radius:20px; font-size:11px; }
+        .review-avatar { width:40px; height:40px; display:grid; place-items:center; border-radius:50%; color:#0f766e; background:#e6f4f1; border:1px solid #cbe7df; font-weight:700; overflow:hidden; }
+        .review-avatar img { width:100%; height:100%; object-fit:cover; }
+        .review-content { padding:28px; }
+        .review-page-title { margin-bottom:22px; }
+        .review-page-title h2 { margin:0 0 5px; font-size:24px; font-weight:700; }
+        .review-page-title p { margin:0; color:#6b7280; font-size:13px; }
+        .review-notice { padding:15px 18px; margin-bottom:22px; border-left:4px solid #0f766e; border-radius:8px; background:#e6f4f1; font-size:13px; }
+        .review-notice strong { color:#0f766e; }
+        .review-card { max-width:1100px; margin:0 auto 22px; padding:24px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+        .profile-heading { display:flex; align-items:center; gap:20px; padding-bottom:22px; margin-bottom:22px; border-bottom:1px solid #e5e7eb; }
+        .profile-photo { width:100px; height:100px; flex:0 0 100px; border-radius:50%; object-fit:cover; border:4px solid #e6f4f1; }
+        .profile-placeholder { display:grid; place-items:center; background:#e6f4f1; color:#0f766e; font-size:36px; }
+        .profile-heading h3 { margin:0 0 3px; font-size:25px; font-weight:700; }
+        .profile-heading .profile-role-name { color:#0f766e; font-weight:600; }
+        .profile-section-title { display:flex; align-items:center; gap:9px; margin:0 0 18px; font-size:16px; font-weight:700; }
+        .profile-section-title i { color:#0f766e; }
+        .form-label { font-size:13px; font-weight:600; }
+        .form-control { border-color:#d7dee7; }
+        .profile-help { margin-top:7px; color:#64748b; font-size:12px; }
+        .review-notice.alert { margin-bottom:18px; }
+        @media(max-width:700px) { .review-topbar { padding:12px 16px; } .review-content { padding:16px; } .review-role { display:none; } .review-card { padding:17px; } .profile-heading { gap:14px; } .profile-photo { width:76px; height:76px; flex-basis:76px; } .profile-heading h3 { font-size:20px; } }
     </style>
-
 </head>
-
-
 <body>
-
-
-<div class="profile-wrapper">
-
-
-    <!-- =========================================
-         SIDEBAR
-    ========================================== -->
-
-    {% include 'includes/role_sidebar.html' %}
-
-
-
-    <!-- =========================================
-         MAIN CONTENT
-    ========================================== -->
-
-    <main class="main-content">
-
-
-        <!-- TOPBAR -->
-
-        <header class="topbar">
-
-            <div>
-
-                <h4>
-                    My Profile
-                </h4>
-
-                <small>
-                    DengueWatch Monitoring System
-                </small>
-
-            </div>
-
-
-            <div class="user-info">
-
-                <span class="role-badge">
-
-                    {{ current_user_name }}{% if current_user_role %} · {{ current_user_role }}{% endif %}
-
-                </span>
-
-
-                {% if user.profile_picture %}
-
-                    <img
-                        src="{{ user.profile_picture.url }}"
-                        class="top-profile-picture"
-                        alt="Profile Picture"
-                    >
-
-                {% else %}
-
-                    <div class="default-user-icon">
-
-                        <i class="fa-solid fa-user"></i>
-
-                    </div>
-
-                {% endif %}
-
-            </div>
-
-        </header>
-
-
-
-        <!-- CONTENT -->
-
-        <div class="content">
-
-
-            <!-- MESSAGES -->
-
-            {% if messages %}
-
-                {% for message in messages %}
-
-                    <div
-                        class="alert alert-{{ message.tags }} alert-dismissible fade show"
-                        role="alert"
-                    >
-
-                        {{ message }}
-
-                        <button
-                            type="button"
-                            class="btn-close"
-                            data-bs-dismiss="alert"
-                        ></button>
-
-                    </div>
-
-                {% endfor %}
-
-            {% endif %}
-
-
-
-            <div class="profile-card">
-
-
-                <!-- =========================================
-                     PROFILE HEADER
-                ========================================== -->
-
-                <div class="profile-header">
-
-
-                    {% if user.profile_picture %}
-
-                        <img
-                            id="profilePreview"
-                            src="{{ user.profile_picture.url }}"
-                            class="profile-picture"
-                            alt="Profile Picture"
-                        >
-
-                    {% else %}
-
-                        <div
-                            id="defaultProfileIcon"
-                            class="default-profile"
-                        >
-
-                            <i class="fa-solid fa-user"></i>
-
-                        </div>
-
-                        <img
-                            id="profilePreview"
-                            class="profile-picture"
-                            alt="Profile Picture"
-                            style="display:none;"
-                        >
-
-                    {% endif %}
-
-
-                    <div>
-
-                        <h2 class="profile-name">
-
-                            {{ user.first_name }}
-                            {{ user.last_name }}
-
-                        </h2>
-
-                        <div class="profile-role">
-
-                            {{ user.role }}
-
-                        </div>
-
-                        <div class="text-muted">
-
-                            @{{ user.username }}
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-
-                <!-- =========================================
-                     PROFILE FORM
-                ========================================== -->
-
-                <form
-                    method="POST"
-                    enctype="multipart/form-data"
-                >
-
-                    {% csrf_token %}
-
-
-                    <h5 class="section-title">
-
-                        <i class="fa-solid fa-user me-2"></i>
-
-                        Personal Information
-
-                    </h5>
-
-
-                    <div class="row g-3">
-
-
-                        <!-- FIRST NAME -->
-
-                        <div class="col-md-6">
-
-                            <label class="form-label">
-
-                                First Name
-
-                            </label>
-
-                            <input
-                                type="text"
-                                name="first_name"
-                                class="form-control"
-                                value="{{ user.first_name }}"
-                            >
-
-                        </div>
-
-
-
-                        <!-- LAST NAME -->
-
-                        <div class="col-md-6">
-
-                            <label class="form-label">
-
-                                Last Name
-
-                            </label>
-
-                            <input
-                                type="text"
-                                name="last_name"
-                                class="form-control"
-                                value="{{ user.last_name }}"
-                            >
-
-                        </div>
-
-
-                        <!-- EMAIL -->
-
-                        <div class="col-md-6">
-
-                            <label class="form-label">
-
-                                Email
-
-                            </label>
-
-                            <input
-                                type="email"
-                                name="email"
-                                class="form-control"
-                                value="{{ user.email }}"
-                            >
-
-                        </div>
-
-
-                        <!-- CONTACT -->
-
-                        <div class="col-md-6">
-
-                            <label class="form-label">
-
-                                Contact Number
-
-                            </label>
-
-                            <input
-                                type="text"
-                                name="contact_number"
-                                class="form-control"
-                                value="{{ user.contact_number }}"
-                            >
-
-                        </div>
-
-
-                        <!-- ADDRESS -->
-
-                        <div class="col-12">
-
-                            <label class="form-label">
-
-                                Address
-
-                            </label>
-
-                            <textarea
-                                name="address"
-                                class="form-control"
-                                rows="3"
-                            >{{ user.address }}</textarea>
-
-                        </div>
-
-
-                        <!-- =================================
-                             PROFILE PICTURE
-                        ================================== -->
-
-                        <div class="col-12">
-
-                            <label class="form-label">
-
-                                <i class="fa-solid fa-camera me-1"></i>
-
-                                Profile Picture
-
-                            </label>
-
-
-                            <input
-                                id="profilePictureInput"
-                                type="file"
-                                name="profile_picture"
-                                class="form-control"
-                                accept="image/jpeg,image/png,image/jpg,image/webp"
-                            >
-
-
-                            <div class="picture-help">
-
-                                You can upload a JPG, JPEG, PNG, or
-                                WEBP image.
-
-                            </div>
-
-
-                            <div class="picture-actions">
-
-
-                                <!-- SAVE / UPDATE -->
-
-                                <button
-                                    type="submit"
-                                    class="btn btn-save"
-                                >
-
-                                    <i
-                                        class="fa-solid fa-save me-2"
-                                    ></i>
-
-                                    Save Changes
-
-                                </button>
-
-
-                            </div>
-
-                        </div>
-
-
-                    </div>
-
-
-                </form>
-
-
-
-                <!-- =========================================
-                     CLEAR PROFILE PICTURE
-                ========================================== -->
-
-                {% if user.profile_picture %}
-
-                    <div
-                        class="mt-4 pt-4"
-                        style="
-                            border-top:1px solid #e5e7eb;
-                        "
-                    >
-
-                        <h5
-                            class="section-title"
-                            style="font-size:15px;"
-                        >
-
-                            <i
-                                class="fa-solid fa-image me-2"
-                            ></i>
-
-                            Profile Picture Settings
-
-                        </h5>
-
-
-                        <p
-                            class="text-muted"
-                            style="
-                                font-size:13px;
-                            "
-                        >
-
-                            If you clear your profile picture,
-                            your account will use the default
-                            user icon instead.
-
-                        </p>
-
-
-                        <form
-                            method="POST"
-                            onsubmit="
-                                return confirm(
-                                    'Are you sure you want to clear your profile picture?'
-                                );
-                            "
-                        >
-
-                            {% csrf_token %}
-
-                            <input
-                                type="hidden"
-                                name="clear_profile_picture"
-                                value="1"
-                            >
-
-
-                            <button
-                                type="submit"
-                                class="btn btn-clear"
-                            >
-
-                                <i
-                                    class="fa-solid fa-trash me-2"
-                                ></i>
-
-                                Clear Profile Picture
-
-                            </button>
-
-                        </form>
-
-                    </div>
-
-                {% endif %}
-
-
-            </div>
-
+{% include 'includes/role_sidebar.html' %}
+<main class="main-content">
+    <header class="review-topbar">
+        <div><h1>My Profile</h1><small>DengueWatch account information</small></div>
+        <div class="review-identity">
+            <div class="review-identity-text"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><span class="review-role">{{ request.user.get_role_display }}</span></div>
+            <span class="review-avatar" aria-hidden="true">{% if user.profile_picture %}<img src="{{ user.profile_picture.url }}" alt="">{% else %}{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}{% endif %}</span>
         </div>
+    </header>
 
-    </main>
+    <div class="review-content">
+        {% if messages %}{% for message in messages %}<div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>{% endfor %}{% endif %}
+        <section class="review-page-title">
+            <h2>Account profile</h2>
+            <p>View and update your contact information and profile picture.</p>
+        </section>
+        <section class="review-notice">
+            <strong><i class="fa-solid fa-user-shield"></i> Your account</strong><br>
+            Keep your contact details current so your organization can reach you about DengueWatch activities.
+        </section>
 
-</div>
+        <section class="review-card">
+            <div class="profile-heading">
+                {% if user.profile_picture %}<img id="profilePreview" src="{{ user.profile_picture.url }}" class="profile-photo" alt="Profile picture">
+                {% else %}<div id="defaultProfileIcon" class="profile-photo profile-placeholder"><i class="fa-solid fa-user"></i></div><img id="profilePreview" class="profile-photo" alt="Profile picture preview" style="display:none">{% endif %}
+                <div>
+                    <h3>{{ user.get_full_name|default:user.username }}</h3>
+                    <div class="profile-role-name">{{ user.get_role_display|default:user.role }}</div>
+                    <div class="text-muted">@{{ user.username }}</div>
+                </div>
+            </div>
 
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <h4 class="profile-section-title"><i class="fa-solid fa-user"></i> Personal Information</h4>
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label" for="first-name">First Name</label><input id="first-name" type="text" name="first_name" class="form-control" value="{{ user.first_name }}"></div>
+                    <div class="col-md-6"><label class="form-label" for="last-name">Last Name</label><input id="last-name" type="text" name="last_name" class="form-control" value="{{ user.last_name }}"></div>
+                    <div class="col-md-6"><label class="form-label" for="email">Email</label><input id="email" type="email" name="email" class="form-control" value="{{ user.email }}"></div>
+                    <div class="col-md-6"><label class="form-label" for="contact-number">Contact Number</label><input id="contact-number" type="text" name="contact_number" class="form-control" value="{{ user.contact_number }}"></div>
+                    <div class="col-12"><label class="form-label" for="address">Address</label><textarea id="address" name="address" class="form-control" rows="3">{{ user.address }}</textarea></div>
+                    <div class="col-12">
+                        <label class="form-label" for="profilePictureInput"><i class="fa-solid fa-camera me-1"></i> Profile Picture</label>
+                        <input id="profilePictureInput" type="file" name="profile_picture" class="form-control" accept="image/jpeg,image/png,image/jpg,image/webp">
+                        <div class="profile-help">You can upload a JPG, JPEG, PNG, or WEBP image.</div>
+                    </div>
+                    <div class="col-12"><button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button></div>
+                </div>
+            </form>
 
-
-<!-- =========================================
-     BOOTSTRAP JS
-========================================= -->
-
-<script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-></script>
-
-
-
-<!-- =========================================
-     PROFILE PICTURE PREVIEW
-========================================= -->
-
+            {% if user.profile_picture %}
+            <div class="mt-4 pt-4 border-top">
+                <h4 class="profile-section-title"><i class="fa-solid fa-image"></i> Profile Picture Settings</h4>
+                <p class="text-muted small">Clear your picture to use the default profile icon.</p>
+                <form method="post" onsubmit="return confirm('Are you sure you want to clear your profile picture?');">
+                    {% csrf_token %}<input type="hidden" name="clear_profile_picture" value="1">
+                    <button type="submit" class="btn btn-outline-danger"><i class="fa-solid fa-trash me-2"></i>Clear Profile Picture</button>
+                </form>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-
-    const profileInput =
-        document.getElementById(
-            "profilePictureInput"
-        );
-
-    const profilePreview =
-        document.getElementById(
-            "profilePreview"
-        );
-
-    const defaultProfileIcon =
-        document.getElementById(
-            "defaultProfileIcon"
-        );
-
-
-    if (profileInput) {
-
-        profileInput.addEventListener(
-            "change",
-            function(event) {
-
-                const file =
-                    event.target.files[0];
-
-
-                if (!file) {
-
-                    return;
-
-                }
-
-
-                /*
-                 * Make sure the selected file
-                 * is an image.
-                 */
-
-                if (!file.type.startsWith("image/")) {
-
-                    alert(
-                        "Please select an image file."
-                    );
-
-                    profileInput.value = "";
-
-                    return;
-
-                }
-
-
-                /*
-                 * Preview selected image.
-                 */
-
-                const reader =
-                    new FileReader();
-
-
-                reader.onload =
-                    function(e) {
-
-                        if (profilePreview) {
-
-                            profilePreview.src =
-                                e.target.result;
-
-                            profilePreview.style.display =
-                                "block";
-
-                        }
-
-
-                        if (defaultProfileIcon) {
-
-                            defaultProfileIcon.style.display =
-                                "none";
-
-                        }
-
-                    };
-
-
-                reader.readAsDataURL(file);
-
-            }
-        );
-
-    }
-
+    const profileInput = document.getElementById('profilePictureInput');
+    const profilePreview = document.getElementById('profilePreview');
+    const defaultProfileIcon = document.getElementById('defaultProfileIcon');
+    if (profileInput) profileInput.addEventListener('change', event => {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) { alert('Please select an image file.'); profileInput.value = ''; return; }
+        const reader = new FileReader();
+        reader.onload = e => { profilePreview.src = e.target.result; profilePreview.style.display = 'block'; if (defaultProfileIcon) defaultProfileIcon.style.display = 'none'; };
+        reader.readAsDataURL(file);
+    });
 </script>
-
-
 </body>
-
 </html>

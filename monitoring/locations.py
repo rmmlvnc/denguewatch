@@ -27,6 +27,7 @@ _ALIASES = {
     "sta elena": "Santa Elena",
     "villa verde": "Villa Verde",
     "villaverde": "Villa Verde",
+    "tomas cabili": "Tomas L. Cabili",
 }
 
 
@@ -34,3 +35,8 @@ def canonicalize_barangay(value: object) -> str | None:
     """Return an official name, or None for an out-of-scope/unknown location."""
     key = _key(value)
     return _ALIASES.get(key) or _CANONICAL.get(key)
+
+
+def is_iligan_city(value: object) -> bool:
+    """Return whether a source city value identifies Iligan City."""
+    return _key(value) in {"iligan", "iligan city", "city of iligan"}

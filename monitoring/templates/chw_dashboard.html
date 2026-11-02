@@ -1167,8 +1167,7 @@
 
                         <p>
 
-                            View predicted dengue hotspot
-                            locations in monitored areas.
+                            Explore historical dengue case levels across Iligan City barangays.
 
                         </p>
 
@@ -1176,7 +1175,7 @@
 
 
                     <a
-                        href="#"
+                        href="{% url 'hotspot_map' %}"
                         class="btn btn-sm btn-outline-success"
                     >
 
@@ -1197,19 +1196,23 @@
 
 
                     <h6>
-                        GIS Hotspot Map
+                        Interactive Iligan City Hotspot Map
                     </h6>
 
 
                     <p>
 
-                        The Google Maps / GIS integration
-                        will display dengue hotspot locations,
-                        barangays, puroks, and their
-                        corresponding risk levels here.
+                        Open the map to filter historical records by year and risk level,
+                        select barangays, and review reported sitio, purok, and street counts.
 
                     </p>
 
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="{% url 'hotspot_map' %}" class="btn btn-outline-success">
+                        <i class="fa-solid fa-map-location-dot"></i> Explore hotspot map
+                    </a>
                 </div>
 
 

@@ -19,24 +19,46 @@ def clean(source: Path, output: Path) -> pd.DataFrame:
     data = pd.read_csv(source)
     data["barangay"] = data["barangay"].map(canonicalize_barangay)
     data = data.dropna(subset=["barangay", "year", "month"])
-    data["case_count"] = pd.to_numeric(data["case_count"], errors="coerce").fillna(0)
+    data["case_count"] = pd.to_numeric(data["case_count"], errors="coerce")
     for column in BLOOD_TYPE_COLUMNS:
         if column not in data:
             data[column] = 0.0
         data[column] = pd.to_numeric(data[column], errors="coerce").fillna(0.0)
 
-    cases = data.groupby(["barangay", "year", "month"], as_index=False)["case_count"].sum()
-    weather = data.groupby(["year", "month"], as_index=False).agg(
-        rainfall_mm=("rainfall_mm", "median"),
-        temperature_c=("temperature_c", "median"),
-        humidity_pct=("humidity_pct", "median"),
+    data["_has_case_rows"] = (
+        data["case_observation_status"].eq("cases_present_line_list_count")
+        if "case_observation_status" in data
+        else data["case_count"].gt(0)
     )
+    cases = data.groupby(["barangay", "year", "month"], as_index=False).agg(
+        case_count=("case_count", lambda values: values.sum(min_count=1)),
+        _has_case_rows=("_has_case_rows", "any"),
+    )
+    weather_columns = {
+        "rainfall_mm": ("rainfall_mm", "median"),
+        "temperature_c": ("temperature_c", "median"),
+        "humidity_pct": ("humidity_pct", "median"),
+    }
+    for column in (
+        "weather_observation_status", "weather_days", "temperature_days",
+        "rainfall_days", "humidity_days", "requested_latitude",
+        "requested_longitude", "grid_latitude", "grid_longitude",
+    ):
+        if column in data:
+            weather_columns[column] = (column, "first")
+    # Keep the weather grain barangay-month; aggregating only by month would
+    # collapse the per-barangay archive values back to one citywide value.
+    weather = data.groupby(["barangay", "year", "month"], as_index=False).agg(**weather_columns)
     periods = weather[["year", "month"]].drop_duplicates()
     barangays = pd.DataFrame({"barangay": ILIGAN_BARANGAYS})
     grid = barangays.merge(periods, how="cross")
     result = grid.merge(cases, how="left", on=["barangay", "year", "month"])
-    result = result.merge(weather, how="left", on=["year", "month"])
+    result = result.merge(weather, how="left", on=["barangay", "year", "month"])
     result["case_count"] = result["case_count"].fillna(0).astype(int)
+    result["case_observation_status"] = result["_has_case_rows"].fillna(False).map(
+        {True: "cases_present_line_list_count", False: "no_records_zero_vs_missing_unverified"}
+    )
+    result = result.drop(columns=["_has_case_rows"])
     blood = data.groupby(["barangay", "year", "month"], as_index=False)[BLOOD_TYPE_COLUMNS].mean()
     result = result.merge(blood, how="left", on=["barangay", "year", "month"])
     result[BLOOD_TYPE_COLUMNS] = result[BLOOD_TYPE_COLUMNS].fillna(0.0)

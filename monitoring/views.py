@@ -6,7 +6,7 @@ import csv
 import json
 import re
 
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from collections import Counter
 
@@ -16,15 +16,19 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
+from django.core.mail import EmailMultiAlternatives
 from django.core.paginator import Paginator
-from django.db.models import Count
-from django.http import HttpResponse
+from django.db import transaction
+from django.db.models import Count, OuterRef, Q, Subquery, Sum
+from django.http import Http404, HttpResponse, JsonResponse
 from django.utils import timezone
-from django.views.decorators.http import require_GET
+from django.utils.html import escape
+from django.views.decorators.http import require_GET, require_POST
 
 from .models import (
     UserAccount,
     DengueCase,
+    DengueDatasetRecordOverride,
     Barangay,
     Purok,
     CommunityReport,
@@ -32,9 +36,10 @@ from .models import (
     SystemNotification,
     notify_user,
     log_report_action,
+    ReportAuditLog,
 )
 from .ml.service import prediction_context
-from .locations import ILIGAN_BARANGAYS, canonicalize_barangay
+from .locations import ILIGAN_BARANGAYS, canonicalize_barangay, is_iligan_city
 
 
 # =========================================================
@@ -70,6 +75,14 @@ def role_required(*allowed_roles):
                 )
 
                 return redirect('dashboard')
+
+            if user_role == 'CHO' and not getattr(request.user, 'email_verified', False):
+                messages.warning(
+                    request,
+                    'Verify your email address before using CHO administration features. '
+                    'Use the resend verification link if you need a new email.',
+                )
+                return redirect('resend_verification')
 
             return view_func(
                 request,
@@ -265,7 +278,7 @@ def register(request):
         # CREATE ACCOUNT
         # -------------------------------------------------
 
-        UserAccount.objects.create(
+        user = UserAccount.objects.create(
 
             username=username,
 
@@ -283,6 +296,10 @@ def register(request):
 
             account_status='PENDING',
 
+            # CHO self-registration is email-verified by this workflow; access
+            # still remains disabled until an administrator approves the account.
+            email_verified=(role == 'CHO'),
+
             password=make_password(
                 password1
             ),
@@ -290,12 +307,20 @@ def register(request):
             is_active=False
         )
 
-        messages.success(
-            request,
-            'Registration submitted successfully. '
-            'Your account is now pending approval '
-            'by the City Health Office.'
-        )
+        if role == 'CHO':
+            messages.success(
+                request,
+                'CHO account email marked as verified. The account remains pending administrator approval before sign-in is allowed.',
+            )
+        else:
+            # Other staff accounts must confirm email ownership before approval.
+            from .api import _send_email_verification
+            verification_sent = _send_email_verification(user, request)
+
+            if verification_sent:
+                messages.success(request, 'Registration submitted. Check your email and verify your address; CHO approval follows verification.')
+            else:
+                messages.warning(request, 'Registration was saved, but the verification email could not be sent. Resend it below or contact the system administrator.')
 
         return redirect('login')
 
@@ -303,6 +328,22 @@ def register(request):
         request,
         'register.html'
     )
+
+
+def resend_verification(request):
+    """Send a fresh verification link without disclosing whether an account exists."""
+    if request.method == 'POST':
+        if not settings.EMAIL_DELIVERY_ENABLED:
+            messages.error(request, 'DengueWatch email delivery is not configured on this server yet. Contact the system administrator.')
+            return render(request, 'resend_verification.html')
+        email = request.POST.get('email', '').strip()
+        user = UserAccount.objects.filter(email__iexact=email).exclude(role='RESIDENT').first()
+        if user and not user.email_verified:
+            from .api import _send_email_verification
+            _send_email_verification(user, request)
+        messages.info(request, 'If that address belongs to an unverified DengueWatch staff account, a verification email has been sent.')
+        return redirect('login')
+    return render(request, 'resend_verification.html')
 
 
 # =========================================================
@@ -333,11 +374,48 @@ def login_view(request):
             password=password
         )
 
+        # Allow the registered email as an alternative sign-in identifier.
+        # Django's default backend authenticates by username, so resolve the
+        # email to its account username first.
+        account = UserAccount.objects.filter(
+            Q(username__iexact=username) | Q(email__iexact=username)
+        ).order_by('pk').first() if username else None
+        if user is None and account and account.email and account.email.casefold() == username.casefold():
+            user = authenticate(
+                request,
+                username=account.username,
+                password=password,
+            )
+
         if user is None:
+
+            # Django's ModelBackend intentionally returns None for inactive
+            # users. Check a matching account's password only to show its real
+            # verification/approval state; never create a session here.
+            if account and account.check_password(password):
+                if not account.email_verified:
+                    messages.error(
+                        request,
+                        'Your password is correct, but this account must verify its registered email before continuing. '
+                        'Use “Resend staff email verification” if the message is missing.',
+                    )
+                elif account.account_status == 'PENDING':
+                    messages.warning(
+                        request,
+                        'Your email and password are correct, but this account is still pending CHO approval.',
+                    )
+                elif account.account_status == 'REJECTED':
+                    messages.error(request, 'This registration request was rejected.')
+                else:
+                    messages.error(
+                        request,
+                        'This account is disabled. Ask a DengueWatch administrator to review its access.',
+                    )
+                return render(request, 'login.html')
 
             messages.error(
                 request,
-                'Invalid username or password.'
+                'No account matched that username or email and password. You can sign in with either your username or registered email.'
             )
 
             return render(
@@ -359,6 +437,17 @@ def login_view(request):
                 request,
                 'login.html'
             )
+
+        # A CHO account must prove control of its registered email before
+        # entering the admin system, even if an account was previously marked
+        # approved by an older workflow.
+        if user.role == 'CHO' and not user.email_verified:
+            messages.error(
+                request,
+                'This CHO account cannot continue until its email address is verified. '
+                'Open the verification link sent by DengueWatch, or use “Resend staff email verification”.',
+            )
+            return render(request, 'login.html')
 
         # -------------------------------------------------
         # ACCOUNT STATUS
@@ -575,6 +664,8 @@ def cho_dashboard(request):
 
         'total_cases':
             total_cases,
+
+        'dataset_quality': _dataset_quality_summary(),
 
         'current_year_cases':
             current_year_cases,
@@ -1058,12 +1149,15 @@ def load_dengue_cases():
     )
 
     cases_data = []
+    dataset_overrides = {
+        override.source_record_id: override
+        for override in DengueDatasetRecordOverride.objects.all()
+    }
 
-    # Only patient-level source exports belong here. Generated ML datasets
-    # (for example integrated_monthly.csv) must never be counted as cases.
-    csv_files = sorted(
-        dataset_folder.glob('WILBUR_DSO_dengue_*.csv')
-    )
+    # Use only the uploaded CHO master dataset. Other CSV/XLSX files in the
+    # datasets folder are archived references and are never fallback inputs.
+    authoritative = dataset_folder / 'WILBUR_DSO_dengue_2018_2026_authoritative.csv'
+    csv_files = [authoritative] if authoritative.is_file() else []
 
     case_id = 1
 
@@ -1083,6 +1177,11 @@ def load_dengue_cases():
                 )
 
                 for row in reader:
+
+                    override = dataset_overrides.get(case_id)
+                    if override and override.is_deleted:
+                        case_id += 1
+                        continue
 
                     # -----------------------------------------
                     # SEX
@@ -1140,8 +1239,11 @@ def load_dengue_cases():
                     ).strip()
                     barangay = canonicalize_barangay(barangay_raw)
                     if barangay is None:
-                        # The study scope is limited to official Iligan barangays.
-                        continue
+                        # Keep source records visible in the line list even
+                        # when their location is blank or outside the mapped
+                        # study area. Hotspot aggregation still requires an
+                        # official Iligan barangay.
+                        barangay = barangay_raw or 'Not provided'
 
                     # -----------------------------------------
                     # PUROK
@@ -1193,6 +1295,15 @@ def load_dengue_cases():
 
                         bloodtype = 'N/A'
 
+                    birthdate = (
+                        row.get('Birthdate')
+                        or row.get('Birth Date')
+                        or row.get('Date of Birth')
+                        or row.get('birth_date')
+                        or row.get('birthday')
+                        or ''
+                    ).strip()
+
                     # -----------------------------------------
                     # DATE REPORTED
                     # -----------------------------------------
@@ -1212,10 +1323,19 @@ def load_dengue_cases():
                     # SAVE CASE
                     # -----------------------------------------
 
-                    cases_data.append({
+                    case_record = {
 
                         'id':
                             case_id,
+
+                        'record_type':
+                            'dataset',
+
+                        'record_id':
+                            case_id,
+
+                        'display_id':
+                            f'DW-{case_id:04d}',
 
                         'sex':
                             sex,
@@ -1225,6 +1345,9 @@ def load_dengue_cases():
 
                         'blood_type':
                             bloodtype,
+
+                        'birthdate':
+                            birthdate or 'Not provided',
 
                         'address':
                             address,
@@ -1243,7 +1366,18 @@ def load_dengue_cases():
 
                         'source_file':
                             csv_file.name,
-                    })
+                    }
+                    if override:
+                        editable_fields = {
+                            'sex', 'age', 'blood_type', 'birthdate', 'address',
+                            'barangay', 'purok', 'year', 'date_reported',
+                        }
+                        case_record.update({
+                            key: value
+                            for key, value in override.overrides.items()
+                            if key in editable_fields
+                        })
+                    cases_data.append(case_record)
 
                     case_id += 1
 
@@ -1260,8 +1394,15 @@ def load_dengue_cases():
     confirmed_cases = DengueCase.objects.filter(
         case_status='Confirmed',
         barangay__isnull=False,
+    ).exclude(
+        # The importer copied workbook rows that are already represented by
+        # the historical CSV exports loaded above. Keep the source rows in
+        # storage, but exclude this marked copy from totals and case lists.
+        user_account__username='dataset_importer',
+        remarks__istartswith='Imported from workbook',
     ).select_related('barangay', 'purok').order_by('dengue_case_id')
 
+    next_display_case_id = case_id
     for report in confirmed_cases:
         barangay = canonicalize_barangay(report.barangay.barangay_name)
         if not barangay:
@@ -1270,16 +1411,22 @@ def load_dengue_cases():
         for copy_index in range(copies):
             cases_data.append({
                 'id': f'confirmed-{report.dengue_case_id}-{copy_index + 1}',
+                'record_type': 'system',
+                'record_id': report.dengue_case_id,
+                'display_id': f'DW-{next_display_case_id:04d}',
                 'sex': report.patient_sex,
                 'age': report.patient_age,
                 'blood_type': report.patient_blood_type or 'N/A',
+                'birthdate': report.patient_birth_date.strftime('%m/%d/%Y') if report.patient_birth_date else 'Not provided',
                 'address': 'Iligan City',
                 'barangay': barangay,
                 'purok': report.purok.purok_name if report.purok else 'Not specified',
+                'location_details': report.location_details,
                 'year': str(report.date_reported.year),
                 'date_reported': report.date_reported.isoformat(),
                 'source_file': 'CHO-confirmed web record',
             })
+            next_display_case_id += 1
 
     return cases_data
 
@@ -1311,6 +1458,68 @@ def build_report_analytics(selected_year='all'):
         'age_group_summary': age_groups.most_common(),
     }
 
+
+def _dataset_quality_summary():
+    """Return aggregate-only quality counts for public-facing data notes."""
+    path = Path(settings.BASE_DIR) / 'datasets' / 'dengue_dataset_quality.json'
+    try:
+        quality = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    historical_manifest_path = Path(settings.BASE_DIR) / 'datasets' / 'cho_historical' / 'manifest.json'
+    try:
+        historical_manifest = json.loads(historical_manifest_path.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        historical_manifest = {}
+    historical_sources = historical_manifest.get('historical_datasets', {})
+    historical_rows = sum(item.get('rows', 0) for item in historical_sources.values())
+    inventory_path = Path(settings.BASE_DIR) / 'datasets' / 'data_feasibility_inventory.json'
+    try:
+        inventory = json.loads(inventory_path.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        inventory = {}
+    patient_audit = inventory.get('patient_line_list', {})
+    monthly_audit = inventory.get('monthly_model_dataset', {})
+    completeness = inventory.get('case_reporting_completeness_confirmation', {})
+    synthetic_manifest_path = Path(settings.BASE_DIR) / 'datasets' / 'synthetic_supplement' / 'manifest.json'
+    try:
+        synthetic_manifest = json.loads(synthetic_manifest_path.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        synthetic_manifest = {}
+    return {
+        'source_rows': quality.get('source_row_count', 0),
+        'complete_rows': quality.get('rows_complete_across_all_eight_requested_fields', 0),
+        'rows_with_gaps': quality.get('rows_with_one_or_more_missing_requested_fields', 0),
+        'exact_duplicate_extra_rows': quality.get('exact_duplicate_extra_rows', 0),
+        'year_mismatches': quality.get('admission_date_year_mismatch_rows', 0),
+        'rows_without_official_barangay': quality.get('rows_without_official_iligan_barangay_match', 0),
+        'historical_cho_rows': historical_rows,
+        'historical_cho_years': sorted(historical_sources),
+        'admission_date_range': quality.get('admission_date_range', []),
+        'valid_admission_date_rows': quality.get('admission_date_valid_rows', 0),
+        'missing_admission_date_rows': quality.get(
+            'admission_date_missing_or_invalid_rows',
+            quality.get('admission_date_missing_rows', 0),
+        ),
+        'outside_iligan_city_rows': quality.get('outside_iligan_city_rows', 0),
+        'application_year_policy': quality.get('application_year_policy', ''),
+        'admission_year_mismatches': quality.get('admission_date_year_mismatch_rows', 0),
+        'exact_duplicate_group_rows': quality.get('rows_in_exact_duplicate_groups', 0),
+        'potential_duplicate_matches': patient_audit.get('potential_duplicate_matches', 0),
+        'duplicate_policy': patient_audit.get('duplicate_policy', 'Exact duplicate rows are retained and flagged.'),
+        'case_definition_status': 'CHO source verified by the project team; the source file does not contain a case-definition version or confirmed/suspected status field.',
+        'reporting_delay_status': 'Not measurable from this source: it has admission dates but no received/entered dates.',
+        'zero_month_cells': monthly_audit.get('cells_with_zero_under_user_completeness_confirmation', 0),
+        'zero_month_interpretation': monthly_audit.get('zero_semantics', ''),
+        'zero_reporting_status': completeness.get('status', 'Not documented'),
+        'synthetic_rows_excluded': synthetic_manifest.get('total_rows', 0),
+        'active_case_source_status': 'CHO-verified source data (confirmed by the project team)',
+        'source_history_notice': (
+            f"{historical_rows:,} CHO-verified 2018–2019 records are included in the consolidated source. Exact duplicate and unmatched-barangay rows are retained and flagged; official barangay maps exclude records without an official Iligan barangay match."
+            if historical_manifest else ''
+        ),
+    }
+
 # =========================================================
 # LGU HOTSPOT MAP
 # LGU ONLY
@@ -1332,11 +1541,10 @@ def lgu_hotspot_map(request):
 
 
 # =========================================================
-# CHO HOTSPOT MAP
-# CHO ONLY
+# SHARED CHO / CHW HOTSPOT MAP
 # =========================================================
 
-@role_required('CHO')
+@role_required('CHO', 'CHW')
 def hotspot_map(request):
 
     context = build_hotspot_data(
@@ -1347,6 +1555,24 @@ def hotspot_map(request):
         'hotspot_map.html',
         context
     )
+
+
+@role_required('CHO', 'CHW', 'LGU')
+@require_GET
+def hotspot_map_data(request):
+    """Return freshly aggregated confirmed-case map data for live map refresh."""
+    context = build_hotspot_data(request)
+    return JsonResponse({
+        'map_data': json.loads(context['map_locations_json']),
+        'total_cases': context['total_cases'],
+        'high_risk_areas': context['high_risk_areas'],
+        'predicted_hotspots': context['predicted_hotspots'],
+        'current_month_label': context['current_month_label'],
+        'current_month_case_total': context['current_month_case_total'],
+        'current_month_report_count': context['current_month_report_count'],
+        'current_month_top_barangays': context['current_month_top_barangays'],
+        'refreshed_at': timezone.localtime().isoformat(),
+    })
 
 
 # =========================================================
@@ -1711,6 +1937,27 @@ def cases(request):
             case
         )
 
+    def case_reported_date(case):
+        raw_date = str(case.get('date_reported', '')).strip()
+        if not raw_date or raw_date == 'Not provided':
+            return date.min
+        try:
+            return date.fromisoformat(raw_date)
+        except ValueError:
+            for date_format in ('%m/%d/%Y', '%d/%m/%Y', '%b %d, %Y'):
+                try:
+                    return datetime.strptime(raw_date, date_format).date()
+                except ValueError:
+                    continue
+        return date.min
+
+    # Sort after filtering and before pagination so the newest reported cases
+    # appear first on every page, with undated historical rows at the end.
+    filtered_cases.sort(
+        key=case_reported_date,
+        reverse=True,
+    )
+
     # =====================================================
     # SUMMARY
     # =====================================================
@@ -1829,6 +2076,10 @@ def cases(request):
 
         'years':
             years,
+
+        'dataset_quality': _dataset_quality_summary(),
+        'edit_barangays': Barangay.objects.all().order_by('barangay_name'),
+        'edit_puroks': Purok.objects.select_related('barangay').order_by('barangay__barangay_name', 'purok_name'),
     }
 
     return render(
@@ -1838,67 +2089,334 @@ def cases(request):
     )
 
 
+def _parse_dengue_case_date(value):
+    raw = str(value or '').strip()
+    if not raw or raw == 'Not provided':
+        return None
+    try:
+        return date.fromisoformat(raw)
+    except ValueError:
+        for date_format in ('%m/%d/%Y', '%d/%m/%Y', '%b %d, %Y'):
+            try:
+                return datetime.strptime(raw, date_format).date()
+            except ValueError:
+                continue
+    return None
+
+
+def _get_manageable_system_case(record_id):
+    return get_object_or_404(
+        DengueCase.objects.filter(
+            case_status='Confirmed',
+            barangay__isnull=False,
+        ).exclude(
+            user_account__username='dataset_importer',
+            remarks__istartswith='Imported from workbook',
+        ),
+        pk=record_id,
+    )
+
+
+@role_required('CHO')
+def edit_dengue_case_record(request, record_type, record_id):
+    if record_type == 'dataset':
+        record = next((
+            item for item in load_dengue_cases()
+            if item.get('record_type') == 'dataset'
+            and item.get('record_id') == record_id
+        ), None)
+        if record is None:
+            raise Http404('Dataset record not found.')
+        is_system = False
+    elif record_type == 'system':
+        report = _get_manageable_system_case(record_id)
+        listed_record = next((
+            item for item in load_dengue_cases()
+            if item.get('record_type') == 'system'
+            and item.get('record_id') == record_id
+        ), {})
+        record = {
+            'display_id': listed_record.get('display_id', f'DW-{record_id:04d}'),
+            'sex': report.patient_sex,
+            'age': report.patient_age,
+            'blood_type': report.patient_blood_type,
+            'birthdate': report.patient_birth_date.isoformat() if report.patient_birth_date else '',
+            'address': 'Iligan City',
+            'barangay': report.barangay.barangay_name,
+            'purok': report.purok.purok_name if report.purok else '',
+            'year': report.date_reported.year,
+            'date_reported': report.date_reported.isoformat(),
+            'location_details': report.location_details,
+        }
+        is_system = True
+    else:
+        raise Http404('Unknown dengue case record type.')
+
+    errors = []
+    if request.method == 'POST':
+        sex = request.POST.get('sex', '').strip()
+        raw_age = request.POST.get('age', '').strip()
+        blood_type = request.POST.get('blood_type', '').strip()
+        address = request.POST.get('address', '').strip()
+        barangay_name = request.POST.get('barangay', '').strip()
+        purok_name = request.POST.get('purok', '').strip()
+        raw_birthdate = request.POST.get('birthdate', '').strip()
+        raw_reported_date = request.POST.get('date_reported', '').strip()
+        location_details = request.POST.get('location_details', '').strip()
+
+        try:
+            age = int(raw_age)
+            if age < 0 or age > 120:
+                raise ValueError
+        except ValueError:
+            errors.append('Age must be a whole number from 0 to 120.')
+
+        reported_date = _parse_dengue_case_date(raw_reported_date)
+        if raw_reported_date and reported_date is None:
+            errors.append('Enter a valid reported date.')
+        if is_system and reported_date is None:
+            errors.append('A reported date is required for CHO-confirmed reports.')
+        if not sex:
+            errors.append('Sex is required.')
+        if len(blood_type) > 5:
+            errors.append('Blood type must be 5 characters or fewer.')
+        if not barangay_name:
+            errors.append('Barangay is required.')
+
+        if is_system:
+            barangay = Barangay.objects.filter(barangay_name__iexact=barangay_name).first()
+            if barangay is None:
+                errors.append('Select an existing Iligan City barangay.')
+            purok = None
+            if barangay and purok_name:
+                purok = Purok.objects.filter(
+                    barangay=barangay,
+                    purok_name__iexact=purok_name,
+                ).first()
+                if purok is None:
+                    errors.append('Select a purok that belongs to the selected barangay.')
+            birthdate = _parse_dengue_case_date(raw_birthdate) if raw_birthdate else None
+            if raw_birthdate and birthdate is None:
+                errors.append('Enter a valid birthdate.')
+
+        if not errors:
+            if is_system:
+                report.patient_age = age
+                report.patient_sex = sex
+                report.patient_blood_type = blood_type
+                report.patient_birth_date = birthdate
+                report.date_reported = reported_date
+                report.barangay = barangay
+                report.purok = purok
+                report.location_details = location_details
+                report.save(update_fields=[
+                    'patient_age', 'patient_sex', 'patient_blood_type',
+                    'patient_birth_date', 'date_reported', 'barangay',
+                    'purok', 'location_details',
+                ])
+            else:
+                override, _ = DengueDatasetRecordOverride.objects.get_or_create(
+                    source_record_id=record_id,
+                )
+                override.overrides = {
+                    'sex': sex,
+                    'age': age,
+                    'blood_type': blood_type or 'N/A',
+                    'address': address,
+                    'barangay': barangay_name,
+                    'purok': purok_name,
+                    'year': reported_date.year if reported_date else request.POST.get('year', '').strip(),
+                    'date_reported': reported_date.isoformat() if reported_date else 'Not provided',
+                    'birthdate': raw_birthdate or 'Not provided',
+                }
+                override.updated_by = request.user
+                override.is_deleted = False
+                override.save()
+            messages.success(request, f"Case {record['display_id']} was updated.")
+            return redirect('cases')
+
+        messages.error(request, ' '.join(errors))
+        record = {
+            **record,
+            'sex': sex,
+            'age': raw_age,
+            'blood_type': blood_type,
+            'address': address,
+            'barangay': barangay_name,
+            'purok': purok_name,
+            'birthdate': raw_birthdate,
+            'date_reported': raw_reported_date,
+            'location_details': location_details,
+        }
+
+    parsed_reported_date = _parse_dengue_case_date(record.get('date_reported'))
+    parsed_birthdate = _parse_dengue_case_date(record.get('birthdate'))
+    context = {
+        'record': record,
+        'record_type': record_type,
+        'record_id': record_id,
+        'is_system': is_system,
+        'barangays': Barangay.objects.all().order_by('barangay_name'),
+        'puroks': Purok.objects.select_related('barangay').order_by('barangay__barangay_name', 'purok_name'),
+        'reported_date_value': parsed_reported_date.isoformat() if parsed_reported_date else '',
+        'birthdate_value': parsed_birthdate.isoformat() if parsed_birthdate else '',
+    }
+    return render(request, 'case_dataset_edit.html', context)
+
+
+@role_required('CHO')
+@require_POST
+def delete_dengue_case_record(request, record_type, record_id):
+    if record_type == 'dataset':
+        override, _ = DengueDatasetRecordOverride.objects.get_or_create(
+            source_record_id=record_id,
+        )
+        override.is_deleted = True
+        override.updated_by = request.user
+        override.save(update_fields=['is_deleted', 'updated_by', 'updated_at'])
+    elif record_type == 'system':
+        report = _get_manageable_system_case(record_id)
+        report.delete()
+    else:
+        raise Http404('Unknown dengue case record type.')
+    messages.success(request, f'Case record {record_id} was removed from Dengue Cases.')
+    return redirect('cases')
+
+
 # =========================================================
 # BHW DENGUE CASE MONITORING
 # BHW ONLY
 # =========================================================
+
+def _bhw_case_records(user):
+    """Combine CHO historical records and reviewed system cases in one BHW area."""
+    assigned_barangay = getattr(user, 'assigned_barangay', None)
+    if not assigned_barangay:
+        return []
+
+    target_barangay = canonicalize_barangay(assigned_barangay.barangay_name)
+    if not target_barangay:
+        return []
+
+    def normalize(value):
+        return re.sub(r'\s+', ' ', str(value or '').strip()).casefold()
+
+    assigned_purok = getattr(user, 'assigned_purok', None)
+    target_purok = normalize(assigned_purok.purok_name) if assigned_purok else ''
+
+    def parse_source_date(value):
+        raw = str(value or '').strip()
+        if not raw or raw == 'Not provided':
+            return None
+        for date_format in ('%m/%d/%Y', '%Y-%m-%d', '%d/%m/%Y', '%b %d, %Y'):
+            try:
+                return datetime.strptime(raw, date_format).date()
+            except ValueError:
+                continue
+        return None
+
+    records = []
+    historical_rows = [
+        row for row in load_dengue_cases()
+        if row.get('source_file') != 'CHO-confirmed web record'
+    ]
+    for row in historical_rows:
+        if canonicalize_barangay(row.get('barangay')) != target_barangay:
+            continue
+        if target_purok and normalize(row.get('purok')) != target_purok:
+            continue
+
+        try:
+            source_id = int(row.get('id'))
+        except (TypeError, ValueError):
+            source_id = len(records) + 1
+        records.append({
+            'display_id': f'HIS-{source_id:06d}',
+            'modal_id': f'historical-case-{source_id}',
+            'patient_sex': row.get('sex') or '',
+            'patient_age': row.get('age') or '',
+            'patient_blood_type': row.get('blood_type') or '',
+            'date_reported': parse_source_date(row.get('date_reported')),
+            'case_count': 1,
+            'case_status': 'Historical',
+            'barangay_name': target_barangay,
+            'purok_name': row.get('purok') or 'Not specified',
+            'remarks': 'Historical record from the CHO-verified dataset.',
+            'source_label': 'CHO historical dataset',
+            'reporter_name': 'CHO-verified historical dataset',
+            'reporter_username': 'Historical record',
+            'is_historical': True,
+        })
+
+    new_cases = DengueCase.objects.filter(
+        barangay=assigned_barangay,
+        case_status__in=['Confirmed', 'Active', 'Recovered'],
+    ).exclude(
+        user_account__username='dataset_importer',
+        remarks__istartswith='Imported from workbook',
+    ).select_related('user_account', 'barangay', 'purok').order_by('-date_reported', '-dengue_case_id')
+    if assigned_purok:
+        new_cases = new_cases.filter(purok=assigned_purok)
+
+    for report in new_cases:
+        reporter = report.user_account.get_full_name().strip() or report.user_account.username
+        records.append({
+            'display_id': f'DW-{report.dengue_case_id:04d}',
+            'modal_id': f'system-case-{report.dengue_case_id}',
+            'patient_sex': report.patient_sex or '',
+            'patient_age': report.patient_age,
+            'patient_blood_type': report.patient_blood_type or '',
+            'date_reported': report.date_reported,
+            'case_count': max(1, int(report.case_count or 1)),
+            'case_status': report.case_status,
+            'barangay_name': report.barangay.barangay_name,
+            'purok_name': report.purok.purok_name if report.purok else 'Not specified',
+            'remarks': report.remarks or '',
+            'source_label': 'CHO-confirmed system case',
+            'reporter_name': reporter,
+            'reporter_username': report.user_account.username,
+            'is_historical': False,
+        })
+
+    records.sort(key=lambda row: row.get('date_reported') or date.min, reverse=True)
+    return records
+
 
 @role_required('BHW')
 def dengue_case_bhw(request):
 
     assigned_barangay = request.user.assigned_barangay
     assigned_purok = request.user.assigned_purok
+    area_cases = _bhw_case_records(request.user)
 
-    # -----------------------------------------
-    # ALL CASES IN ASSIGNED BARANGAY
-    # -----------------------------------------
+    search = request.GET.get('search', '').strip().casefold()
+    selected_status = request.GET.get('status', '').strip()
+    selected_sex = request.GET.get('sex', '').strip()
+    selected_blood_type = request.GET.get('blood_type', '').strip().upper()
 
-    # Suspected/draft reports belong to the CHW -> CHO verification flow and
-    # are not disclosed in the BHW view. BHW sees only recorded outcomes in
-    # the assigned area.
-    area_cases = DengueCase.objects.filter(
-        barangay=assigned_barangay,
-        case_status__in=['Confirmed', 'Active', 'Recovered'],
-    )
-
-    # If BHW monitoring should only cover
-    # their assigned purok
-    if assigned_purok:
-
-        area_cases = area_cases.filter(
-            purok=assigned_purok
-        )
-
-    # -----------------------------------------
-    # CURRENT / ACTIVE CASES
-    # -----------------------------------------
-
-    active_cases = area_cases.filter(
-        case_status='Active'
-    ).count()
-
-    confirmed_cases = area_cases.filter(
-        case_status='Confirmed'
-    ).count()
-
+    historical_cases = sum(row['case_count'] for row in area_cases if row['is_historical'])
+    new_case_records = sum(row['case_count'] for row in area_cases if not row['is_historical'])
+    active_cases = sum(row['case_count'] for row in area_cases if row['case_status'] == 'Active')
+    confirmed_cases = sum(row['case_count'] for row in area_cases if row['case_status'] == 'Confirmed')
+    recovered_cases = sum(row['case_count'] for row in area_cases if row['case_status'] == 'Recovered')
+    current_cases = active_cases + confirmed_cases
     pending_cases = 0
 
-    recovered_cases = area_cases.filter(
-        case_status='Recovered'
-    ).count()
-
-    # Current cases can include Confirmed + Active
-    current_cases = (
-        active_cases +
-        confirmed_cases
-    )
-
-    # BHWs have view-only access to confirmed/active case information in
-    # their assigned area. CHO remains the final authority for case records.
-    area_cases = area_cases.order_by(
-        '-date_reported',
-        '-dengue_case_id'
-    )
+    if selected_status:
+        area_cases = [row for row in area_cases if row['case_status'] == selected_status]
+    if selected_sex:
+        area_cases = [row for row in area_cases if row['patient_sex'].casefold() == selected_sex.casefold()]
+    if selected_blood_type:
+        area_cases = [row for row in area_cases if row['patient_blood_type'].upper() == selected_blood_type]
+    if search:
+        area_cases = [
+            row for row in area_cases
+            if search in ' '.join(str(row.get(key) or '') for key in (
+                'display_id', 'patient_sex', 'patient_age', 'patient_blood_type',
+                'date_reported', 'case_status', 'barangay_name', 'purok_name',
+                'remarks', 'source_label',
+            )).casefold()
+        ]
 
     context = {
 
@@ -1926,7 +2444,19 @@ def dengue_case_bhw(request):
             recovered_cases,
 
         'total_area_cases':
-            area_cases.count(),
+            historical_cases + new_case_records,
+
+        'historical_cases': historical_cases,
+
+        'new_case_records': new_case_records,
+
+        'search': search,
+
+        'selected_status': selected_status,
+
+        'selected_sex': selected_sex,
+
+        'selected_blood_type': selected_blood_type,
     }
 
     return render(
@@ -1966,17 +2496,8 @@ def build_hotspot_data(request):
     # USE THE SAME DATASETS AS CHO HOTSPOT MAP
     # =====================================================
 
-    dataset_files = sorted(
-        dataset_dir.glob(
-            'WILBUR_DSO_dengue_*.csv'
-        )
-    )
-
-    # Fallback if dataset filenames are different
-    if not dataset_files:
-        dataset_files = sorted(
-            dataset_dir.glob('*.csv')
-        )
+    authoritative = dataset_dir / 'WILBUR_DSO_dengue_2018_2026_authoritative.csv'
+    dataset_files = [authoritative] if authoritative.is_file() else []
 
     # =====================================================
     # FILTERS
@@ -1984,7 +2505,7 @@ def build_hotspot_data(request):
 
     selected_year = request.GET.get(
         'year',
-        'all'
+        '2026'
     ).strip()
 
     selected_risk = request.GET.get(
@@ -2025,6 +2546,18 @@ def build_hotspot_data(request):
         )
 
         return value.lower().strip()
+
+    def normalize_year(value):
+        """Normalize the dataset's year column, including legacy date values."""
+        raw = str(value or '').strip()
+        if re.fullmatch(r'\d{4}', raw):
+            return raw
+        for date_format in ('%m/%d/%Y', '%d/%m/%Y'):
+            try:
+                return str(datetime.strptime(raw, date_format).year)
+            except ValueError:
+                continue
+        return ''
 
     # =====================================================
     # RISK LEVEL
@@ -2093,11 +2626,11 @@ def build_hotspot_data(request):
                     # YEAR
                     # =============================================
 
-                    year = (
+                    year = normalize_year(
                         row.get('Year')
                         or row.get('year')
                         or ''
-                    ).strip()
+                    )
 
                     if year:
                         year = str(year)
@@ -2151,6 +2684,10 @@ def build_hotspot_data(request):
                         or row.get('city')
                         or ''
                     ).strip()
+
+                    if '(Current Address) City / Municipality' in row and not is_iligan_city(city):
+                        total_dataset_cases -= 1
+                        continue
 
                     if not city:
                         city = 'Iligan City'
@@ -2224,6 +2761,13 @@ def build_hotspot_data(request):
         DengueCase.objects.filter(
             case_status='Confirmed',
             barangay__isnull=False,
+        ).exclude(
+            # These records are a database copy of the historical workbook
+            # already included by the CSV loader above. Keep them in the
+            # database for provenance, but do not count the same workbook
+            # cases a second time in hotspot totals.
+            user_account__username='dataset_importer',
+            remarks__istartswith='Imported from workbook',
         ).select_related('barangay', 'purok')
     )
     for report in confirmed_web_cases:
@@ -2315,15 +2859,23 @@ def build_hotspot_data(request):
 
                     for row in reader:
 
-                        year = (
+                        year = normalize_year(
                             row.get('Year')
                             or row.get('year')
                             or ''
-                        ).strip()
+                        )
 
                         if str(year) != str(
                             selected_year
                         ):
+                            continue
+
+                        city = (
+                            row.get('(Current Address) City / Municipality')
+                            or row.get('City')
+                            or row.get('city')
+                        )
+                        if city is not None and not is_iligan_city(city):
                             continue
 
                         barangay_raw = (
@@ -2453,6 +3005,15 @@ def build_hotspot_data(request):
                     get_risk(count),
             })
 
+        named_puroks = [
+            item for item in purok_data
+            if item['name'].strip().casefold() not in {
+                '', 'not specified', 'unknown', 'n/a', 'na', 'none', 'nan',
+                'not available', 'not reported', 'unspecified',
+            }
+        ]
+        top_purok = named_puroks[0] if named_puroks else None
+
         # =============================================
         # YEAR DATA
         # =============================================
@@ -2508,6 +3069,12 @@ def build_hotspot_data(request):
 
             'puroks':
                 purok_data,
+
+            'top_purok_name':
+                top_purok['name'] if top_purok else 'No recorded purok',
+
+            'top_purok_cases':
+                top_purok['case_count'] if top_purok else 0,
 
             'years':
                 year_data,
@@ -2627,7 +3194,7 @@ def build_hotspot_data(request):
     # =====================================================
 
     ordered_years = sorted(all_years, reverse=True)
-    chronological_years = sorted(all_years, key=lambda value: int(value) if str(value).isdigit() else str(value))
+    chronological_years = sorted(all_years, key=lambda value: int(value))
     historical_case_period = (
         f'{chronological_years[0]}–{chronological_years[-1]}'
         if len(chronological_years) > 1 else (chronological_years[0] if chronological_years else 'No historical records')
@@ -2635,6 +3202,33 @@ def build_hotspot_data(request):
     selected_year_label = (
         'All available historical years'
         if selected_year.lower() == 'all' else f'Historical year {selected_year}'
+    )
+
+    current_month = timezone.localdate().replace(day=1)
+    current_month_query = DengueCase.objects.filter(
+        case_status='Confirmed',
+        date_reported__year=current_month.year,
+        date_reported__month=current_month.month,
+        barangay__isnull=False,
+    ).exclude(
+        user_account__username='dataset_importer',
+        remarks__istartswith='Imported from workbook',
+    ).values(
+        'barangay__barangay_name',
+    ).annotate(
+        case_total=Sum('case_count'),
+        report_count=Count('pk'),
+    ).order_by('-case_total', 'barangay__barangay_name')
+    current_month_top_barangays = [
+        {
+            'barangay': row['barangay__barangay_name'],
+            'case_count': row['case_total'] or 0,
+            'report_count': row['report_count'],
+        }
+        for row in current_month_query
+    ]
+    current_month_case_total = sum(
+        row['case_count'] for row in current_month_top_barangays
     )
 
     return {
@@ -2689,6 +3283,13 @@ def build_hotspot_data(request):
         'map_data_source': 'Historical dengue case records',
         'historical_case_period': historical_case_period,
         'selected_year_label': selected_year_label,
+        'current_month_label': current_month.strftime('%B %Y'),
+        'current_month_case_total': current_month_case_total,
+        'current_month_report_count': sum(
+            row['report_count'] for row in current_month_top_barangays
+        ),
+        'current_month_top_barangays': current_month_top_barangays,
+        'dataset_quality': _dataset_quality_summary(),
 
         'dataset_count':
             len(dataset_files),
@@ -2726,25 +3327,37 @@ def chw_dashboard(request):
     )
 
 
-def _render_chw_case_reports(request, form_case=None, form_data=None):
+def _render_chw_case_reports(request, form_case=None, form_data=None, view_case=None):
+    latest_submission = ReportAuditLog.objects.filter(
+        dengue_case_id=OuterRef('pk'),
+        action='SUBMITTED',
+    ).order_by('-created_at', '-audit_id').values('created_at')[:1]
     reports = DengueCase.objects.filter(
         user_account=request.user,
-    ).select_related('barangay', 'purok', 'reviewed_by').prefetch_related('audit_logs__actor').order_by('-date_reported', '-dengue_case_id')
+    ).annotate(
+        latest_submission_at=Subquery(latest_submission),
+    ).select_related(
+        'barangay', 'purok', 'reviewed_by',
+    ).prefetch_related(
+        'audit_logs__actor',
+    ).order_by(
+        '-latest_submission_at', '-date_reported', '-dengue_case_id',
+    )
     form_values = {
-        'patient_age': '', 'patient_sex': '', 'patient_blood_type': '',
+        'patient_age': '', 'patient_birth_date': '', 'patient_sex': '', 'patient_blood_type': '',
         'date_reported': '', 'barangay_id': '', 'purok_id': '',
-        'location_details': '', 'symptoms': '', 'remarks': '',
+        'location_details': '', 'remarks': '',
     }
     if form_case:
         form_values.update({
             'patient_age': form_case.patient_age,
+            'patient_birth_date': form_case.patient_birth_date.isoformat() if form_case.patient_birth_date else '',
             'patient_sex': form_case.patient_sex,
             'patient_blood_type': form_case.patient_blood_type,
             'date_reported': form_case.date_reported.isoformat(),
             'barangay_id': form_case.barangay_id or '',
             'purok_id': form_case.purok_id or '',
             'location_details': form_case.location_details,
-            'symptoms': form_case.symptoms,
             'remarks': form_case.remarks,
         })
     if form_data:
@@ -2754,6 +3367,7 @@ def _render_chw_case_reports(request, form_case=None, form_data=None):
         'barangays': Barangay.objects.order_by('barangay_name'),
         'puroks': Purok.objects.select_related('barangay').order_by('barangay__barangay_name', 'purok_name'),
         'form_case': form_case,
+        'view_case': view_case,
         'form_values': form_values,
     })
 
@@ -2775,26 +3389,32 @@ def _save_chw_case(request, case=None):
         reported_on = date.fromisoformat(request.POST.get('date_reported', ''))
     except (TypeError, ValueError):
         return None, 'Enter a valid patient age and report date.'
+    birth_date_raw = request.POST.get('patient_birth_date', '').strip()
+    try:
+        patient_birth_date = date.fromisoformat(birth_date_raw) if birth_date_raw else None
+    except ValueError:
+        return None, 'Enter a valid patient birthdate.'
+    if patient_birth_date and patient_birth_date > reported_on:
+        return None, 'Patient birthdate cannot be after the report date.'
     if patient_age < 0 or patient_age > 130:
         return None, 'Patient age must be between 0 and 130.'
 
     patient_sex = request.POST.get('patient_sex', '').strip()
-    symptoms = request.POST.get('symptoms', '').strip()
     location_details = request.POST.get('location_details', '').strip()
     if not patient_sex:
         return None, 'Select the patient sex.'
-    if action == 'submit' and (not symptoms or not location_details):
-        return None, 'Symptoms and exact location details are required before sending to CHO.'
+    if action == 'submit' and not location_details:
+        return None, 'Exact location details are required before sending to CHO.'
 
     is_new = case is None
     report = case or DengueCase(user_account=request.user)
     report.barangay = barangay
     report.purok = purok
     report.patient_age = patient_age
+    report.patient_birth_date = patient_birth_date
     report.patient_sex = patient_sex[:20]
     report.patient_blood_type = request.POST.get('patient_blood_type', '').strip().upper()[:5]
     report.date_reported = reported_on
-    report.symptoms = symptoms
     report.location_details = location_details
     report.remarks = request.POST.get('remarks', '').strip()
     report.case_status = 'Pending' if action == 'submit' else 'Draft'
@@ -2811,6 +3431,13 @@ def _save_chw_case(request, case=None):
         action=audit_action,
         details='CHW submitted the suspected case to CHO.' if action == 'submit' else 'CHW saved a suspected-case draft.',
     )
+    if action == 'submit':
+        from .admin_notifications import notify_cho_admins
+        notify_cho_admins(
+            title='New suspected case report',
+            message=f'{request.user.get_full_name() or request.user.username} submitted a suspected dengue case for CHO review in {barangay.barangay_name}.',
+            link='/cho/suspected-cases/', actor=request.user, notification_type='CASE',
+        )
     return report, None
 
 
@@ -2830,15 +3457,29 @@ def chw_case_reports(request):
     editing_case = None
     edit_id = request.GET.get('edit')
     if edit_id:
-        editing_case = get_object_or_404(DengueCase, pk=edit_id, user_account=request.user, case_status='Draft')
-    return _render_chw_case_reports(request, form_case=editing_case)
+        editing_case = get_object_or_404(
+            DengueCase,
+            pk=edit_id,
+            user_account=request.user,
+            case_status__in=['Draft', 'Pending', 'Rejected'],
+        )
+    view_case = None
+    view_id = request.GET.get('view')
+    if view_id:
+        view_case = get_object_or_404(DengueCase, pk=view_id, user_account=request.user)
+    return _render_chw_case_reports(request, form_case=editing_case, view_case=view_case)
 
 
 @role_required('CHW')
 def update_chw_case_report(request, case_id):
     if request.method != 'POST':
         return redirect('chw_case_reports')
-    report = get_object_or_404(DengueCase, pk=case_id, user_account=request.user, case_status='Draft')
+    report = get_object_or_404(
+        DengueCase,
+        pk=case_id,
+        user_account=request.user,
+        case_status__in=['Draft', 'Pending', 'Rejected'],
+    )
     saved, error = _save_chw_case(request, case=report)
     if error:
         messages.error(request, error)
@@ -2850,13 +3491,85 @@ def update_chw_case_report(request, case_id):
     return redirect('chw_case_reports')
 
 
+@role_required('CHW')
+@require_POST
+def delete_chw_case_report(request, case_id):
+    """Allow a CHW to withdraw their own draft or report still awaiting CHO review."""
+    with transaction.atomic():
+        report = get_object_or_404(
+            DengueCase.objects.select_for_update(),
+            pk=case_id,
+            user_account=request.user,
+            case_status__in=['Draft', 'Pending'],
+        )
+        report_id = report.dengue_case_id
+        previous_status = report.case_status
+
+        # Keep the append-only history even though the report itself is removed.
+        ReportAuditLog.objects.filter(dengue_case=report).update(dengue_case=None)
+        log_report_action(
+            actor=request.user,
+            action='DELETED',
+            details=(
+                f'CHW deleted suspected case #{report_id} while it was {previous_status}. '
+                'Earlier audit events were retained.'
+            ),
+        )
+        report.delete()
+
+    if previous_status == 'Pending':
+        from .admin_notifications import notify_cho_admins
+        notify_cho_admins(
+            title='Suspected case report withdrawn',
+            message=f'{request.user.get_full_name() or request.user.username} withdrew suspected case #{report_id} before CHO review.',
+            link='/cho/suspected-cases/', actor=request.user, notification_type='CASE',
+        )
+    messages.success(request, f'Suspected case report #{report_id} was deleted.')
+    return redirect('chw_case_reports')
+
+
 @role_required('CHO')
 def cho_suspected_case_reviews(request):
-    reports = DengueCase.objects.filter(
-        user_account__role='CHW',
+    chw_reports = DengueCase.objects.filter(user_account__role='CHW')
+    pending_reports = chw_reports.filter(
         case_status='Pending',
-    ).select_related('user_account', 'barangay', 'purok').prefetch_related('audit_logs__actor').order_by('date_reported', 'dengue_case_id')
-    return render(request, 'cho_suspected_case_reviews.html', {'reports': reports})
+    )
+    search = request.GET.get('search', '').strip()
+    if search:
+        filters = (
+            Q(user_account__first_name__icontains=search)
+            | Q(user_account__last_name__icontains=search)
+            | Q(user_account__username__icontains=search)
+            | Q(barangay__barangay_name__icontains=search)
+            | Q(purok__purok_name__icontains=search)
+            | Q(location_details__icontains=search)
+        )
+        if search.isdigit():
+            filters |= Q(dengue_case_id=int(search))
+        pending_reports = pending_reports.filter(filters)
+
+    reports = pending_reports.select_related(
+        'user_account', 'barangay', 'purok'
+    ).prefetch_related('audit_logs__actor').order_by(
+        'date_reported', 'dengue_case_id'
+    )
+    reports_page = Paginator(reports, 15).get_page(request.GET.get('page'))
+    modal_reports = chw_reports.select_related(
+        'user_account', 'barangay', 'purok'
+    ).order_by('-date_reported', '-dengue_case_id')
+    return render(request, 'cho_suspected_case_reviews.html', {
+        'reports': reports_page,
+        'reports_page': reports_page,
+        'search': search,
+        'pending_count': chw_reports.filter(case_status='Pending').count(),
+        'confirmed_count': chw_reports.filter(case_status='Confirmed').count(),
+        'rejected_count': chw_reports.filter(case_status='Rejected').count(),
+        'total_count': chw_reports.count(),
+        'filtered_count': pending_reports.count(),
+        'modal_pending_reports': modal_reports.filter(case_status='Pending'),
+        'modal_confirmed_reports': modal_reports.filter(case_status='Confirmed'),
+        'modal_rejected_reports': modal_reports.filter(case_status='Rejected'),
+    })
 
 
 @role_required('CHO')
@@ -2865,10 +3578,10 @@ def review_chw_case_report(request, case_id):
         return redirect('cho_suspected_case_reviews')
     report = get_object_or_404(DengueCase, pk=case_id, user_account__role='CHW', case_status='Pending')
     decision = request.POST.get('decision')
-    note = request.POST.get('cho_review_note', '').strip()
-    if decision not in {'Confirmed', 'Rejected'} or not note:
-        messages.error(request, 'Choose Confirmed or Rejected and provide a CHO review note.')
+    if decision not in {'Confirmed', 'Rejected'}:
+        messages.error(request, 'Choose Confirmed or Rejected.')
         return redirect('cho_suspected_case_reviews')
+    note = f'CHO {decision.lower()} the suspected case after review.'
     report.case_status = decision
     report.cho_review_note = note
     report.reviewed_by = request.user
@@ -2887,6 +3600,12 @@ def review_chw_case_report(request, case_id):
         f'CHO review: {note}',
         created_by=request.user,
         link='/chw/suspected-cases/',
+    )
+    from .admin_notifications import notify_cho_admins
+    notify_cho_admins(
+        title=f'Suspected case #{report.dengue_case_id} {decision.lower()}',
+        message=f'{request.user.get_full_name() or request.user.username} {decision.lower()} a CHW-submitted suspected case.',
+        link='/cho/suspected-cases/', actor=request.user, notification_type='CASE',
     )
     if decision == 'Confirmed':
         messages.success(
@@ -3019,6 +3738,17 @@ def bhw_dashboard(request):
         assigned_barangay
     )
 
+    # The map's risk level is based on its selected/current map period. Keep
+    # that separate from the all-period case history shown in the dashboard.
+    area_case_records = _bhw_case_records(request.user)
+    total_cases = sum(row['case_count'] for row in area_case_records)
+    historical_case_records = sum(
+        row['case_count'] for row in area_case_records if row['is_historical']
+    )
+    new_confirmed_case_records = sum(
+        row['case_count'] for row in area_case_records if not row['is_historical']
+    )
+
 
     # =====================================================
     # GET SAME HOTSPOT DATA AS CHO/LGU
@@ -3072,15 +3802,6 @@ def bhw_dashboard(request):
 
     if assigned_hotspot:
 
-        total_cases = int(
-            assigned_hotspot.get(
-                'case_count',
-                0
-            )
-            or 0
-        )
-
-
         current_risk = (
             assigned_hotspot.get(
                 'risk_level',
@@ -3100,9 +3821,6 @@ def bhw_dashboard(request):
 
 
     else:
-
-        total_cases = 0
-
 
         if assignment_configured:
 
@@ -3170,6 +3888,10 @@ def bhw_dashboard(request):
         'total_cases':
             total_cases,
 
+        'historical_case_records': historical_case_records,
+
+        'new_confirmed_case_records': new_confirmed_case_records,
+
         'pending_environmental_reports':
             pending_environmental_reports,
 
@@ -3218,6 +3940,8 @@ def bhw_hotspot_information(request):
     barangay_name = None
     total_cases = 0
     risk_level = 'N/A'
+    historical_case_count = 0
+    new_confirmed_case_count = 0
 
     location_data = []
 
@@ -3245,24 +3969,34 @@ def bhw_hotspot_information(request):
 
         barangay_cases = []
 
+        def normalize_area(value):
+            return re.sub(r'\s+', ' ', str(value or '').strip()).casefold()
+
+        target_barangay = canonicalize_barangay(barangay_name)
+        target_purok = normalize_area(assigned_purok.purok_name) if assigned_purok else ''
+
         for case in dataset_cases:
+            if canonicalize_barangay(case.get('barangay')) != target_barangay:
+                continue
+            if target_purok and normalize_area(case.get('purok')) != target_purok:
+                continue
+            barangay_cases.append(case)
 
-            case_barangay = str(
-                case.get('barangay', '')
-            ).strip()
-
-            if (
-                case_barangay.lower()
-                == barangay_name.strip().lower()
-            ):
-                barangay_cases.append(case)
+        historical_case_count = sum(
+            1 for case in barangay_cases
+            if case.get('source_file') != 'CHO-confirmed web record'
+        )
+        new_confirmed_case_count = sum(
+            1 for case in barangay_cases
+            if case.get('source_file') == 'CHO-confirmed web record'
+        )
 
         total_cases = len(barangay_cases)
 
         # -------------------------------------------------
         # BARANGAY RISK CLASSIFICATION
         #
-        # 1-5    = Low
+        # 0-5    = Low
         # 6-50   = Moderate
         # 51-100 = High
         # 101+   = Critical
@@ -3294,22 +4028,6 @@ def bhw_hotspot_information(request):
 
             if not location_name:
                 location_name = 'Not specified'
-
-            # If BHW has specific Purok assignment,
-            # only show that Purok.
-            if assigned_purok:
-
-                assigned_purok_name = (
-                    assigned_purok.purok_name
-                    .strip()
-                    .lower()
-                )
-
-                if (
-                    location_name.strip().lower()
-                    != assigned_purok_name
-                ):
-                    continue
 
             if location_name not in location_counts:
                 location_counts[location_name] = 0
@@ -3403,6 +4121,10 @@ def bhw_hotspot_information(request):
 
         'total_cases':
             total_cases,
+
+        'historical_case_count': historical_case_count,
+
+        'new_confirmed_case_count': new_confirmed_case_count,
 
         'risk_level':
             risk_level,
@@ -4073,14 +4795,10 @@ def city_wide_monitoring(request):
     )
 
 
-    dataset_count = len(
-
-        list(
-            dataset_dir.glob(
-                '*.csv'
-            )
-        )
-
+    # Report only the active CHO master file; archived and generated CSVs are
+    # not additional case sources.
+    dataset_count = int(
+        (dataset_dir / 'WILBUR_DSO_dengue_2018_2026_authoritative.csv').is_file()
     )
 
 
@@ -4802,14 +5520,40 @@ def pending_requests(request):
 
 @login_required(login_url='login')
 def notification_center(request):
-    notifications = SystemNotification.objects.filter(recipient=request.user)
+    visible_alert_ids = Alert.objects.filter(
+        is_active=True,
+        cho_review_confirmed=True,
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())).filter(
+        Q(barangay__isnull=True) | Q(barangay_id=getattr(request.user, 'assigned_barangay_id', None))
+    ).values_list('pk', flat=True)
+    notification_query = SystemNotification.objects.filter(recipient=request.user).filter(
+        ~Q(notification_type='ALERT')
+        | Q(link__in=[f'/alert/{alert_id}' for alert_id in visible_alert_ids])
+    ).order_by('-created_at', '-pk')
     if request.method == 'POST':
-        notifications.filter(is_read=False).update(is_read=True, read_at=timezone.now())
+        notification_query.filter(is_read=False).update(is_read=True, read_at=timezone.now())
         messages.success(request, 'Notifications marked as read.')
         return redirect('notification_center')
+    total_count = notification_query.count()
+    unread_count = notification_query.filter(is_read=False).count()
+    read_count = total_count - unread_count
+    search = request.GET.get('search', '').strip()
+    filtered_notifications = notification_query
+    if search:
+        filtered_notifications = filtered_notifications.filter(
+            Q(title__icontains=search)
+            | Q(message__icontains=search)
+            | Q(notification_type__icontains=search)
+        )
+    notifications_page = Paginator(filtered_notifications, 15).get_page(request.GET.get('page'))
     return render(request, 'notification_center.html', {
-        'notifications': notifications[:100],
-        'unread_count': notifications.filter(is_read=False).count(),
+        'notifications': notifications_page,
+        'notifications_page': notifications_page,
+        'unread_count': unread_count,
+        'read_count': read_count,
+        'total_count': total_count,
+        'filtered_count': filtered_notifications.count(),
+        'search': search,
     })
 
 
@@ -4820,17 +5564,38 @@ def notification_center(request):
 
 @role_required('CHO')
 def user_management(request):
-
-    users = UserAccount.objects.all().order_by(
-        '-date_joined'
-    )
+    # Keep this screen scoped to resident accounts; staff administration has
+    # separate workflows and must not appear in the resident list.
+    resident_users = UserAccount.objects.filter(role='RESIDENT')
+    search = request.GET.get('search', '').strip()
+    if search:
+        resident_users = resident_users.filter(
+            Q(first_name__icontains=search)
+            | Q(last_name__icontains=search)
+            | Q(username__icontains=search)
+            | Q(email__icontains=search)
+            | Q(contact_number__icontains=search)
+            | Q(address__icontains=search)
+        )
+    users = resident_users.order_by('-date_joined')
+    users_page = Paginator(users, 50).get_page(request.GET.get('page'))
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+    all_residents = UserAccount.objects.filter(role='RESIDENT')
 
     return render(
         request,
         'user_management.html',
         {
-            'users':
-                users
+            'users': users_page,
+            'users_page': users_page,
+            'users_querystring': query_params.urlencode(),
+            'filtered_resident_count': users_page.paginator.count,
+            'resident_count': all_residents.count(),
+            'resident_pending': all_residents.filter(account_status='PENDING').count(),
+            'resident_approved': all_residents.filter(account_status='APPROVED').count(),
+            'resident_verified': all_residents.filter(email_verified=True).count(),
+            'search': search,
         }
     )
 
@@ -4843,10 +5608,33 @@ def user_management(request):
 @role_required('CHO')
 def community_reports_review(request):
     """Final CHO queue for resident reports verified and forwarded by BHWs."""
-    reports = CommunityReport.objects.select_related(
+    all_reports = CommunityReport.objects.select_related(
         'resident', 'barangay', 'purok', 'reviewed_by', 'bhw_reviewed_by'
-    ).prefetch_related('audit_logs__actor').filter(status='FORWARDED').order_by('-bhw_reviewed_at', '-submitted_at')
-    return render(request, 'community_reports_review.html', {'reports': reports})
+    ).prefetch_related('audit_logs__actor')
+    reports = all_reports.filter(status='FORWARDED').order_by('-bhw_reviewed_at', '-submitted_at')
+    search = request.GET.get('search', '').strip()
+    if search:
+        reports = reports.filter(
+            Q(observation_type__icontains=search)
+            | Q(description__icontains=search)
+            | Q(location_details__icontains=search)
+            | Q(resident__first_name__icontains=search)
+            | Q(resident__last_name__icontains=search)
+            | Q(resident__username__icontains=search)
+            | Q(barangay__barangay_name__icontains=search)
+            | Q(purok__purok_name__icontains=search)
+        )
+    reports_page = Paginator(reports, 10).get_page(request.GET.get('page'))
+    return render(request, 'community_reports_review.html', {
+        'reports': reports_page,
+        'reports_page': reports_page,
+        'search': search,
+        'filtered_count': reports.count(),
+        'pending_count': all_reports.filter(status='FORWARDED').count(),
+        'verified_count': all_reports.filter(status='VERIFIED').count(),
+        'rejected_count': all_reports.filter(status='REJECTED').count(),
+        'total_count': all_reports.count(),
+    })
 
 
 @role_required('CHO')
@@ -4880,6 +5668,12 @@ def review_community_report(request, report_id):
         created_by=request.user,
         link='/(tabs)/report',
     )
+    from .admin_notifications import notify_cho_admins
+    notify_cho_admins(
+        title=f'Resident report {status.lower()}',
+        message=f'{request.user.get_full_name() or request.user.username} {status.lower()} a {report.observation_type} report from {report.barangay.barangay_name}.',
+        link='/cho/community-reports/', actor=request.user, notification_type='REPORT',
+    )
     messages.success(request, 'Resident report reviewed and response saved.')
     return redirect('community_reports_review')
 
@@ -4890,16 +5684,126 @@ def review_community_report(request, report_id):
 
 @role_required('CHO')
 def alert_management(request):
-    """CHO is the only role that can publish, withdraw, or re-activate alerts."""
-    alerts = Alert.objects.select_related('barangay', 'created_by').order_by(
+    """Only explicitly CHO-reviewed alerts may be published to residents."""
+    all_alerts = Alert.objects.select_related('barangay', 'created_by', 'cho_reviewed_by').order_by(
         '-is_active', '-created_at'
     )
+    # Keep withdrawn alerts in storage for audit/history, but omit them from
+    # the CHO's active alert list and its related summary counts.
+    active_alerts = all_alerts.filter(is_active=True)
+    alerts = active_alerts
+    search = request.GET.get('search', '').strip()
+    if search:
+        alerts = alerts.filter(
+            Q(title__icontains=search)
+            | Q(message__icontains=search)
+            | Q(barangay__barangay_name__icontains=search)
+        )
+    alerts_page = Paginator(alerts, 15).get_page(request.GET.get('page'))
     barangays = Barangay.objects.order_by('barangay_name')
     return render(request, 'alert_management.html', {
-        'alerts': alerts,
+        'alerts': alerts_page,
+        'alerts_page': alerts_page,
+        'search': search,
+        'filtered_count': alerts.count(),
+        'total_count': active_alerts.count(),
+        'active_count': active_alerts.count(),
+        'pending_review_count': active_alerts.filter(cho_review_confirmed=False).count(),
+        'reviewed_count': active_alerts.filter(cho_review_confirmed=True).count(),
         'barangays': barangays,
         'risk_choices': Alert.RISK_CHOICES,
     })
+
+
+def _deliver_reviewed_alert(alert, actor):
+    """Notify intended residents only after the CHO review has been saved."""
+    recipients = UserAccount.objects.filter(
+        role='RESIDENT', account_status='APPROVED',
+    )
+    if alert.barangay:
+        recipients = recipients.filter(assigned_barangay=alert.barangay)
+        target_area = alert.barangay.barangay_name
+        audience = f'{target_area} residents'
+    else:
+        target_area = 'All Iligan City'
+        audience = 'all Iligan City residents'
+    email_sent = email_failed = email_missing = 0
+    # Email should open the resident app's Alerts/Notifications tab, where the
+    # published alert is already available as an in-app notification.
+    mobile_link = settings.MOBILE_NOTIFICATIONS_LINK
+    for resident in recipients.iterator():
+        notification_link = f'/alert/{alert.pk}'
+        existing_notification = SystemNotification.objects.filter(
+            recipient=resident,
+            notification_type='ALERT',
+            link=notification_link,
+        ).order_by('-created_at', '-notification_id').first()
+        if existing_notification:
+            # Republishing the same alert updates its existing inbox record
+            # instead of adding another copy for the same resident.
+            existing_notification.title = alert.title
+            existing_notification.message = alert.message
+            existing_notification.created_by = actor
+            existing_notification.is_read = False
+            existing_notification.read_at = None
+            existing_notification.save(update_fields=[
+                'title', 'message', 'created_by', 'is_read', 'read_at',
+            ])
+        else:
+            notify_user(
+                resident,
+                'ALERT',
+                alert.title,
+                alert.message,
+                created_by=actor,
+                link=notification_link,
+            )
+        if resident.email and resident.email_verified:
+            text_body = (
+                f'{alert.title}\n\n'
+                f'Target area: {target_area}\n'
+                f'Risk level: {alert.get_risk_level_display()}\n\n'
+                f'{alert.message}\n\n'
+                f'Open DengueWatch Notifications: {mobile_link}\n\n'
+                'If the app is not installed, open DengueWatch and check Alerts.'
+            )
+            html_body = (
+                '<div style="font-family:Arial,sans-serif;line-height:1.6">'
+                f'<h2>{escape(alert.title)}</h2>'
+                f'<p><strong>Target area:</strong> {escape(target_area)}<br>'
+                f'<strong>Risk level:</strong> {escape(alert.get_risk_level_display())}</p>'
+                f'<p>{escape(alert.message).replace(chr(10), "<br>")}</p>'
+                f'<p><a href="{escape(mobile_link)}" style="display:inline-block;padding:12px 18px;'
+                'background:#0d6b57;color:#fff;text-decoration:none;border-radius:6px">'
+                'Open DengueWatch Notifications</a></p>'
+                '<p>If the button does not open the app, open DengueWatch Mobile and '
+                'check Alerts.</p></div>'
+            )
+            try:
+                email = EmailMultiAlternatives(
+                    subject=f'DengueWatch alert: {alert.title}',
+                    body=text_body,
+                    from_email=settings.DEFAULT_FROM_EMAIL or None,
+                    to=[resident.email],
+                )
+                email.attach_alternative(html_body, 'text/html')
+                email_sent += email.send(fail_silently=False)
+            except Exception:
+                email_failed += 1
+        else:
+            email_missing += 1
+
+    if settings.EMAIL_BACKEND.endswith('console.EmailBackend'):
+        email_status = (
+            f'{email_missing} resident(s) have unverified/missing email. Email is in console mode; '
+            'configure Gmail SMTP to deliver it.'
+        )
+    else:
+        email_status = (
+            f'{email_sent} email(s) sent; {email_failed} failed; '
+            f'{email_missing} resident(s) have an unverified or missing email.'
+        )
+    return audience, email_status
 
 
 @role_required('CHO')
@@ -4915,35 +5819,36 @@ def create_alert(request):
     if not title or not message or risk_level not in valid_levels:
         messages.error(request, 'Provide an alert title, message, and valid risk level.')
         return redirect('alert_management')
+    review_note = request.POST.get('cho_review_note', '').strip()
+    if request.POST.get('cho_review_confirmed') != 'on' or len(review_note) < 20:
+        messages.error(
+            request,
+            'Before publishing, confirm CHO review and provide a review note of at least 20 characters.',
+        )
+        return redirect('alert_management')
 
     barangay = None
     if barangay_id:
         barangay = get_object_or_404(Barangay, pk=barangay_id)
-    Alert.objects.create(
+    alert = Alert.objects.create(
         title=title,
         message=message,
         risk_level=risk_level,
         barangay=barangay,
         created_by=request.user,
+        cho_review_confirmed=True,
+        cho_review_note=review_note,
+        cho_reviewed_by=request.user,
+        cho_reviewed_at=timezone.now(),
     )
-    recipients = UserAccount.objects.filter(
-        role='RESIDENT', account_status='APPROVED',
+    from .admin_notifications import notify_cho_admins
+    notify_cho_admins(
+        title=f'Resident alert published: {title}',
+        message=f'{request.user.get_full_name() or request.user.username} published a {risk_level.lower()}-risk alert for {barangay.barangay_name if barangay else "All Iligan City"}.',
+        link='/cho/alerts/', actor=request.user, notification_type='ALERT',
     )
-    if barangay:
-        recipients = recipients.filter(assigned_barangay=barangay)
-        audience = f'{barangay.barangay_name} residents'
-    else:
-        audience = 'all resident users'
-    for resident in recipients.iterator():
-        notify_user(
-            resident,
-            'ALERT',
-            title,
-            message,
-            created_by=request.user,
-            link='/alerts',
-        )
-    messages.success(request, f'Alert published and sent to {audience}.')
+    audience, email_status = _deliver_reviewed_alert(alert, request.user)
+    messages.success(request, f'Alert published for {audience}. {email_status}')
     return redirect('alert_management')
 
 
@@ -4952,9 +5857,41 @@ def toggle_alert(request, alert_id):
     if request.method != 'POST':
         return redirect('alert_management')
     alert = get_object_or_404(Alert, pk=alert_id)
-    alert.is_active = not alert.is_active
-    alert.save(update_fields=['is_active'])
-    messages.success(request, 'Alert activated.' if alert.is_active else 'Alert withdrawn.')
+    if alert.is_active:
+        alert.is_active = False
+        alert.save(update_fields=['is_active'])
+        from .admin_notifications import notify_cho_admins
+        notify_cho_admins(
+            title=f'Resident alert withdrawn: {alert.title}',
+            message=f'{request.user.get_full_name() or request.user.username} withdrew a previously published resident alert.',
+            link='/cho/alerts/', actor=request.user, notification_type='ALERT',
+        )
+        messages.success(request, 'Alert withdrawn.')
+    else:
+        review_note = request.POST.get('cho_review_note', '').strip()
+        if request.POST.get('cho_review_confirmed') != 'on' or len(review_note) < 20:
+            messages.error(
+                request,
+                'Before reactivating, confirm a fresh CHO review and provide a review note of at least 20 characters.',
+            )
+            return redirect('alert_management')
+        alert.is_active = True
+        alert.cho_review_confirmed = True
+        alert.cho_review_note = review_note
+        alert.cho_reviewed_by = request.user
+        alert.cho_reviewed_at = timezone.now()
+        alert.save(update_fields=[
+            'is_active', 'cho_review_confirmed', 'cho_review_note',
+            'cho_reviewed_by', 'cho_reviewed_at',
+        ])
+        from .admin_notifications import notify_cho_admins
+        notify_cho_admins(
+            title=f'Resident alert re-published: {alert.title}',
+            message=f'{request.user.get_full_name() or request.user.username} re-reviewed and re-published a resident alert.',
+            link='/cho/alerts/', actor=request.user, notification_type='ALERT',
+        )
+        audience, email_status = _deliver_reviewed_alert(alert, request.user)
+        messages.success(request, f'Alert re-reviewed and published for {audience}. {email_status}')
     return redirect('alert_management')
 
 
@@ -4979,6 +5916,9 @@ def bhw_environmental_reports(request):
         'reports': reports,
         'assigned_barangay': request.user.assigned_barangay,
         'assigned_purok': request.user.assigned_purok,
+        'pending_count': reports.filter(status='PENDING').count(),
+        'forwarded_count': reports.filter(status='FORWARDED').count(),
+        'total_count': reports.count(),
     })
 
 
@@ -5016,15 +5956,12 @@ def forward_environmental_report(request, report_id):
         created_by=request.user,
         link='/(tabs)/report',
     )
-    for cho in UserAccount.objects.filter(role='CHO', account_status='APPROVED'):
-        notify_user(
-            cho,
-            'REPORT',
-            f'BHW forwarded a {report.observation_type} concern',
-            f'{report.barangay.barangay_name}: {note}',
-            created_by=request.user,
-            link='/cho/community-reports/',
-        )
+    from .admin_notifications import notify_cho_admins
+    notify_cho_admins(
+        title=f'BHW forwarded a {report.observation_type} concern',
+        message=f'{report.barangay.barangay_name}: {note}',
+        actor=request.user, link='/cho/community-reports/', notification_type='REPORT',
+    )
     messages.success(request, 'Environmental concern verified and forwarded to CHO for final review.')
     return redirect('bhw_environmental_reports')
 
@@ -5258,6 +6195,12 @@ def assign_bhw_area(request, user_id):
         created_by=request.user,
         link='/dashboard/',
     )
+    from .admin_notifications import notify_cho_admins
+    notify_cho_admins(
+        title=f'Monitoring area assigned: {bhw.username}',
+        message=f'{request.user.get_full_name() or request.user.username} assigned {bhw.username} to {assigned_area}.',
+        actor=request.user, link='/cho/bhw-assignments/', notification_type='ASSIGNMENT',
+    )
 
     # -----------------------------------------------------
     # SUCCESS MESSAGE
@@ -5341,6 +6284,12 @@ def remove_bhw_assignment(request, user_id):
         created_by=request.user,
         link='/dashboard/',
     )
+    from .admin_notifications import notify_cho_admins
+    notify_cho_admins(
+        title=f'Monitoring area removed: {bhw.username}',
+        message=f'{request.user.get_full_name() or request.user.username} removed {bhw.username}’s barangay/purok assignment.',
+        actor=request.user, link='/cho/bhw-assignments/', notification_type='ASSIGNMENT',
+    )
 
     messages.success(
         request,
@@ -5358,12 +6307,19 @@ def remove_bhw_assignment(request, user_id):
 # =========================================================
 
 @role_required('CHO')
+@require_POST
 def approve_user(request, user_id):
 
     user = get_object_or_404(
         UserAccount,
-        id=user_id
+        id=user_id,
+        role__in=['CHO', 'BHW', 'CHW', 'LGU', 'RESIDENT'],
+        account_status='PENDING',
     )
+
+    if not user.email_verified:
+        messages.error(request, f'{user.username} must verify their email before approval. Ask them to use the resend verification link.')
+        return redirect('pending_requests' if request.POST.get('next') == 'pending_requests' else 'user_management')
 
     user.account_status = 'APPROVED'
     user.is_active = True
@@ -5374,6 +6330,14 @@ def approve_user(request, user_id):
             'is_active',
         ]
     )
+
+    from .admin_notifications import notify_cho_admins
+    notify_cho_admins(
+        title=f'Account approved: {user.username}',
+        message=f'{request.user.get_full_name() or request.user.username} approved a {user.get_role_display()} account.',
+        actor=request.user, link='/pending-requests/', notification_type='ADMIN',
+    )
+    notify_user(user, 'ADMIN', 'DengueWatch account approved', 'Your account has been approved. You can now sign in.', created_by=request.user, link='/login/')
 
     # -----------------------------------------------------
     # SPECIAL MESSAGE FOR BHW
@@ -5396,7 +6360,7 @@ def approve_user(request, user_id):
         )
 
     return redirect(
-        'user_management'
+        'pending_requests' if request.POST.get('next') == 'pending_requests' else 'user_management'
     )
 
 # =========================================================
@@ -5405,6 +6369,7 @@ def approve_user(request, user_id):
 # =========================================================
 
 @role_required('CHO')
+@require_POST
 def reject_user(
     request,
     user_id
@@ -5413,7 +6378,9 @@ def reject_user(
     try:
 
         user = UserAccount.objects.get(
-            id=user_id
+            id=user_id,
+            role__in=['CHO', 'BHW', 'CHW', 'LGU', 'RESIDENT'],
+            account_status='PENDING',
         )
 
         user.account_status = 'REJECTED'
@@ -5421,6 +6388,13 @@ def reject_user(
         user.is_active = False
 
         user.save()
+
+        from .admin_notifications import notify_cho_admins
+        notify_cho_admins(
+            title=f'Account rejected: {user.username}',
+            message=f'{request.user.get_full_name() or request.user.username} rejected a {user.get_role_display()} account request.',
+            actor=request.user, link='/pending-requests/', notification_type='ADMIN',
+        )
 
         messages.success(
             request,
@@ -5435,7 +6409,7 @@ def reject_user(
         )
 
     return redirect(
-        'user_management'
+        'pending_requests' if request.POST.get('next') == 'pending_requests' else 'user_management'
     )
 
 

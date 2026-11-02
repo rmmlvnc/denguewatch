@@ -258,7 +258,9 @@
           <h5>Reports &amp; Analytics</h5>
           <small class="muted">City Health Office</small>
         </div>
-        <span>{{ user.get_username }}</span>
+        <div class="user-info">
+          <span>{{ user.get_username }}</span>
+        </div>
       </header>
       <main class="content">
         <section class="heading">
@@ -342,7 +344,11 @@
                     >
                   </td>
                   <td>
+                    {% if row.top_purok_cases %}
                     {{ row.top_purok_name }} ({{ row.top_purok_cases }} cases)
+                    {% else %}
+                    <span class="text-muted">{{ row.top_purok_name }}</span>
+                    {% endif %}
                   </td>
                 </tr>
                 {% empty %}

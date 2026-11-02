@@ -12,13 +12,18 @@ urlpatterns = [
     path("api/mobile/locations/", api.locations, name="api_mobile_locations"),
     path("api/mobile/locations/<int:barangay_id>/puroks/", api.barangay_puroks, name="api_mobile_barangay_puroks"),
     path("api/mobile/boundaries/", api.iligan_barangay_boundaries, name="api_iligan_barangay_boundaries"),
+    path("api/mobile/public-hotspot-preview/", api.public_hotspot_preview, name="api_mobile_public_hotspot_preview"),
+    path("api/mobile/public-monthly-critical-areas/", api.public_monthly_critical_areas, name="api_mobile_public_monthly_critical_areas"),
     path("api/mobile/auth/register/", api.register_resident, name="api_mobile_register"),
+    path("api/mobile/auth/verify-email/", api.verify_resident_email, name="api_mobile_verify_email"),
+    path("api/mobile/auth/resend-verification/", api.resend_email_verification, name="api_mobile_resend_verification"),
     path("api/mobile/auth/login/", api.login_mobile, name="api_mobile_login"),
     path("api/mobile/auth/logout/", api.logout_mobile, name="api_mobile_logout"),
     path("api/mobile/me/", api.me, name="api_mobile_me"),
     path("api/mobile/profile/", api.update_profile, name="api_mobile_update_profile"),
     path("api/mobile/hotspots/", api.hotspots, name="api_mobile_hotspots"),
     path("api/mobile/alerts/", api.alerts, name="api_mobile_alerts"),
+    path("api/mobile/alerts/<int:alert_id>/", api.alert_detail, name="api_mobile_alert_detail"),
     path("api/mobile/notifications/", api.notifications, name="api_mobile_notifications"),
     path("api/mobile/community-reports/", api.community_reports, name="api_mobile_community_reports"),
 
@@ -48,6 +53,7 @@ urlpatterns = [
         views.register,
         name="register"
     ),
+    path("verify-staff-email/resend/", views.resend_verification, name="resend_verification"),
 
     path(
         "logout/",
@@ -92,6 +98,16 @@ urlpatterns = [
         views.cases,
         name="cases"
     ),
+    path(
+        "cases/records/<str:record_type>/<int:record_id>/edit/",
+        views.edit_dengue_case_record,
+        name="edit_dengue_case_record",
+    ),
+    path(
+        "cases/records/<str:record_type>/<int:record_id>/delete/",
+        views.delete_dengue_case_record,
+        name="delete_dengue_case_record",
+    ),
 
 
     # =====================================================
@@ -102,6 +118,11 @@ urlpatterns = [
         "hotspot-map/",
         views.hotspot_map,
         name="hotspot_map"
+    ),
+    path(
+        "hotspot-map/data/",
+        views.hotspot_map_data,
+        name="hotspot_map_data",
     ),
 
 
@@ -396,6 +417,11 @@ urlpatterns = [
         "chw/suspected-cases/<int:case_id>/update/",
         views.update_chw_case_report,
         name="update_chw_case_report"
+    ),
+    path(
+        "chw/suspected-cases/<int:case_id>/delete/",
+        views.delete_chw_case_report,
+        name="delete_chw_case_report"
     ),
 
 

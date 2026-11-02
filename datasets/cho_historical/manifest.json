@@ -1,0 +1,33 @@
+{
+  "status": "CHO_attributed_historical_source_integrated",
+  "source_attribution": "CHO verification confirmed by the project team for the uploaded 2018-2026 source.",
+  "active_source_file": "WILBUR_DSO_dengue_2018_2026_authoritative.csv",
+  "included_in_operational_totals_maps_and_training": true,
+  "historical_datasets": {
+    "2018": {
+      "source_file": "WILBUR_DSO_dengue_2018_2026_authoritative.csv",
+      "rows": 1781,
+      "rows_by_admission_date": 1781,
+      "rows_by_year_column": 1781,
+      "exact_duplicate_extra_rows": 0,
+      "rows_with_unmatched_barangay": 1,
+      "sha256": "e6d874eceaa29518e8a86d9fee9e034b42e4f2d387d4ee891e0477275e71d8f4",
+      "invalid_admission_dates_not_in_year_count": true
+    },
+    "2019": {
+      "source_file": "WILBUR_DSO_dengue_2018_2026_authoritative.csv",
+      "rows": 1888,
+      "rows_by_admission_date": 1888,
+      "rows_by_year_column": 1888,
+      "exact_duplicate_extra_rows": 0,
+      "rows_with_unmatched_barangay": 0,
+      "sha256": "e6d874eceaa29518e8a86d9fee9e034b42e4f2d387d4ee891e0477275e71d8f4",
+      "invalid_admission_dates_not_in_year_count": true
+    }
+  },
+  "previous_synthetic_submission_status": "Synthetic demo records remain excluded from the active line list.",
+  "row_handling": "Retain all rows and flag exact repeats for CHO review; no stable case identifier is available.",
+  "combined_case_rows": 14071,
+  "active_source_sha256": "e6d874eceaa29518e8a86d9fee9e034b42e4f2d387d4ee891e0477275e71d8f4",
+  "generated_at_utc": "2026-10-22T14:43:18.729679+00:00"
+}

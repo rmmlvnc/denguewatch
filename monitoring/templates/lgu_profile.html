@@ -388,8 +388,8 @@
               <h3>{{ user.get_full_name|default:user.username }}</h3>
               <div class="username">@{{ user.username }}</div>
               <div class="status">
-                <i class="fa-solid fa-circle-check"></i>{{
-                user.get_account_status_display }}
+                <i class="fa-solid fa-circle-check"></i>
+                <span>{{ user.get_account_status_display }}</span>
               </div>
             </div>
             <div class="summary-list">
@@ -401,11 +401,10 @@
                 ><strong>{{ user.date_joined|date:"M d, Y" }}</strong>
               </div>
               <div class="summary-row">
-                <span>Last login</span
-                ><strong
-                  >{{ user.last_login|date:"M d, Y g:i A"|default:"No record"
-                  }}</strong
-                >
+                <span>Last login</span>
+                <strong>
+                  {% if user.last_login %}{{ user.last_login|date:"M d, Y g:i A" }}{% else %}No record{% endif %}
+                </strong>
               </div>
             </div>
           </section>

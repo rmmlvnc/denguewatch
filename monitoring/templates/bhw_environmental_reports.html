@@ -1,4 +1,154 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>DengueWatch | BHW Environmental Reports</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><link rel="stylesheet" href="{% static 'css/style.css' %}"><style>body{margin:0;background:#f4f7f9;color:#1f2937;font-family:"Segoe UI",Arial,sans-serif}.layout{min-height:100vh;display:flex}.sidebar{width:260px;min-height:100vh;background:#0f766e;color:#fff;position:fixed;inset:0 auto 0 0;padding:25px 18px;overflow-y:auto}.sidebar a{color:#fff;padding:12px;border-radius:8px;margin-bottom:5px;font-size:14px}.sidebar a:hover,.sidebar a.active{background:rgba(255,255,255,.18)}.main{margin-left:260px;width:calc(100% - 260px)}.topbar{min-height:75px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:14px 35px}.topbar h5{margin:0;font-weight:700}.content{max-width:1250px;padding:35px}.muted{color:#64748b}.notice{background:#e6f4f1;border-left:4px solid #0f766e;border-radius:8px;padding:15px 18px;margin:22px 0}.report{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:22px;margin-bottom:16px}.status{display:inline-block;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:700}.status-pending{background:#fef3c7;color:#92400e}.status-forwarded{background:#dbeafe;color:#1d4ed8}.metadata{color:#64748b;font-size:14px}.map-note{background:#f8fafc;border-radius:8px;padding:10px;margin-top:10px}textarea{min-height:88px}@media(max-width:900px){.sidebar{width:220px}.main{margin-left:220px;width:calc(100% - 220px)}}@media(max-width:700px){.layout{display:block}.sidebar{position:static;width:100%;min-height:auto}.main{margin:0;width:100%}.topbar,.content{padding-left:20px;padding-right:20px}}</style></head>
-<body><div class="layout">{% include 'includes/role_sidebar.html' %}<main class="main"><header class="topbar"><div><h5>Environmental Reports</h5><small class="muted">Barangay-level resident concern verification</small></div><div class="text-end"><strong>{{ current_user_name }}</strong><br><small class="muted">{{ current_user_role }}</small></div></header><div class="content"><h1 class="h3 mb-1">Resident environmental concerns</h1>{% if assigned_barangay %}<p class="muted mb-0">You can review only reports in <strong>{{ assigned_barangay.barangay_name }}</strong>{% if assigned_purok %}, <strong>{{ assigned_purok.purok_name }}</strong>{% endif %}.</p>{% else %}<p class="text-danger">Your BHW account has no assigned area. Ask CHO to assign a barangay or purok before reviewing reports.</p>{% endif %}<div class="notice"><strong><i class="fa-solid fa-route"></i> BHW → CHO workflow</strong><div>Review the report’s location and description. If the concern is valid, record your verification note and forward it to CHO. CHO provides the final resident-facing response.</div></div>{% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}{% for report in reports %}<article class="report"><div class="d-flex justify-content-between gap-3"><div><h2 class="h5 mb-1">{{ report.observation_type }} <span class="status status-{{ report.status|lower }}">{{ report.get_status_display }}</span></h2><p class="metadata mb-0">{{ report.resident.get_full_name|default:report.resident.username }} &middot; {{ report.submitted_at }}</p></div><div class="text-end metadata">{{ report.barangay.barangay_name }}{% if report.purok %}<br>{{ report.purok.purok_name }}{% endif %}</div></div><p class="mt-3 mb-0">{{ report.description }}</p>{% if report.latitude and report.longitude %}<div class="map-note"><i class="fa-solid fa-location-dot"></i> Resident location attached: {{ report.latitude }}, {{ report.longitude }}</div>{% endif %}<div class="map-note"><strong>Audit trail</strong>{% for audit in report.audit_logs.all %}<br><small class="metadata">{{ audit.created_at|date:"M d, Y g:i a" }} · {{ audit.get_action_display }} by {{ audit.actor.get_full_name|default:audit.actor.username|default:"System" }}{% if audit.details %}: {{ audit.details }}{% endif %}</small>{% empty %}<br><small class="metadata">No audit events recorded.</small>{% endfor %}</div>{% if report.status == 'PENDING' %}<form method="post" action="{% url 'forward_environmental_report' report.pk %}" class="mt-3">{% csrf_token %}<label class="form-label" for="note-{{ report.pk }}">BHW verification note</label><textarea id="note-{{ report.pk }}" class="form-control" name="bhw_review_note" required placeholder="Describe what you verified during area review."></textarea><button class="btn btn-success mt-2" type="submit"><i class="fa-solid fa-paper-plane"></i> Verify and forward to CHO</button></form>{% else %}<div class="map-note"><strong>Forwarded to CHO:</strong> {{ report.bhw_review_note }}<br><small class="metadata">{{ report.bhw_reviewed_at }}</small></div>{% endif %}</article>{% empty %}<div class="report text-center muted py-4">No resident environmental reports are waiting in your assigned area.</div>{% endfor %}</div></main></div></body></html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environmental Reports | DengueWatch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        * { box-sizing:border-box; }
+        body { margin:0; font-family:"Segoe UI",Arial,sans-serif; background:#f4f7f9; color:#1f2937; }
+        .main-content { margin-left:260px; width:calc(100% - 260px); min-height:100vh; }
+        .review-topbar { min-height:75px; background:#fff; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 28px; }
+        .review-topbar h1 { margin:0; font-size:20px; font-weight:700; }
+        .review-topbar small { color:#6b7280; }
+        .review-identity { display:flex; align-items:center; gap:12px; }
+        .review-identity-text { text-align:right; line-height:1.15; }
+        .review-identity-text strong { display:block; font-size:14px; }
+        .review-role { color:#0f766e; background:#e6f4f1; padding:5px 10px; border-radius:20px; font-size:11px; }
+        .review-avatar { width:40px; height:40px; display:grid; place-items:center; border-radius:50%; color:#0f766e; background:#e6f4f1; border:1px solid #cbe7df; font-weight:700; }
+        .review-content { padding:28px; }
+        .review-page-title { margin-bottom:22px; }
+        .review-page-title h2 { margin:0 0 5px; font-size:24px; font-weight:700; }
+        .review-page-title p { margin:0; color:#6b7280; font-size:13px; }
+        .review-page-title strong { color:#0f766e; }
+        .review-notice { padding:15px 18px; margin-bottom:16px; border-left:4px solid #0f766e; border-radius:8px; background:#e6f4f1; font-size:13px; line-height:1.6; }
+        .review-notice strong { color:#0f766e; }
+        .review-notice.safe { color:#166534; background:#f0fdf4; border-color:#22c55e; }
+        .review-notice.safe strong { color:#15803d; }
+        .review-notice.warning { color:#7c2d12; background:#fff7ed; border-color:#f97316; }
+        .review-notice.warning strong { color:#c2410c; }
+        .review-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; margin:22px 0; }
+        .review-stat { display:flex; align-items:center; gap:15px; min-width:0; padding:20px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+        .review-stat-icon { width:45px; height:45px; flex:0 0 45px; display:grid; place-items:center; border-radius:9px; background:#e6f4f1; color:#0f766e; font-size:18px; }
+        .review-stat-icon.pending { background:#fefce8; color:#ca8a04; }
+        .review-stat-icon.forwarded { background:#eff6ff; color:#2563eb; }
+        .review-stat h3 { margin:0; font-size:23px; font-weight:700; }
+        .review-stat p { margin:2px 0 0; color:#6b7280; font-size:12px; }
+        .review-card { padding:22px; margin-bottom:22px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+        .review-card-title { display:flex; align-items:center; gap:8px; margin-bottom:5px; font-size:16px; font-weight:700; }
+        .review-card-title i { color:#0f766e; }
+        .review-card-subtitle { margin-bottom:18px; color:#6b7280; font-size:12px; }
+        .review-table { width:100%; min-width:820px; border-collapse:collapse; }
+        .review-table th { padding:12px; border-bottom:1px solid #e5e7eb; background:#f8fafc; color:#6b7280; font-size:11px; white-space:nowrap; }
+        .review-table td { padding:12px; border-bottom:1px solid #f1f1f1; vertical-align:middle; font-size:12px; }
+        .review-table tbody tr:hover { background:#f9fafb; }
+        .review-name { color:#172b3c; font-weight:700; }
+        .review-muted { color:#64748b; }
+        .review-status { display:inline-block; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; }
+        .review-status.pending { color:#92400e; background:#fef3c7; }
+        .review-status.forwarded { color:#1d4ed8; background:#dbeafe; }
+        .review-detail-row td { padding:17px; background:#f8fafc; }
+        .review-details-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px 20px; }
+        .review-details-grid span { display:block; color:#64748b; font-size:11px; }
+        .review-details-grid strong { display:block; color:#1f2937; font-size:13px; white-space:pre-wrap; overflow-wrap:anywhere; }
+        .review-audit { margin-top:16px; padding:14px; border-radius:8px; background:#fff; border:1px solid #e5e7eb; }
+        .review-empty { padding:42px 20px; color:#6b7280; text-align:center; }
+        .review-empty i { display:block; margin-bottom:12px; color:#0f766e; font-size:32px; }
+        .review-actions { min-width:140px; }
+        @media(max-width:1100px) { .review-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:900px) { .main-content { margin-left:220px; width:calc(100% - 220px); } }
+        @media(max-width:700px) { .main-content { width:100%; margin:0; } .review-topbar { padding:12px 16px; } .review-content { padding:16px; } .review-role { display:none; } .review-stats { grid-template-columns:1fr; gap:10px; } .review-card { padding:16px; } .review-details-grid { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+{% include 'includes/role_sidebar.html' %}
+<main class="main-content">
+    <header class="review-topbar">
+        <div><h1>Environmental Reports</h1><small>Barangay-level resident concern verification</small></div>
+        <div class="review-identity"><div class="review-identity-text"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><span class="review-role">{{ request.user.get_role_display }}</span></div><span class="review-avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</span></div>
+    </header>
+
+    <div class="review-content">
+        {% if messages %}{% for message in messages %}<div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %}">{{ message }}</div>{% endfor %}{% endif %}
+        <section class="review-page-title">
+            <h2>Resident environmental concerns</h2>
+            {% if assigned_barangay %}<p>Review reports for <strong>{{ assigned_barangay.barangay_name }}</strong>{% if assigned_purok %}, <strong>{{ assigned_purok.purok_name }}</strong>{% else %} — barangay-wide monitoring{% endif %}.</p>{% else %}<p class="text-danger">Your BHW account has no assigned area. Ask CHO to assign a barangay or purok before reviewing reports.</p>{% endif %}
+        </section>
+
+        {% if pending_count == 0 %}
+        <section class="review-notice safe"><strong><i class="fa-solid fa-circle-check"></i> No concerns awaiting verification</strong><br>There are no new resident environmental reports awaiting BHW review in your assigned area.</section>
+        {% endif %}
+        <section class="review-notice"><strong><i class="fa-solid fa-route"></i> BHW → CHO workflow</strong><br>Review the resident’s concern and location. If it is valid, enter your verification note and forward it to CHO. CHO provides the final response to the resident.</section>
+
+        <section class="review-stats" aria-label="Environmental report summary">
+            <div class="review-stat"><div class="review-stat-icon pending"><i class="fa-solid fa-clock"></i></div><div><h3>{{ pending_count }}</h3><p>Awaiting BHW review</p></div></div>
+            <div class="review-stat"><div class="review-stat-icon forwarded"><i class="fa-solid fa-share"></i></div><div><h3>{{ forwarded_count }}</h3><p>Forwarded to CHO</p></div></div>
+            <div class="review-stat"><div class="review-stat-icon"><i class="fa-solid fa-file-lines"></i></div><div><h3>{{ total_count }}</h3><p>Reports in queue</p></div></div>
+            <div class="review-stat"><div class="review-stat-icon"><i class="fa-solid fa-location-dot"></i></div><div><h3>{% if assigned_barangay %}1{% else %}0{% endif %}</h3><p>Assigned barangay{% if assigned_purok %} / purok{% endif %}</p></div></div>
+        </section>
+
+        <section class="review-card">
+            <div class="review-card-title"><i class="fa-solid fa-clipboard-check"></i> Resident Environmental Reports</div>
+            <div class="review-card-subtitle">Resident submissions in your assigned monitoring area.</div>
+            {% if reports %}
+            <div class="table-responsive">
+                <table class="review-table">
+                    <thead><tr><th>Report</th><th>Resident</th><th>Concern</th><th>Location</th><th>Submitted</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for report in reports %}
+                        <tr>
+                            <td><span class="review-name">#{{ report.pk }}</span></td>
+                            <td><span class="review-name">{{ report.resident.get_full_name|default:report.resident.username }}</span><br><span class="review-muted">{{ report.resident.username }}</span></td>
+                            <td>{{ report.observation_type }}</td>
+                            <td>{{ report.barangay.barangay_name }}{% if report.purok %}<br><span class="review-muted">{{ report.purok.purok_name }}</span>{% endif %}</td>
+                            <td>{{ report.submitted_at|date:"M d, Y" }}</td>
+                            <td><span class="review-status {% if report.status == 'PENDING' %}pending{% else %}forwarded{% endif %}">{{ report.get_status_display }}</span></td>
+                            <td class="review-actions"><button class="btn btn-outline-primary btn-sm" type="button" aria-expanded="false" aria-controls="report-details-{{ report.pk }}" onclick="toggleReportDetails(this, 'report-details-{{ report.pk }}')"><i class="fa-solid fa-eye"></i> View details</button></td>
+                        </tr>
+                        <tr id="report-details-{{ report.pk }}" class="review-detail-row" hidden>
+                            <td colspan="7">
+                                <div class="review-details-grid">
+                                    <div><span>Report ID</span><strong>#{{ report.pk }}</strong></div>
+                                    <div><span>Resident</span><strong>{{ report.resident.get_full_name|default:report.resident.username }}</strong></div>
+                                    <div><span>Concern type</span><strong>{{ report.observation_type }}</strong></div>
+                                    <div><span>Barangay</span><strong>{{ report.barangay.barangay_name|default:"Not provided" }}</strong></div>
+                                    <div><span>Purok / sitio</span><strong>{{ report.purok.purok_name|default:"Not provided" }}</strong></div>
+                                    <div><span>Exact location / landmark</span><strong>{{ report.location_details|default:"Not provided" }}</strong></div>
+                                    <div><span>Description</span><strong>{{ report.description }}</strong></div>
+                                    <div><span>Date submitted</span><strong>{{ report.submitted_at|date:"M d, Y g:i a" }}</strong></div>
+                                    {% if report.latitude and report.longitude %}<div><span>Resident coordinates</span><strong>{{ report.latitude }}, {{ report.longitude }}</strong></div>{% endif %}
+                                </div>
+                                {% if report.photo %}<div class="mt-3"><span class="review-muted">Resident photo</span><br><a href="{{ report.photo.url }}" target="_blank" rel="noopener"><img src="{{ report.photo.url }}" alt="Photo attached to resident report" style="max-width:320px;max-height:220px;object-fit:cover;border-radius:8px;margin-top:8px"></a></div>{% endif %}
+                                <div class="review-audit"><strong>Audit trail</strong>{% for audit in report.audit_logs.all %}<div class="review-muted mt-1">{{ audit.created_at|date:"M d, Y g:i a" }} · {{ audit.get_action_display }} by {{ audit.actor.get_full_name|default:audit.actor.username|default:"System" }}{% if audit.details %}: {{ audit.details }}{% endif %}</div>{% empty %}<div class="review-muted mt-1">No audit events recorded.</div>{% endfor %}</div>
+                                {% if report.status == 'PENDING' %}
+                                <form method="post" action="{% url 'forward_environmental_report' report.pk %}" class="mt-3">
+                                    {% csrf_token %}<label class="form-label fw-semibold" for="note-{{ report.pk }}">BHW verification note</label>
+                                    <textarea id="note-{{ report.pk }}" class="form-control" name="bhw_review_note" rows="3" required placeholder="Describe what you verified during area review."></textarea>
+                                    <button class="btn btn-success mt-2" type="submit"><i class="fa-solid fa-paper-plane"></i> Verify and forward to CHO</button>
+                                </form>
+                                {% else %}<div class="review-audit"><strong>Forwarded to CHO</strong><div>{{ report.bhw_review_note }}</div><small class="review-muted">{{ report.bhw_reviewed_at|date:"M d, Y g:i a" }}</small></div>{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div class="review-empty"><i class="fa-solid fa-leaf"></i><strong>No resident environmental reports found</strong><div>{% if assigned_barangay %}There are no reports waiting in your assigned area.{% else %}Once CHO assigns your monitoring area, relevant reports will appear here.{% endif %}</div></div>
+            {% endif %}
+        </section>
+    </div>
+</main>
+<script>
+    function toggleReportDetails(button, rowId) {
+        const row = document.getElementById(rowId);
+        if (!row) return;
+        row.hidden = !row.hidden;
+        button.setAttribute('aria-expanded', String(!row.hidden));
+    }
+</script>
+</body>
+</html>

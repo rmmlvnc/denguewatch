@@ -447,7 +447,7 @@
                     >
                   </td>
                   <td>
-                    {% for purok in row.puroks|slice:":1" %}{{ purok.name }} ({{ purok.case_count }}){% empty %}Not specified{% endfor %}
+                    {% if row.top_purok_cases %}{{ row.top_purok_name }} ({{ row.top_purok_cases }} cases){% else %}<span class="text-muted">{{ row.top_purok_name }}</span>{% endif %}
                   </td>
                 </tr>
                 {% empty %}
@@ -465,7 +465,7 @@
           <div class="panel-head"><h5>Risk Classification Guide</h5></div>
           <div class="panel-body guide">
             <div style="border-top-color: #22c55e">
-              <strong>Low Risk · 1–5</strong>Routine monitoring and prevention.
+              <strong>Low Risk · 0–5</strong>Routine monitoring and prevention.
             </div>
             <div style="border-top-color: #eab308">
               <strong>Moderate · 6–50</strong>Strengthen monitoring and

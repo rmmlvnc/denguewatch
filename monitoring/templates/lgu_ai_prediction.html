@@ -14,6 +14,7 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
         rel="stylesheet"
     >
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
     <style>
         * {
@@ -369,6 +370,11 @@
             font-size: 12px;
         }
 
+        #forecastHotspotMap { height: 540px; width: 100%; border-radius: 0 0 12px 12px; background-color: #edf5f3; background-image: linear-gradient(rgba(15,118,110,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(15,118,110,.08) 1px, transparent 1px); background-size: 32px 32px; }
+        .forecast-map-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; color: #475569; font-size: 13px; }
+        .forecast-map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+        .forecast-map-swatch { width: 13px; height: 13px; border-radius: 3px; display: inline-block; }
+
         .risk-name {
             display: flex;
             align-items: center;
@@ -620,13 +626,13 @@
             <section class="page-title">
                 <div>
                     <h2>AI Hotspot Planning Information</h2>
-                    <p>Read-only Random Forest forecasts for LGU planning and coordination.</p>
+                    <p>Read-only next-month barangay case estimates to flag potential hotspots for LGU planning and coordination.</p>
                 </div>
 
                 {% if model_ready %}
                     <div class="model-status">
                         <i class="fa-solid fa-circle-check"></i>
-                        Random Forest model loaded
+                        Tree-ensemble model loaded
                     </div>
                 {% elif prediction_error %}
                     <div class="model-status error-status">
@@ -654,6 +660,43 @@
                     </div>
                 </div>
             {% endif %}
+
+            <section class="box mb-3">
+                <div class="box-head">
+                    <h5><i class="fa-solid fa-bullseye me-2 text-success"></i>One-Month-Ahead Barangay Case Forecast</h5>
+                    <p>Estimates next calendar month's recorded case count for each of Iligan City's 44 barangays.</p>
+                </div>
+                {% if model_ready %}
+                    <div class="box-body risk-guide">
+                        <div class="metric-grid">
+                            <div class="metric-item"><span>Potential hotspots for {{ forecast_period }}</span><strong>{{ planning_summary.potential_hotspot_count|default:"0" }}</strong></div>
+                            <div class="metric-item"><span>Latest data through</span><strong>{{ case_data_period }}</strong></div>
+                            <div class="metric-item"><span>Planning flag threshold</span><strong>{{ predicted_hotspot_threshold }}+ estimated cases</strong></div>
+                        </div>
+                        <p class="source">Data used: {{ prediction_data_source }}. Pending case reports are excluded until CHO confirms them.</p>
+                        {% if model_metrics.source_data_quality_note %}<p class="source text-warning-emphasis"><strong>Source-data verification:</strong> {{ model_metrics.source_data_quality_note }}</p>{% endif %}
+                        {% if prediction_input_provisional %}<p class="source text-warning-emphasis"><strong>Provisional month-to-date forecast:</strong> This month is still underway. Confirmed cases may change the estimate as CHO approves more reports.</p>{% endif %}
+                        <div class="row g-3 mt-1">
+                            <div class="col-12">
+                                <h6>Forecast map · {{ forecast_period }}</h6>
+                                {% if forecast_map_geojson %}
+                                    <div id="forecastHotspotMap" role="img" aria-label="Map of predicted dengue cases by barangay for {{ forecast_period }}"></div>
+                                    <div class="forecast-map-legend">
+                                        <span><i class="forecast-map-swatch" style="background:#dc2626"></i>High / Critical</span>
+                                        <span><i class="forecast-map-swatch" style="background:#f59e0b"></i>Moderate</span>
+                                        <span><i class="forecast-map-swatch" style="background:#16a34a"></i>Low</span>
+                                        <span>Click a barangay for estimated and observed cases.</span>
+                                    </div>
+                                {% else %}
+                                    <p class="muted">Forecast map boundaries are unavailable.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="box-body"><p class="muted mb-0">Potential hotspot estimates are unavailable until the prediction model and monthly dataset are ready.</p></div>
+                {% endif %}
+            </section>
 
             <section class="stats">
                 <article class="stat-card">
@@ -711,7 +754,7 @@
             <section class="box mb-3">
                 <div class="box-head">
                     <h5><i class="fa-solid fa-city me-2 text-success"></i>City planning brief</h5>
-                    <p>Read-only summary for coordination; CHO verifies field actions and public alerts.</p>
+                    <p>Read-only forecast summary for coordination; CHO verifies field actions and public alerts.</p>
                 </div>
                 <div class="box-body">
                     <div class="metric-grid">
@@ -719,7 +762,8 @@
                         <div class="metric-item"><span>Increasing barangays</span><strong>{{ planning_summary.increasing_barangays|default:"0" }}</strong></div>
                         <div class="metric-item"><span>High / critical priorities</span><strong>{{ planning_summary.priority_barangays|default:"0" }}</strong></div>
                     </div>
-                    <p class="source">Historical case month: {{ case_data_period }} · Forecast month: {{ forecast_period }}. Use this information for resource planning, coordination, and reporting only.</p>
+                    <p class="source">Observed input through {{ case_data_period }} · One-month-ahead estimate for {{ forecast_period }}. Potential hotspot flag: estimated count ≥ {{ predicted_hotspot_threshold }}. The flag is an internal planning threshold, not an official outbreak definition. Use for resource planning, coordination, and reporting only.</p>
+                    <p class="source">The Random Forest forecast uses each barangay's two latest complete monthly case counts, plus calendar, location, and available weather features. Partial current-month reports are excluded. Retrospective evaluation used a chronological {{ model_metrics.outer_training_share_pct }}% training/development and {{ model_metrics.outer_test_share_pct }}% test split; test targets ran {{ model_metrics.final_test_target_start }}–{{ model_metrics.final_test_target_end }}.</p>
                 </div>
             </section>
 
@@ -752,8 +796,8 @@
                         <strong>{{ demographic_summary.common_age_group }}</strong>
                     </div>
                     <div class="profile-card">
-                        <span>Common reported area</span>
-                        <strong>{{ demographic_summary.common_purok }}</strong>
+                        <span>Common barangay</span>
+                        <strong>{{ demographic_summary.common_barangay }}</strong>
                     </div>
                 </div>
                 <p class="source px-3 pb-3 mb-0">
@@ -782,7 +826,7 @@
                             <i class="fa-solid fa-cloud-sun me-2 text-success"></i>
                             Weather and Rainfall Context
                         </h5>
-                        <p>Weather for the selected day is shown separately from the monthly Random Forest forecast.</p>
+                        <p>Weather for the selected day is shown separately from the monthly machine-learning forecast.</p>
                     </div>
                     <div class="box-body">
                         <form method="get" class="weather-controls">
@@ -812,7 +856,7 @@
                             Source:
                             {% if weather.source_url %}<a href="{{ weather.source_url }}" target="_blank" rel="noopener">{{ weather.source }}</a>{% else %}{{ weather.source }}{% endif %}
                             · Retrieved {{ weather.retrieved_at }}.<br>
-                            Latest dengue cases: {{ case_data_period }} · Random Forest forecast: {{ forecast_period }}.
+                            Latest dengue cases: {{ case_data_period }} · machine-learning forecast: {{ forecast_period }}.
                         </p>
                         <p class="source">
                             <strong>Interpretation:</strong> Rain today or yesterday is a weather monitoring signal, not an immediate dengue case prediction. Dengue transmission can increase during and after rainy periods, so the system uses rainfall to support surveillance of the following days and weeks.
@@ -825,25 +869,26 @@
                             <i class="fa-solid fa-layer-group me-2 text-success"></i>
                             Risk Classification Guide
                         </h5>
-                        <p>Same thresholds used by the hotspot map</p>
+                        <p>Categories are applied to each barangay's estimated case count for {{ forecast_period }}. They are internal planning bands, not official outbreak classifications.</p>
                     </div>
                     <div class="box-body risk-guide">
                         <div class="risk-row">
                             <div class="risk-name"><span class="dot low"></span>Low Risk</div>
-                            <strong>1–5 Cases</strong>
+                            <strong>0–5 Estimated Cases</strong>
                         </div>
                         <div class="risk-row">
                             <div class="risk-name"><span class="dot moderate"></span>Moderate Risk</div>
-                            <strong>6–50 Cases</strong>
+                            <strong>6–50 Estimated Cases</strong>
                         </div>
                         <div class="risk-row">
                             <div class="risk-name"><span class="dot high"></span>High Risk</div>
-                            <strong>51–100 Cases</strong>
+                            <strong>51–100 Estimated Cases</strong>
                         </div>
                         <div class="risk-row">
                             <div class="risk-name"><span class="dot critical"></span>Critical Risk</div>
-                            <strong>101+ Cases</strong>
+                            <strong>101+ Estimated Cases</strong>
                         </div>
+                        <p class="source mt-2 mb-0">These four bands describe the estimated count. Separately, {{ predicted_hotspot_threshold|default:"2" }} or more estimated cases creates an internal planning-review flag, while evaluation labels {{ observed_hotspot_threshold|default:"2" }} or more observed cases as a hotspot. The thresholds are internal, not official DOH categories.</p>
                     </div>
                 </article>
             </section>
@@ -862,8 +907,8 @@
                             <div>
                                 <strong>{{ forloop.counter }}. {{ row.barangay }}</strong>
                                 <div class="source mt-1">
-                                    Estimated {{ row.predicted_cases }} cases ·
-                                    Current input {{ row.current_cases }} ·
+                                    {{ forecast_period }} estimate: {{ row.predicted_cases }} cases ·
+                                    {{ case_data_period }} observed: {{ row.current_cases }} ·
                                     Historical profile: {{ row.common_age_group }},
                                     {{ row.common_sex }}
                                 </div>
@@ -878,54 +923,12 @@
                 </div>
             </section>
 
-            <section class="box mb-3">
-                <div class="box-head">
-                    <h5>
-                        <i class="fa-solid fa-chart-column me-2 text-success"></i>
-                        Model Evaluation
-                    </h5>
-                    <p>Later-period chronological validation</p>
-                </div>
-                <div class="box-body">
-                    <div class="metric-grid">
-                        <div class="metric-item">
-                            <span>Mean Absolute Error</span>
-                            <strong>{{ model_metrics.mae }}</strong>
-                        </div>
-                        <div class="metric-item">
-                            <span>Root Mean Squared Error</span>
-                            <strong>{{ model_metrics.rmse }}</strong>
-                        </div>
-                        <div class="metric-item">
-                            <span>Persistence Baseline MAE</span>
-                            <strong>{{ model_evaluation.baseline_mae|default:"N/A" }}</strong>
-                        </div>
-                        <div class="metric-item">
-                            <span>Persistence Baseline RMSE</span>
-                            <strong>{{ model_evaluation.baseline_rmse|default:"N/A" }}</strong>
-                        </div>
-                        <div class="metric-item">
-                            <span>R² Score</span>
-                            <strong>{{ model_metrics.r2 }}</strong>
-                        </div>
-                    </div>
-                    <p class="source">
-                        Test rows: {{ model_metrics.test_rows }} ·
-                        Validation starts: {{ model_metrics.validation_start }} ·
-                        Baseline: {{ model_evaluation.baseline_name }}.
-                        Lower MAE/RMSE is better. {{ model_evaluation.comparison_message }}
-                        Forecasts remain planning guidance only and must not be treated as
-                        confirmed outbreaks or automatic action triggers.
-                    </p>
-                </div>
-            </section>
-
             <section class="table-card">
                 <div class="toolbar">
                     <div>
                         <strong>Barangay Forecasts</strong>
                         <div class="source mt-1">
-                            Ranked by predicted cases for {{ forecast_period }}
+                            Ranked one-month-ahead estimates for {{ forecast_period }} · Potential hotspot threshold: {{ predicted_hotspot_threshold }} cases. Weather columns use the <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">Open-Meteo historical archive</a> for the latest complete month at representative barangay coordinates; nearby places may share a grid estimate. They do not change model inputs.
                         </div>
                     </div>
 
@@ -947,8 +950,8 @@
                             <tr>
                                 <th>Rank</th>
                                 <th>Barangay</th>
-                                <th>Current Cases</th>
-                                <th>Predicted Cases</th>
+                                <th>Observed Cases<br><small>{{ case_data_period }}</small></th>
+                                <th>Random Forest forecast<br><small>{{ forecast_period }}</small></th>
                                 <th>Expected Change</th>
                                 <th>Risk Level</th>
                                 <th>Historical Case Profile</th>
@@ -986,9 +989,9 @@
                                         <span class="muted">{{ row.common_purok }} · {{ row.historical_records }} records</span>
                                     </td>
                                     <td>{{ row.recommendation }}</td>
-                                    <td>{{ row.rainfall_mm }} mm</td>
-                                    <td>{{ row.temperature_c }}°C</td>
-                                    <td>{{ row.humidity_pct }}%</td>
+                                    <td title="{{ row.weather_source }} · {{ row.weather_period|default:'unavailable' }}">{{ row.rainfall_mm|default:"—" }} mm</td>
+                                    <td title="{{ row.weather_source }} · {{ row.weather_period|default:'unavailable' }}">{{ row.temperature_c|default:"—" }}°C</td>
+                                    <td title="{{ row.weather_source }} · {{ row.weather_period|default:'unavailable' }}">{{ row.humidity_pct|default:"—" }}%</td>
                                 </tr>
                             {% empty %}
                                 <tr>
@@ -1033,5 +1036,57 @@
         searchInput.addEventListener("input", filterRows);
         riskSelect.addEventListener("change", filterRows);
     </script>
+{% if model_ready and forecast_map_geojson %}
+{{ forecast_map_geojson|json_script:"forecast-map-data" }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(() => {
+    const mapElement = document.getElementById('forecastHotspotMap');
+    const source = document.getElementById('forecast-map-data');
+    if (!mapElement || !source || !window.L) return;
+    const geojson = JSON.parse(source.textContent);
+    const map = L.map(mapElement, { zoomControl: true, minZoom: 10, maxZoom: 18, scrollWheelZoom: false })
+        .setView([8.2280, 124.2452], 12);
+    map.attributionControl.setPrefix(false);
+    const mapMode = L.control({ position: 'bottomleft' });
+    mapMode.onAdd = () => {
+        const element = L.DomUtil.create('div', 'leaflet-control');
+        element.style.cssText = 'background:rgba(255,255,255,.92);padding:6px 9px;border-radius:4px;font-size:11px;color:#475569;box-shadow:0 1px 4px rgba(0,0,0,.18);';
+        element.textContent = 'Street map + predicted barangay boundaries';
+        mapMode.label = element;
+        return element;
+    };
+    mapMode.addTo(map);
+    const streetBasemap = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: 'Tiles &copy; Esri' }
+    ).addTo(map);
+    let streetMapAvailable = true;
+    streetBasemap.on('tileerror', () => {
+        if (!streetMapAvailable) return;
+        streetMapAvailable = false;
+        map.removeLayer(streetBasemap);
+        if (mapMode.label) mapMode.label.textContent = 'Official barangay boundary view (street map unavailable)';
+    });
+    const colors = { 'Critical': '#b91c1c', 'High': '#dc2626', 'Moderate': '#f59e0b', 'Low': '#16a34a' };
+    let layer;
+    layer = L.geoJSON(geojson, {
+        style: feature => {
+            const risk = feature.properties.forecast_risk;
+            return { color: '#ffffff', weight: 1.5, fillColor: colors[risk] || '#d1d5db', fillOpacity: risk ? 0.78 : 0.18 };
+        },
+        onEachFeature: (feature, polygon) => {
+            const p = feature.properties;
+            if (p.forecast_cases === undefined) return;
+            polygon.bindPopup(`<strong>${p.brgy_name}</strong><br>{{ forecast_period|escapejs }} Random Forest forecast: ${p.forecast_cases} cases<br>{{ case_data_period|escapejs }} observed: ${p.current_cases}<br>Planning band: ${p.forecast_risk}`);
+            polygon.bindTooltip(`${p.brgy_name}: ${p.forecast_cases} RF estimated cases`);
+            polygon.on('mouseover', () => polygon.setStyle({ weight: 2.5, fillOpacity: 0.92 }));
+            polygon.on('mouseout', () => layer.resetStyle(polygon));
+        }
+    }).addTo(map);
+    if (layer.getBounds().isValid()) map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+})();
+</script>
+{% endif %}
 </body>
 </html>

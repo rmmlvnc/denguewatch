@@ -1065,11 +1065,11 @@
                 <div>
 
                     <h3>
-                        {{ submitted_reports|default:"0" }}
+                        {{ historical_cases|default:"0" }}
                     </h3>
 
                     <p>
-                        Reports Submitted by You
+                        Historical CHO Records
                     </p>
 
                 </div>
@@ -1356,14 +1356,14 @@
 
                 <i class="fa-solid fa-filter"></i>
 
-                Search and Filter My Reports
+                Search and Filter Assigned-area Records
 
             </div>
 
 
             <p class="card-subtitle">
 
-                Search dengue reports submitted using your BHW account.
+                Search historical CHO records and CHO-reviewed system cases in your assigned area.
 
             </p>
 
@@ -1389,7 +1389,7 @@
                             type="text"
                             name="search"
                             class="form-control"
-                            placeholder="Search Case ID or remarks..."
+                            placeholder="Search case ID, area, source, or remarks..."
                             value="{{ search }}"
                         >
 
@@ -1413,14 +1413,7 @@
                                 All
                             </option>
 
-                            <option
-                                value="Pending"
-                                {% if selected_status == "Pending" %}
-                                    selected
-                                {% endif %}
-                            >
-                                Pending
-                            </option>
+                            <option value="Historical" {% if selected_status == "Historical" %}selected{% endif %}>Historical</option>
 
                             <option
                                 value="Confirmed"
@@ -1447,15 +1440,6 @@
                                 {% endif %}
                             >
                                 Recovered
-                            </option>
-
-                            <option
-                                value="Rejected"
-                                {% if selected_status == "Rejected" %}
-                                    selected
-                                {% endif %}
-                            >
-                                Rejected
                             </option>
 
                         </select>
@@ -1641,16 +1625,13 @@
 
                 <i class="fa-solid fa-clipboard-list"></i>
 
-                My Reported Dengue Cases
+                Assigned-area Dengue Case Records
 
             </div>
 
 
             <p class="card-subtitle">
-
-                Dengue case reports submitted using
-                {{ request.user.username }}'s BHW account.
-
+                Historical CHO records: {{ historical_cases }}. New CHO-reviewed system case count: {{ new_case_records }}. Historical records are not current active cases.
             </p>
 
 
@@ -1691,6 +1672,10 @@
                                 </th>
 
                                 <th>
+                                    Source
+                                </th>
+
+                                <th>
                                     Case Count
                                 </th>
 
@@ -1720,7 +1705,7 @@
 
                                         <span class="case-id">
 
-                                            DW-{{ case.dengue_case_id|stringformat:"04d" }}
+                                            {{ case.display_id }}
 
                                         </span>
 
@@ -1761,6 +1746,8 @@
                                         {{ case.date_reported|date:"M d, Y" }}
 
                                     </td>
+
+                                    <td>{{ case.source_label }}</td>
 
 
                                     <td>
@@ -1837,7 +1824,7 @@
                                             type="button"
                                             class="btn-view"
                                             data-bs-toggle="modal"
-                                            data-bs-target="#caseModal{{ case.dengue_case_id }}"
+                                            data-bs-target="#{{ case.modal_id }}"
                                         >
 
                                             <i class="fa-solid fa-eye"></i>
@@ -1858,7 +1845,7 @@
 
                                 <div
                                     class="modal fade"
-                                    id="caseModal{{ case.dengue_case_id }}"
+                                    id="{{ case.modal_id }}"
                                     tabindex="-1"
                                     aria-hidden="true"
                                 >
@@ -1883,7 +1870,7 @@
                                                     <small class="text-muted">
 
                                                         Case
-                                                        DW-{{ case.dengue_case_id|stringformat:"04d" }}
+                                                        {{ case.display_id }}
 
                                                     </small>
 
@@ -1997,7 +1984,7 @@
 
                                                         <div class="detail-value">
 
-                                                            DW-{{ case.dengue_case_id|stringformat:"04d" }}
+                                                            {{ case.display_id }}
 
                                                         </div>
 
@@ -2169,16 +2156,7 @@
                                                         <div class="detail-value">
 
 
-                                                            {% if request.user.first_name or request.user.last_name %}
-
-                                                                {{ request.user.first_name }}
-                                                                {{ request.user.last_name }}
-
-                                                            {% else %}
-
-                                                                {{ request.user.username }}
-
-                                                            {% endif %}
+                                                            {{ case.reporter_name }}
 
 
                                                         </div>
@@ -2194,7 +2172,7 @@
 
                                                         <div class="detail-value">
 
-                                                            {{ request.user.username }}
+                                                            {{ case.reporter_username }}
 
                                                         </div>
 

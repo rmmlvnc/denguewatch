@@ -2,77 +2,169 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DengueWatch | Resident Community Reports</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  <style>
-    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #f4f7f9; color: #1f2937; }
-    .dashboard-wrapper { min-height: 100vh; display: flex; }
-    .sidebar { width: 260px; min-height: 100vh; background: #0f766e; color: #fff; position: fixed; inset: 0 auto 0 0; padding: 25px 18px; overflow-y: auto; }
-    .sidebar a { color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 5px; font-size: 14px; }
-    .sidebar a:hover, .sidebar a.active { background: rgba(255, 255, 255, .18); }
-    .main-content { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; }
-    .topbar { min-height: 75px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 14px 35px; }
-    .topbar h5 { margin: 0; font-weight: 700; }
-    .topbar small, .meta { color: #6b7280; }
-    .user-info { display: flex; align-items: center; gap: 12px; }
-    .user-icon { width: 42px; height: 42px; border-radius: 50%; background: #e6f4f1; color: #0f766e; display: grid; place-items: center; }
-    .role-badge { display: inline-block; background: #e6f4f1; color: #0f766e; padding: 4px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-    .content { padding: 35px; max-width: 1280px; }
-    .page-heading { margin-bottom: 24px; }
-    .page-heading h1 { font-size: 28px; font-weight: 700; margin-bottom: 5px; }
-    .notice { background: #e6f4f1; border-left: 4px solid #0f766e; padding: 15px 18px; border-radius: 8px; margin-bottom: 25px; }
-    .report-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 22px; margin-bottom: 16px; }
-    .report-title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-    .status { font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 999px; }
-    .status-pending { background: #fef3c7; color: #92400e; }
-    .status-forwarded { background: #dbeafe; color: #1d4ed8; }
-    .status-verified { background: #dcfce7; color: #166534; }
-    .status-rejected { background: #fee2e2; color: #991b1b; }
-    textarea { width: 100%; box-sizing: border-box; min-height: 92px; margin: 14px 0; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; resize: vertical; }
-    .response { background: #eaf6f1; padding: 13px; border-radius: 8px; margin-top: 14px; }
-    .audit { margin-top: 14px; padding: 12px; border-radius: 8px; background: #f8fafc; font-size: 13px; }
-    @media (max-width: 900px) { .sidebar { width: 220px; } .main-content { margin-left: 220px; width: calc(100% - 220px); } }
-    @media (max-width: 700px) { .dashboard-wrapper { display: block; } .sidebar { position: static; width: 100%; min-height: auto; } .main-content { margin-left: 0; width: 100%; } .topbar, .content { padding-left: 20px; padding-right: 20px; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resident Community Reports | DengueWatch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:"Segoe UI",Arial,sans-serif; background:#f4f7f9; color:#1f2937; }
+        .review-topbar { min-height:75px; background:#fff; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 28px; }
+        .review-topbar h1 { margin:0; font-size:20px; font-weight:700; }
+        .review-topbar small { color:#6b7280; }
+        .review-identity { display:flex; align-items:center; gap:12px; }
+        .review-identity-text { text-align:right; line-height:1.15; }
+        .review-identity-text strong { display:block; font-size:14px; }
+        .review-role { color:#0f766e; background:#e6f4f1; padding:5px 10px; border-radius:20px; font-size:11px; }
+        .review-avatar { width:40px; height:40px; display:grid; place-items:center; border-radius:50%; color:#0f766e; background:#e6f4f1; border:1px solid #cbe7df; font-weight:700; }
+        .review-content { padding:28px; }
+        .review-page-title { margin-bottom:22px; }
+        .review-page-title h2 { margin:0 0 5px; font-size:24px; font-weight:700; }
+        .review-page-title p { margin:0; color:#6b7280; font-size:13px; }
+        .review-notice { padding:15px 18px; margin-bottom:22px; border-left:4px solid #0f766e; border-radius:8px; background:#e6f4f1; font-size:13px; }
+        .review-notice strong { color:#0f766e; }
+        .review-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; margin-bottom:22px; }
+        .review-stat { display:flex; align-items:center; gap:15px; min-width:0; padding:20px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+        .review-stat-icon { width:45px; height:45px; flex:0 0 45px; display:grid; place-items:center; border-radius:9px; background:#e6f4f1; color:#0f766e; font-size:18px; }
+        .review-stat h3 { margin:0; font-size:23px; font-weight:700; }
+        .review-stat p { margin:2px 0 0; color:#6b7280; font-size:12px; }
+        .review-card { padding:22px; margin-bottom:22px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+        .review-card-title { display:flex; align-items:center; gap:8px; margin-bottom:5px; font-size:16px; font-weight:700; }
+        .review-card-title i { color:#0f766e; }
+        .review-card-subtitle { margin-bottom:18px; color:#6b7280; font-size:12px; }
+        .review-toolbar { display:flex; justify-content:space-between; align-items:end; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+        .review-count { color:#64748b; white-space:nowrap; }
+        .review-filters { display:flex; align-items:end; gap:8px; flex-wrap:wrap; }
+        .review-filters .search-field { width:min(370px,42vw); }
+        .review-table { width:100%; min-width:850px; border-collapse:collapse; }
+        .review-table th { padding:12px; border-bottom:1px solid #e5e7eb; background:#f8fafc; color:#6b7280; font-size:11px; white-space:nowrap; }
+        .review-table td { padding:12px; border-bottom:1px solid #f1f1f1; vertical-align:middle; font-size:12px; }
+        .review-table tbody tr:hover { background:#f9fafb; }
+        .review-case-name { color:#172b3c; font-weight:700; }
+        .review-muted { color:#64748b; }
+        .review-actions { min-width:140px; }
+        .review-details-row td { padding:16px; background:#f8fafc; }
+        .review-details-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px 20px; }
+        .review-details-grid span { display:block; color:#64748b; font-size:11px; }
+        .review-details-grid strong { display:block; color:#1f2937; font-size:13px; white-space:pre-wrap; overflow-wrap:anywhere; }
+        .review-audit { margin-top:16px; padding:14px; border-radius:8px; background:#fff; border:1px solid #e5e7eb; }
+        .review-audit-title { margin-bottom:6px; font-weight:700; }
+        .review-empty { padding:48px 20px; color:#6b7280; text-align:center; }
+        .review-empty i { display:block; margin-bottom:12px; color:#0f766e; font-size:32px; }
+        .review-pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding-top:16px; }
+        .review-response { margin-top:16px; padding:16px; border-radius:8px; background:#fff; border:1px solid #dbe3ea; }
+        @media (max-width:1100px) { .review-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media (max-width:700px) { .review-content { padding:16px; } .review-topbar { padding:12px 16px; } .review-role { display:none; } .review-stats { grid-template-columns:1fr; gap:10px; } .review-toolbar { align-items:stretch; } .review-filters { width:100%; } .review-filters .search-field { width:100%; flex:1 1 100%; } .review-card { padding:16px; } .review-details-grid { grid-template-columns:1fr; } }
+    </style>
 </head>
 <body>
-  <div class="dashboard-wrapper">
-    {% include 'includes/role_sidebar.html' %}
-    <main class="main-content">
-      <header class="topbar">
-        <div><h5>Resident Community Reports</h5><small>DengueWatch Monitoring System</small></div>
-        <div class="user-info"><div class="text-end"><strong>{{ current_user_name }}</strong><br><span class="role-badge">{{ current_user_role }}</span></div><div class="user-icon"><i class="fa-solid fa-user"></i></div></div>
-      </header>
-      <div class="content">
-        <section class="page-heading"><h1>Final review of resident concerns</h1><p class="mb-0 text-muted">Review environmental reports that were verified and forwarded by the responsible BHW.</p></section>
-        <div class="notice"><strong><i class="fa-solid fa-circle-info"></i> CHO final review queue</strong><div class="mt-1">BHWs first verify reports within their assigned area. The CHO response below becomes visible to the resident in the mobile app.</div></div>
-        {% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}
-        {% for report in reports %}
-          <article class="report-card">
-            <div class="report-title"><strong>{{ report.observation_type }}</strong><span class="status status-{{ report.status|lower }}">{{ report.get_status_display }}</span></div>
-            <p class="meta mt-2 mb-2">{{ report.resident.get_full_name|default:report.resident.username }} &middot; {{ report.barangay.barangay_name }}{% if report.purok %} &middot; {{ report.purok.purok_name }}{% endif %} &middot; {{ report.submitted_at }}</p>
-            <p class="mb-0">{{ report.description }}</p>
-            <div class="response"><strong>BHW verification:</strong> {{ report.bhw_review_note }}<br><span class="meta">Verified by {{ report.bhw_reviewed_by.get_full_name|default:report.bhw_reviewed_by.username }} &middot; {{ report.bhw_reviewed_at }}</span></div>
-            <div class="audit"><strong>Audit trail</strong>{% for audit in report.audit_logs.all %}<div class="meta mt-1">{{ audit.created_at|date:"M d, Y g:i a" }} &middot; {{ audit.get_action_display }} by {{ audit.actor.get_full_name|default:audit.actor.username|default:"System" }}{% if audit.details %}: {{ audit.details }}{% endif %}</div>{% empty %}<div class="meta mt-1">No audit events recorded.</div>{% endfor %}</div>
-            {% if report.status == 'FORWARDED' %}
-              <form method="post" action="{% url 'review_community_report' report.pk %}">{% csrf_token %}
-                <label class="visually-hidden" for="response-{{ report.pk }}">Response visible to the resident</label>
-                <textarea id="response-{{ report.pk }}" name="staff_response" required placeholder="Response visible to the resident"></textarea>
-                <button class="btn btn-success" name="status" value="VERIFIED"><i class="fa-solid fa-check"></i> Finalize and reply</button>
-                <button class="btn btn-danger ms-1" name="status" value="REJECTED"><i class="fa-solid fa-xmark"></i> Reject and reply</button>
-              </form>
+{% include 'includes/role_sidebar.html' %}
+<main class="main-content">
+    <header class="review-topbar">
+        <div><h1>Resident Community Reports</h1><small>Final review of resident environmental concerns</small></div>
+        <div class="review-identity">
+            <div class="review-identity-text"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><span class="review-role">{{ request.user.get_role_display }}</span></div>
+            <span class="review-avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</span>
+        </div>
+    </header>
+
+    <div class="review-content">
+        {% if messages %}{% for message in messages %}<div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %}">{{ message }}</div>{% endfor %}{% endif %}
+        <section class="review-page-title">
+            <h2>Final review of resident concerns</h2>
+            <p>Review environmental reports verified and forwarded by the responsible BHW before sending the CHO response to the resident.</p>
+        </section>
+        <section class="review-notice">
+            <strong><i class="fa-solid fa-circle-info"></i> CHO final review queue</strong><br>
+            BHWs first verify reports within their assigned area. Your decision and response below will be visible to the resident in the mobile app.
+        </section>
+        <section class="review-stats" aria-label="Community report summary">
+            <div class="review-stat"><div class="review-stat-icon"><i class="fa-solid fa-inbox"></i></div><div><h3>{{ pending_count }}</h3><p>Awaiting CHO review</p></div></div>
+            <div class="review-stat"><div class="review-stat-icon"><i class="fa-solid fa-circle-check"></i></div><div><h3>{{ verified_count }}</h3><p>Verified by CHO</p></div></div>
+            <div class="review-stat"><div class="review-stat-icon"><i class="fa-solid fa-circle-xmark"></i></div><div><h3>{{ rejected_count }}</h3><p>Rejected by CHO</p></div></div>
+            <div class="review-stat"><div class="review-stat-icon"><i class="fa-solid fa-folder-open"></i></div><div><h3>{{ total_count }}</h3><p>Total resident reports</p></div></div>
+        </section>
+
+        <section class="review-card">
+            <div class="review-card-title"><i class="fa-solid fa-comments"></i> Resident Community Reports</div>
+            <div class="review-card-subtitle">BHW-verified submissions currently awaiting a final CHO decision.</div>
+            <div class="review-toolbar">
+                <div class="review-count"><strong class="text-dark">{{ filtered_count }}</strong> matching pending reports</div>
+                <form method="get" class="review-filters">
+                    <div class="search-field"><label class="form-label mb-1" for="report-search">Search reports</label><input id="report-search" class="form-control" type="search" name="search" value="{{ search }}" placeholder="Issue, resident, barangay, location"></div>
+                    <div class="d-flex gap-2"><button class="btn btn-success" type="submit"><i class="fa-solid fa-filter"></i> Filter</button><a class="btn btn-outline-secondary" href="{% url 'community_reports_review' %}">Clear</a></div>
+                </form>
+            </div>
+            {% if reports %}
+            <div class="table-responsive">
+                <table class="review-table">
+                    <thead><tr><th>Report</th><th>Submitted by</th><th>Concern</th><th>Barangay / purok</th><th>Submitted</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for report in reports %}
+                        <tr>
+                            <td><span class="review-case-name">#{{ report.pk }}</span><br><span class="badge bg-warning text-dark mt-1">Awaiting review</span></td>
+                            <td><span class="review-case-name">{{ report.resident.get_full_name|default:report.resident.username }}</span><br><span class="review-muted">{{ report.resident.username }}</span></td>
+                            <td>{{ report.observation_type }}</td>
+                            <td>{{ report.barangay.barangay_name }}{% if report.purok %}<br><span class="review-muted">{{ report.purok.purok_name }}</span>{% endif %}</td>
+                            <td>{{ report.submitted_at|date:"M d, Y" }}</td>
+                            <td class="review-actions"><button class="btn btn-outline-primary btn-sm" type="button" aria-expanded="false" aria-controls="report-details-{{ report.pk }}" onclick="toggleReportDetails(this, 'report-details-{{ report.pk }}')"><i class="fa-solid fa-eye"></i> View details</button></td>
+                        </tr>
+                        <tr id="report-details-{{ report.pk }}" class="review-details-row" hidden>
+                            <td colspan="6">
+                                <div class="review-details-grid">
+                                    <div><span>Report ID</span><strong>#{{ report.pk }}</strong></div>
+                                    <div><span>Resident</span><strong>{{ report.resident.get_full_name|default:report.resident.username }}</strong></div>
+                                    <div><span>Concern type</span><strong>{{ report.observation_type }}</strong></div>
+                                    <div><span>Barangay</span><strong>{{ report.barangay.barangay_name|default:"Not provided" }}</strong></div>
+                                    <div><span>Purok / sitio</span><strong>{{ report.purok.purok_name|default:"Not provided" }}</strong></div>
+                                    <div><span>Exact location / landmark</span><strong>{{ report.location_details|default:"Not provided" }}</strong></div>
+                                    <div><span>Description</span><strong>{{ report.description }}</strong></div>
+                                    <div><span>Date submitted</span><strong>{{ report.submitted_at|date:"M d, Y g:i a" }}</strong></div>
+                                </div>
+                                {% if report.photo %}<div class="mt-3"><span class="review-muted">Resident photo</span><br><a href="{{ report.photo.url }}" target="_blank" rel="noopener"><img src="{{ report.photo.url }}" alt="Photo attached to resident report" style="max-width:320px;max-height:220px;object-fit:cover;border-radius:8px;margin-top:8px"></a></div>{% endif %}
+                                <div class="review-audit">
+                                    <div class="review-audit-title">Audit trail</div>
+                                    <div class="review-muted mt-1">BHW verification: {{ report.bhw_review_note|default:"No note provided." }}</div>
+                                    <div class="review-muted mt-1">Verified by {{ report.bhw_reviewed_by.get_full_name|default:report.bhw_reviewed_by.username|default:"BHW" }}{% if report.bhw_reviewed_at %} · {{ report.bhw_reviewed_at|date:"M d, Y g:i a" }}{% endif %}</div>
+                                    {% for audit in report.audit_logs.all %}<div class="review-muted mt-1">{{ audit.created_at|date:"M d, Y g:i a" }} · {{ audit.get_action_display }} by {{ audit.actor.get_full_name|default:audit.actor.username|default:"System" }}{% if audit.details %}: {{ audit.details }}{% endif %}</div>{% empty %}<div class="review-muted mt-1">No additional audit events recorded.</div>{% endfor %}
+                                </div>
+                                <form method="post" action="{% url 'review_community_report' report.pk %}" class="review-response">
+                                    {% csrf_token %}
+                                    <label class="form-label" for="response-{{ report.pk }}"><strong>Response to resident</strong></label>
+                                    <textarea id="response-{{ report.pk }}" class="form-control mb-3" name="staff_response" rows="3" required placeholder="Enter the CHO response that will be visible to the resident"></textarea>
+                                    <button class="btn btn-success" name="status" value="VERIFIED" onclick="return confirm('Verify this resident report and send the response?')"><i class="fa-solid fa-check"></i> Verify and reply</button>
+                                    <button class="btn btn-danger ms-1" name="status" value="REJECTED" onclick="return confirm('Reject this resident report and send the response?')"><i class="fa-solid fa-xmark"></i> Reject and reply</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
-              <div class="response"><strong>CHO response:</strong> {{ report.staff_response|default:"No response recorded." }}<br><span class="meta">Reviewed by {{ report.reviewed_by.get_full_name|default:report.reviewed_by.username }} &middot; {{ report.reviewed_at }}</span></div>
+                <div class="review-empty"><i class="fa-solid fa-comments"></i><strong>No pending community reports found</strong><div>{% if search %}Try another search term or clear the filter.{% else %}No BHW-verified environmental concerns are awaiting CHO review.{% endif %}</div></div>
             {% endif %}
-          </article>
-        {% empty %}<div class="report-card text-muted">No BHW-verified environmental concerns are awaiting CHO review.</div>{% endfor %}
-      </div>
-    </main>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            {% if reports_page.paginator.num_pages > 1 %}
+            <nav class="review-pagination" aria-label="Community report pages">
+                <span class="review-count">Showing {{ reports_page.start_index }}–{{ reports_page.end_index }} of {{ filtered_count }}</span>
+                <div class="btn-group" role="group" aria-label="Pagination controls">
+                    {% if reports_page.has_previous %}<a class="btn btn-outline-secondary btn-sm" href="?{% if search %}search={{ search|urlencode }}&amp;{% endif %}page={{ reports_page.previous_page_number }}"><i class="fa-solid fa-chevron-left"></i> Previous</a>{% else %}<span class="btn btn-outline-secondary btn-sm disabled">Previous</span>{% endif %}
+                    <span class="btn btn-light btn-sm disabled">Page {{ reports_page.number }} of {{ reports_page.paginator.num_pages }}</span>
+                    {% if reports_page.has_next %}<a class="btn btn-outline-secondary btn-sm" href="?{% if search %}search={{ search|urlencode }}&amp;{% endif %}page={{ reports_page.next_page_number }}">Next <i class="fa-solid fa-chevron-right"></i></a>{% else %}<span class="btn btn-outline-secondary btn-sm disabled">Next</span>{% endif %}
+                </div>
+            </nav>
+            {% endif %}
+        </section>
+    </div>
+</main>
+<script>
+    function toggleReportDetails(button, rowId) {
+        const row = document.getElementById(rowId);
+        if (!row) return;
+        row.hidden = !row.hidden;
+        button.setAttribute('aria-expanded', String(!row.hidden));
+    }
+</script>
 </body>
 </html>

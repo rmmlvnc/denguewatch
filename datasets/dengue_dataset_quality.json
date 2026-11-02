@@ -1,0 +1,72 @@
+{
+  "dataset_name": "DengueWatch consolidated CHO-verified 2018-2026 line-list source",
+  "active_file": "WILBUR_DSO_dengue_2018_2026_authoritative.csv",
+  "source_file": "WILBUR_DSO_dengue_2018_2026_authoritative.csv",
+  "source_files": [
+    "WILBUR_DSO_dengue_2018_2026_authoritative.csv"
+  ],
+  "source_sha256": "e6d874eceaa29518e8a86d9fee9e034b42e4f2d387d4ee891e0477275e71d8f4",
+  "archived_upload": "datasets/cho_source_archive/20261022_224318_WILBUR_DSO_dengue_2018_2026_authoritative.csv",
+  "previous_active_backup": "datasets/source_backups/20261022_224318_WILBUR_DSO_dengue_2018_2026_authoritative.csv",
+  "source_attribution": "CHO verification confirmed by the project team for the uploaded 2018-2026 source.",
+  "source_row_count": 14071,
+  "all_rows_retained": true,
+  "unique_rows_by_exact_eight_field_match": 14071,
+  "exact_duplicate_extra_rows": 0,
+  "rows_in_exact_duplicate_groups": 0,
+  "rows_complete_across_all_eight_requested_fields": 14067,
+  "rows_with_one_or_more_missing_requested_fields": 4,
+  "missing_values_by_field": {
+    "Sex": 0,
+    "AgeYears": 0,
+    "(Current Address) City / Municipality": 0,
+    "(Current Address) Barangay": 0,
+    "(Current Address) Sitio / Purok / Street Name": 3,
+    "DAdmit": 1,
+    "Year": 0,
+    "BloodType": 0
+  },
+  "admission_date_valid_rows": 14069,
+  "admission_date_missing_or_invalid_rows": 2,
+  "admission_date_year_mismatch_rows": 0,
+  "rows_without_official_iligan_barangay_match": 1,
+  "outside_iligan_city_rows": 0,
+  "extra_source_columns_preserved_as_SourceExtraColumn": [],
+  "nonempty_preserved_extra_values": 0,
+  "admission_date_range": [
+    "2018-01-01",
+    "2026-11-23"
+  ],
+  "counts_by_year_column": {
+    "2018": 1781,
+    "2019": 1888,
+    "2020": 899,
+    "2021": 1289,
+    "2022": 1443,
+    "2023": 2066,
+    "2024": 2604,
+    "2025": 1834,
+    "2026": 267
+  },
+  "counts_by_admission_date_year": {
+    "2018": 1781,
+    "2019": 1888,
+    "2020": 899,
+    "2021": 1289,
+    "2022": 1443,
+    "2023": 2065,
+    "2024": 2604,
+    "2025": 1834,
+    "2026": 266
+  },
+  "city_value_counts": {
+    "City of Iligan": 14071
+  },
+  "duplicate_policy": "Retain all rows and flag exact repeats for CHO review; no stable case identifier is available.",
+  "date_policy": "Retain submitted dates and Year values; flag missing/invalid dates and year mismatches.",
+  "application_year_policy": "For mapping and reporting, Year is derived from valid DAdmit to keep annual case totals consistent with event date; the submitted year remains in SourceYear and mismatches are flagged.",
+  "map_and_training_scope": "Only valid admission dates, official Iligan barangays, and Iligan City rows are aggregated for city modeling.",
+  "total_semantics": "Source rows, not verified unique people or independently adjudicated case count.",
+  "generated_at_utc": "2026-10-22T14:43:18.728343+00:00",
+  "source_verification_status": "CHO-verified per project-team confirmation; the source itself does not encode case-definition version or received date."
+}

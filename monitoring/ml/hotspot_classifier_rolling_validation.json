@@ -1,0 +1,2258 @@
+{
+  "analysis_type": "exploratory_direct_hotspot_classifier_rolling_validation_only",
+  "validation_rows": 1408,
+  "validation_reference_start": "2022-02",
+  "validation_reference_end": "2024-09",
+  "validation_windows": 4,
+  "target": "1 if observed next-month barangay case_count >= 6; otherwise 0",
+  "positive_class": "potential planning hotspot",
+  "thresholds": [
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8
+  ],
+  "fold_policy": "Expanding chronological windows; all barangays from a reference month remain together; preprocessing fits on training rows only.",
+  "feature_policy": "Uses the shared case-lag, prior rolling-count, seasonal, barangay, location, and weather features. Missing weather source cells are not filled in the CSV; fold-local median imputation is part of the model pipeline.",
+  "source_policy": "Uses datasets/integrated_monthly.csv after verifying its case_observation_status values; synthetic 2018-2019 supplements are not in this active monthly source.",
+  "later_holdout_scored": false,
+  "validation_previously_used_for_model_selection": true,
+  "confusion_matrix_order": "TN, FP, FN, TP",
+  "candidate_results": [
+    {
+      "name": "RF classifier baseline",
+      "parameters": {
+        "n_estimators": 300,
+        "max_depth": null,
+        "min_samples_leaf": 2,
+        "max_features": 0.8,
+        "class_weight": null
+      },
+      "threshold_results": [
+        {
+          "probability_threshold": 0.3,
+          "precision": 0.5663,
+          "recall": 0.8152,
+          "f1": 0.6683,
+          "flagged_rows": 475,
+          "confusion_matrix_tn_fp_fn_tp": [
+            872,
+            206,
+            61,
+            269
+          ]
+        },
+        {
+          "probability_threshold": 0.4,
+          "precision": 0.6419,
+          "recall": 0.7333,
+          "f1": 0.6846,
+          "flagged_rows": 377,
+          "confusion_matrix_tn_fp_fn_tp": [
+            943,
+            135,
+            88,
+            242
+          ]
+        },
+        {
+          "probability_threshold": 0.5,
+          "precision": 0.6719,
+          "recall": 0.5212,
+          "f1": 0.587,
+          "flagged_rows": 256,
+          "confusion_matrix_tn_fp_fn_tp": [
+            994,
+            84,
+            158,
+            172
+          ]
+        },
+        {
+          "probability_threshold": 0.6,
+          "precision": 0.707,
+          "recall": 0.3364,
+          "f1": 0.4559,
+          "flagged_rows": 157,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1032,
+            46,
+            219,
+            111
+          ]
+        },
+        {
+          "probability_threshold": 0.7,
+          "precision": 0.8061,
+          "recall": 0.2394,
+          "f1": 0.3692,
+          "flagged_rows": 98,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1059,
+            19,
+            251,
+            79
+          ]
+        },
+        {
+          "probability_threshold": 0.8,
+          "precision": 0.8696,
+          "recall": 0.1212,
+          "f1": 0.2128,
+          "flagged_rows": 46,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1072,
+            6,
+            290,
+            40
+          ]
+        }
+      ],
+      "thresholds_meeting_precision_85_recall_75": [],
+      "best_f1_threshold_result": {
+        "probability_threshold": 0.4,
+        "precision": 0.6419,
+        "recall": 0.7333,
+        "f1": 0.6846,
+        "flagged_rows": 377,
+        "confusion_matrix_tn_fp_fn_tp": [
+          943,
+          135,
+          88,
+          242
+        ]
+      }
+    },
+    {
+      "name": "RF classifier depth 10",
+      "parameters": {
+        "n_estimators": 300,
+        "max_depth": 10,
+        "min_samples_leaf": 2,
+        "max_features": 0.8,
+        "class_weight": null
+      },
+      "threshold_results": [
+        {
+          "probability_threshold": 0.3,
+          "precision": 0.5846,
+          "recall": 0.8061,
+          "f1": 0.6777,
+          "flagged_rows": 455,
+          "confusion_matrix_tn_fp_fn_tp": [
+            889,
+            189,
+            64,
+            266
+          ]
+        },
+        {
+          "probability_threshold": 0.4,
+          "precision": 0.655,
+          "recall": 0.7364,
+          "f1": 0.6933,
+          "flagged_rows": 371,
+          "confusion_matrix_tn_fp_fn_tp": [
+            950,
+            128,
+            87,
+            243
+          ]
+        },
+        {
+          "probability_threshold": 0.5,
+          "precision": 0.6977,
+          "recall": 0.5455,
+          "f1": 0.6122,
+          "flagged_rows": 258,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1000,
+            78,
+            150,
+            180
+          ]
+        },
+        {
+          "probability_threshold": 0.6,
+          "precision": 0.7233,
+          "recall": 0.3485,
+          "f1": 0.4703,
+          "flagged_rows": 159,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1034,
+            44,
+            215,
+            115
+          ]
+        },
+        {
+          "probability_threshold": 0.7,
+          "precision": 0.7979,
+          "recall": 0.2273,
+          "f1": 0.3538,
+          "flagged_rows": 94,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1059,
+            19,
+            255,
+            75
+          ]
+        },
+        {
+          "probability_threshold": 0.8,
+          "precision": 0.875,
+          "recall": 0.1273,
+          "f1": 0.2222,
+          "flagged_rows": 48,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1072,
+            6,
+            288,
+            42
+          ]
+        }
+      ],
+      "thresholds_meeting_precision_85_recall_75": [],
+      "best_f1_threshold_result": {
+        "probability_threshold": 0.4,
+        "precision": 0.655,
+        "recall": 0.7364,
+        "f1": 0.6933,
+        "flagged_rows": 371,
+        "confusion_matrix_tn_fp_fn_tp": [
+          950,
+          128,
+          87,
+          243
+        ]
+      }
+    },
+    {
+      "name": "RF classifier conservative",
+      "parameters": {
+        "n_estimators": 500,
+        "max_depth": 10,
+        "min_samples_leaf": 4,
+        "max_features": 0.8,
+        "class_weight": null
+      },
+      "threshold_results": [
+        {
+          "probability_threshold": 0.3,
+          "precision": 0.5978,
+          "recall": 0.8152,
+          "f1": 0.6897,
+          "flagged_rows": 450,
+          "confusion_matrix_tn_fp_fn_tp": [
+            897,
+            181,
+            61,
+            269
+          ]
+        },
+        {
+          "probability_threshold": 0.4,
+          "precision": 0.6621,
+          "recall": 0.7364,
+          "f1": 0.6973,
+          "flagged_rows": 367,
+          "confusion_matrix_tn_fp_fn_tp": [
+            954,
+            124,
+            87,
+            243
+          ]
+        },
+        {
+          "probability_threshold": 0.5,
+          "precision": 0.7045,
+          "recall": 0.5636,
+          "f1": 0.6263,
+          "flagged_rows": 264,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1000,
+            78,
+            144,
+            186
+          ]
+        },
+        {
+          "probability_threshold": 0.6,
+          "precision": 0.7368,
+          "recall": 0.3818,
+          "f1": 0.503,
+          "flagged_rows": 171,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1033,
+            45,
+            204,
+            126
+          ]
+        },
+        {
+          "probability_threshold": 0.7,
+          "precision": 0.8,
+          "recall": 0.2545,
+          "f1": 0.3862,
+          "flagged_rows": 105,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1057,
+            21,
+            246,
+            84
+          ]
+        },
+        {
+          "probability_threshold": 0.8,
+          "precision": 0.8421,
+          "recall": 0.1455,
+          "f1": 0.2481,
+          "flagged_rows": 57,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1069,
+            9,
+            282,
+            48
+          ]
+        }
+      ],
+      "thresholds_meeting_precision_85_recall_75": [],
+      "best_f1_threshold_result": {
+        "probability_threshold": 0.4,
+        "precision": 0.6621,
+        "recall": 0.7364,
+        "f1": 0.6973,
+        "flagged_rows": 367,
+        "confusion_matrix_tn_fp_fn_tp": [
+          954,
+          124,
+          87,
+          243
+        ]
+      }
+    },
+    {
+      "name": "RF classifier balanced",
+      "parameters": {
+        "n_estimators": 300,
+        "max_depth": 10,
+        "min_samples_leaf": 2,
+        "max_features": 0.8,
+        "class_weight": "balanced_subsample"
+      },
+      "threshold_results": [
+        {
+          "probability_threshold": 0.3,
+          "precision": 0.5745,
+          "recall": 0.8182,
+          "f1": 0.675,
+          "flagged_rows": 470,
+          "confusion_matrix_tn_fp_fn_tp": [
+            878,
+            200,
+            60,
+            270
+          ]
+        },
+        {
+          "probability_threshold": 0.4,
+          "precision": 0.6281,
+          "recall": 0.7727,
+          "f1": 0.6929,
+          "flagged_rows": 406,
+          "confusion_matrix_tn_fp_fn_tp": [
+            927,
+            151,
+            75,
+            255
+          ]
+        },
+        {
+          "probability_threshold": 0.5,
+          "precision": 0.6763,
+          "recall": 0.6394,
+          "f1": 0.6573,
+          "flagged_rows": 312,
+          "confusion_matrix_tn_fp_fn_tp": [
+            977,
+            101,
+            119,
+            211
+          ]
+        },
+        {
+          "probability_threshold": 0.6,
+          "precision": 0.721,
+          "recall": 0.5091,
+          "f1": 0.5968,
+          "flagged_rows": 233,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1013,
+            65,
+            162,
+            168
+          ]
+        },
+        {
+          "probability_threshold": 0.7,
+          "precision": 0.7483,
+          "recall": 0.3242,
+          "f1": 0.4524,
+          "flagged_rows": 143,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1042,
+            36,
+            223,
+            107
+          ]
+        },
+        {
+          "probability_threshold": 0.8,
+          "precision": 0.8049,
+          "recall": 0.2,
+          "f1": 0.3204,
+          "flagged_rows": 82,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1062,
+            16,
+            264,
+            66
+          ]
+        }
+      ],
+      "thresholds_meeting_precision_85_recall_75": [],
+      "best_f1_threshold_result": {
+        "probability_threshold": 0.4,
+        "precision": 0.6281,
+        "recall": 0.7727,
+        "f1": 0.6929,
+        "flagged_rows": 406,
+        "confusion_matrix_tn_fp_fn_tp": [
+          927,
+          151,
+          75,
+          255
+        ]
+      }
+    },
+    {
+      "name": "RF classifier balanced conservative",
+      "parameters": {
+        "n_estimators": 500,
+        "max_depth": 10,
+        "min_samples_leaf": 4,
+        "max_features": 0.8,
+        "class_weight": "balanced_subsample"
+      },
+      "threshold_results": [
+        {
+          "probability_threshold": 0.3,
+          "precision": 0.5405,
+          "recall": 0.8485,
+          "f1": 0.6604,
+          "flagged_rows": 518,
+          "confusion_matrix_tn_fp_fn_tp": [
+            840,
+            238,
+            50,
+            280
+          ]
+        },
+        {
+          "probability_threshold": 0.4,
+          "precision": 0.5986,
+          "recall": 0.8,
+          "f1": 0.6848,
+          "flagged_rows": 441,
+          "confusion_matrix_tn_fp_fn_tp": [
+            901,
+            177,
+            66,
+            264
+          ]
+        },
+        {
+          "probability_threshold": 0.5,
+          "precision": 0.6542,
+          "recall": 0.7394,
+          "f1": 0.6942,
+          "flagged_rows": 373,
+          "confusion_matrix_tn_fp_fn_tp": [
+            949,
+            129,
+            86,
+            244
+          ]
+        },
+        {
+          "probability_threshold": 0.6,
+          "precision": 0.6835,
+          "recall": 0.6152,
+          "f1": 0.6475,
+          "flagged_rows": 297,
+          "confusion_matrix_tn_fp_fn_tp": [
+            984,
+            94,
+            127,
+            203
+          ]
+        },
+        {
+          "probability_threshold": 0.7,
+          "precision": 0.7548,
+          "recall": 0.4758,
+          "f1": 0.5836,
+          "flagged_rows": 208,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1027,
+            51,
+            173,
+            157
+          ]
+        },
+        {
+          "probability_threshold": 0.8,
+          "precision": 0.8056,
+          "recall": 0.2636,
+          "f1": 0.3973,
+          "flagged_rows": 108,
+          "confusion_matrix_tn_fp_fn_tp": [
+            1057,
+            21,
+            243,
+            87
+          ]
+        }
+      ],
+      "thresholds_meeting_precision_85_recall_75": [],
+      "best_f1_threshold_result": {
+        "probability_threshold": 0.5,
+        "precision": 0.6542,
+        "recall": 0.7394,
+        "f1": 0.6942,
+        "flagged_rows": 373,
+        "confusion_matrix_tn_fp_fn_tp": [
+          949,
+          129,
+          86,
+          244
+        ]
+      }
+    }
+  ],
+  "baseline_results": {
+    "persistence": {
+      "probability_threshold": 0.5,
+      "precision": 0.6708,
+      "recall": 0.6606,
+      "f1": 0.6656,
+      "flagged_rows": 325,
+      "confusion_matrix_tn_fp_fn_tp": [
+        971,
+        107,
+        112,
+        218
+      ],
+      "interpretation": "Count baseline converted to a hotspot flag using the six-case cutoff."
+    },
+    "trailing_3_month_mean": {
+      "probability_threshold": 0.5,
+      "precision": 0.7118,
+      "recall": 0.6212,
+      "f1": 0.6634,
+      "flagged_rows": 288,
+      "confusion_matrix_tn_fp_fn_tp": [
+        995,
+        83,
+        125,
+        205
+      ],
+      "interpretation": "Count baseline converted to a hotspot flag using the six-case cutoff."
+    }
+  },
+  "fold_results": [
+    {
+      "fold": 1,
+      "training_reference_start": "2018-02",
+      "training_reference_end": "2022-01",
+      "validation_reference_start": "2022-02",
+      "validation_reference_end": "2022-09",
+      "rows": 352,
+      "candidates": {
+        "RF classifier baseline": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.506,
+              "recall": 0.7636,
+              "f1": 0.6087,
+              "flagged_rows": 83,
+              "confusion_matrix_tn_fp_fn_tp": [
+                256,
+                41,
+                13,
+                42
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.5493,
+              "recall": 0.7091,
+              "f1": 0.619,
+              "flagged_rows": 71,
+              "confusion_matrix_tn_fp_fn_tp": [
+                265,
+                32,
+                16,
+                39
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.5306,
+              "recall": 0.4727,
+              "f1": 0.5,
+              "flagged_rows": 49,
+              "confusion_matrix_tn_fp_fn_tp": [
+                274,
+                23,
+                29,
+                26
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.6207,
+              "recall": 0.3273,
+              "f1": 0.4286,
+              "flagged_rows": 29,
+              "confusion_matrix_tn_fp_fn_tp": [
+                286,
+                11,
+                37,
+                18
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.9286,
+              "recall": 0.2364,
+              "f1": 0.3768,
+              "flagged_rows": 14,
+              "confusion_matrix_tn_fp_fn_tp": [
+                296,
+                1,
+                42,
+                13
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 1.0,
+              "recall": 0.1455,
+              "f1": 0.254,
+              "flagged_rows": 8,
+              "confusion_matrix_tn_fp_fn_tp": [
+                297,
+                0,
+                47,
+                8
+              ]
+            }
+          ]
+        },
+        "RF classifier depth 10": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.5,
+              "recall": 0.7636,
+              "f1": 0.6043,
+              "flagged_rows": 84,
+              "confusion_matrix_tn_fp_fn_tp": [
+                255,
+                42,
+                13,
+                42
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.5652,
+              "recall": 0.7091,
+              "f1": 0.629,
+              "flagged_rows": 69,
+              "confusion_matrix_tn_fp_fn_tp": [
+                267,
+                30,
+                16,
+                39
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.54,
+              "recall": 0.4909,
+              "f1": 0.5143,
+              "flagged_rows": 50,
+              "confusion_matrix_tn_fp_fn_tp": [
+                274,
+                23,
+                28,
+                27
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.6071,
+              "recall": 0.3091,
+              "f1": 0.4096,
+              "flagged_rows": 28,
+              "confusion_matrix_tn_fp_fn_tp": [
+                286,
+                11,
+                38,
+                17
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 1.0,
+              "recall": 0.2,
+              "f1": 0.3333,
+              "flagged_rows": 11,
+              "confusion_matrix_tn_fp_fn_tp": [
+                297,
+                0,
+                44,
+                11
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 1.0,
+              "recall": 0.1455,
+              "f1": 0.254,
+              "flagged_rows": 8,
+              "confusion_matrix_tn_fp_fn_tp": [
+                297,
+                0,
+                47,
+                8
+              ]
+            }
+          ]
+        },
+        "RF classifier conservative": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.525,
+              "recall": 0.7636,
+              "f1": 0.6222,
+              "flagged_rows": 80,
+              "confusion_matrix_tn_fp_fn_tp": [
+                259,
+                38,
+                13,
+                42
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.5846,
+              "recall": 0.6909,
+              "f1": 0.6333,
+              "flagged_rows": 65,
+              "confusion_matrix_tn_fp_fn_tp": [
+                270,
+                27,
+                17,
+                38
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.5652,
+              "recall": 0.4727,
+              "f1": 0.5149,
+              "flagged_rows": 46,
+              "confusion_matrix_tn_fp_fn_tp": [
+                277,
+                20,
+                29,
+                26
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.6667,
+              "recall": 0.2909,
+              "f1": 0.4051,
+              "flagged_rows": 24,
+              "confusion_matrix_tn_fp_fn_tp": [
+                289,
+                8,
+                39,
+                16
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 1.0,
+              "recall": 0.2182,
+              "f1": 0.3582,
+              "flagged_rows": 12,
+              "confusion_matrix_tn_fp_fn_tp": [
+                297,
+                0,
+                43,
+                12
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 1.0,
+              "recall": 0.1273,
+              "f1": 0.2258,
+              "flagged_rows": 7,
+              "confusion_matrix_tn_fp_fn_tp": [
+                297,
+                0,
+                48,
+                7
+              ]
+            }
+          ]
+        },
+        "RF classifier balanced": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.4891,
+              "recall": 0.8182,
+              "f1": 0.6122,
+              "flagged_rows": 92,
+              "confusion_matrix_tn_fp_fn_tp": [
+                250,
+                47,
+                10,
+                45
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.5185,
+              "recall": 0.7636,
+              "f1": 0.6176,
+              "flagged_rows": 81,
+              "confusion_matrix_tn_fp_fn_tp": [
+                258,
+                39,
+                13,
+                42
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.5397,
+              "recall": 0.6182,
+              "f1": 0.5763,
+              "flagged_rows": 63,
+              "confusion_matrix_tn_fp_fn_tp": [
+                268,
+                29,
+                21,
+                34
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.5741,
+              "recall": 0.5636,
+              "f1": 0.5688,
+              "flagged_rows": 54,
+              "confusion_matrix_tn_fp_fn_tp": [
+                274,
+                23,
+                24,
+                31
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.7241,
+              "recall": 0.3818,
+              "f1": 0.5,
+              "flagged_rows": 29,
+              "confusion_matrix_tn_fp_fn_tp": [
+                289,
+                8,
+                34,
+                21
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.8125,
+              "recall": 0.2364,
+              "f1": 0.3662,
+              "flagged_rows": 16,
+              "confusion_matrix_tn_fp_fn_tp": [
+                294,
+                3,
+                42,
+                13
+              ]
+            }
+          ]
+        },
+        "RF classifier balanced conservative": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.4896,
+              "recall": 0.8545,
+              "f1": 0.6225,
+              "flagged_rows": 96,
+              "confusion_matrix_tn_fp_fn_tp": [
+                248,
+                49,
+                8,
+                47
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.5119,
+              "recall": 0.7818,
+              "f1": 0.6187,
+              "flagged_rows": 84,
+              "confusion_matrix_tn_fp_fn_tp": [
+                256,
+                41,
+                12,
+                43
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.5278,
+              "recall": 0.6909,
+              "f1": 0.5984,
+              "flagged_rows": 72,
+              "confusion_matrix_tn_fp_fn_tp": [
+                263,
+                34,
+                17,
+                38
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.55,
+              "recall": 0.6,
+              "f1": 0.5739,
+              "flagged_rows": 60,
+              "confusion_matrix_tn_fp_fn_tp": [
+                270,
+                27,
+                22,
+                33
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.6571,
+              "recall": 0.4182,
+              "f1": 0.5111,
+              "flagged_rows": 35,
+              "confusion_matrix_tn_fp_fn_tp": [
+                285,
+                12,
+                32,
+                23
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.8889,
+              "recall": 0.2909,
+              "f1": 0.4384,
+              "flagged_rows": 18,
+              "confusion_matrix_tn_fp_fn_tp": [
+                295,
+                2,
+                39,
+                16
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fold": 2,
+      "training_reference_start": "2018-02",
+      "training_reference_end": "2022-09",
+      "validation_reference_start": "2022-10",
+      "validation_reference_end": "2023-05",
+      "rows": 352,
+      "candidates": {
+        "RF classifier baseline": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.2958,
+              "recall": 0.6,
+              "f1": 0.3962,
+              "flagged_rows": 71,
+              "confusion_matrix_tn_fp_fn_tp": [
+                267,
+                50,
+                14,
+                21
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.359,
+              "recall": 0.4,
+              "f1": 0.3784,
+              "flagged_rows": 39,
+              "confusion_matrix_tn_fp_fn_tp": [
+                292,
+                25,
+                21,
+                14
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.4583,
+              "recall": 0.3143,
+              "f1": 0.3729,
+              "flagged_rows": 24,
+              "confusion_matrix_tn_fp_fn_tp": [
+                304,
+                13,
+                24,
+                11
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.5,
+              "recall": 0.2571,
+              "f1": 0.3396,
+              "flagged_rows": 18,
+              "confusion_matrix_tn_fp_fn_tp": [
+                308,
+                9,
+                26,
+                9
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.5333,
+              "recall": 0.2286,
+              "f1": 0.32,
+              "flagged_rows": 15,
+              "confusion_matrix_tn_fp_fn_tp": [
+                310,
+                7,
+                27,
+                8
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.6364,
+              "recall": 0.2,
+              "f1": 0.3043,
+              "flagged_rows": 11,
+              "confusion_matrix_tn_fp_fn_tp": [
+                313,
+                4,
+                28,
+                7
+              ]
+            }
+          ]
+        },
+        "RF classifier depth 10": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.3281,
+              "recall": 0.6,
+              "f1": 0.4242,
+              "flagged_rows": 64,
+              "confusion_matrix_tn_fp_fn_tp": [
+                274,
+                43,
+                14,
+                21
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.3429,
+              "recall": 0.3429,
+              "f1": 0.3429,
+              "flagged_rows": 35,
+              "confusion_matrix_tn_fp_fn_tp": [
+                294,
+                23,
+                23,
+                12
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.4783,
+              "recall": 0.3143,
+              "f1": 0.3793,
+              "flagged_rows": 23,
+              "confusion_matrix_tn_fp_fn_tp": [
+                305,
+                12,
+                24,
+                11
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.5263,
+              "recall": 0.2857,
+              "f1": 0.3704,
+              "flagged_rows": 19,
+              "confusion_matrix_tn_fp_fn_tp": [
+                308,
+                9,
+                25,
+                10
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.5294,
+              "recall": 0.2571,
+              "f1": 0.3462,
+              "flagged_rows": 17,
+              "confusion_matrix_tn_fp_fn_tp": [
+                309,
+                8,
+                26,
+                9
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.6364,
+              "recall": 0.2,
+              "f1": 0.3043,
+              "flagged_rows": 11,
+              "confusion_matrix_tn_fp_fn_tp": [
+                313,
+                4,
+                28,
+                7
+              ]
+            }
+          ]
+        },
+        "RF classifier conservative": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.3548,
+              "recall": 0.6286,
+              "f1": 0.4536,
+              "flagged_rows": 62,
+              "confusion_matrix_tn_fp_fn_tp": [
+                277,
+                40,
+                13,
+                22
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.3611,
+              "recall": 0.3714,
+              "f1": 0.3662,
+              "flagged_rows": 36,
+              "confusion_matrix_tn_fp_fn_tp": [
+                294,
+                23,
+                22,
+                13
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.4783,
+              "recall": 0.3143,
+              "f1": 0.3793,
+              "flagged_rows": 23,
+              "confusion_matrix_tn_fp_fn_tp": [
+                305,
+                12,
+                24,
+                11
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.5556,
+              "recall": 0.2857,
+              "f1": 0.3774,
+              "flagged_rows": 18,
+              "confusion_matrix_tn_fp_fn_tp": [
+                309,
+                8,
+                25,
+                10
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.5294,
+              "recall": 0.2571,
+              "f1": 0.3462,
+              "flagged_rows": 17,
+              "confusion_matrix_tn_fp_fn_tp": [
+                309,
+                8,
+                26,
+                9
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.5455,
+              "recall": 0.1714,
+              "f1": 0.2609,
+              "flagged_rows": 11,
+              "confusion_matrix_tn_fp_fn_tp": [
+                312,
+                5,
+                29,
+                6
+              ]
+            }
+          ]
+        },
+        "RF classifier balanced": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.3462,
+              "recall": 0.7714,
+              "f1": 0.4779,
+              "flagged_rows": 78,
+              "confusion_matrix_tn_fp_fn_tp": [
+                266,
+                51,
+                8,
+                27
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.3793,
+              "recall": 0.6286,
+              "f1": 0.4731,
+              "flagged_rows": 58,
+              "confusion_matrix_tn_fp_fn_tp": [
+                281,
+                36,
+                13,
+                22
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.4186,
+              "recall": 0.5143,
+              "f1": 0.4615,
+              "flagged_rows": 43,
+              "confusion_matrix_tn_fp_fn_tp": [
+                292,
+                25,
+                17,
+                18
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.5,
+              "recall": 0.4,
+              "f1": 0.4444,
+              "flagged_rows": 28,
+              "confusion_matrix_tn_fp_fn_tp": [
+                303,
+                14,
+                21,
+                14
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.5714,
+              "recall": 0.3429,
+              "f1": 0.4286,
+              "flagged_rows": 21,
+              "confusion_matrix_tn_fp_fn_tp": [
+                308,
+                9,
+                23,
+                12
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.5455,
+              "recall": 0.1714,
+              "f1": 0.2609,
+              "flagged_rows": 11,
+              "confusion_matrix_tn_fp_fn_tp": [
+                312,
+                5,
+                29,
+                6
+              ]
+            }
+          ]
+        },
+        "RF classifier balanced conservative": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.3182,
+              "recall": 0.8,
+              "f1": 0.4553,
+              "flagged_rows": 88,
+              "confusion_matrix_tn_fp_fn_tp": [
+                257,
+                60,
+                7,
+                28
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.3582,
+              "recall": 0.6857,
+              "f1": 0.4706,
+              "flagged_rows": 67,
+              "confusion_matrix_tn_fp_fn_tp": [
+                274,
+                43,
+                11,
+                24
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.4082,
+              "recall": 0.5714,
+              "f1": 0.4762,
+              "flagged_rows": 49,
+              "confusion_matrix_tn_fp_fn_tp": [
+                288,
+                29,
+                15,
+                20
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.4375,
+              "recall": 0.4,
+              "f1": 0.4179,
+              "flagged_rows": 32,
+              "confusion_matrix_tn_fp_fn_tp": [
+                299,
+                18,
+                21,
+                14
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.5455,
+              "recall": 0.3429,
+              "f1": 0.4211,
+              "flagged_rows": 22,
+              "confusion_matrix_tn_fp_fn_tp": [
+                307,
+                10,
+                23,
+                12
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.5333,
+              "recall": 0.2286,
+              "f1": 0.32,
+              "flagged_rows": 15,
+              "confusion_matrix_tn_fp_fn_tp": [
+                310,
+                7,
+                27,
+                8
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fold": 3,
+      "training_reference_start": "2018-02",
+      "training_reference_end": "2023-05",
+      "validation_reference_start": "2023-06",
+      "validation_reference_end": "2024-01",
+      "rows": 352,
+      "candidates": {
+        "RF classifier baseline": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.7554,
+              "recall": 0.8015,
+              "f1": 0.7778,
+              "flagged_rows": 139,
+              "confusion_matrix_tn_fp_fn_tp": [
+                187,
+                34,
+                26,
+                105
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.812,
+              "recall": 0.7252,
+              "f1": 0.7661,
+              "flagged_rows": 117,
+              "confusion_matrix_tn_fp_fn_tp": [
+                199,
+                22,
+                36,
+                95
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.8209,
+              "recall": 0.4198,
+              "f1": 0.5556,
+              "flagged_rows": 67,
+              "confusion_matrix_tn_fp_fn_tp": [
+                209,
+                12,
+                76,
+                55
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.8214,
+              "recall": 0.1756,
+              "f1": 0.2893,
+              "flagged_rows": 28,
+              "confusion_matrix_tn_fp_fn_tp": [
+                216,
+                5,
+                108,
+                23
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.9333,
+              "recall": 0.1069,
+              "f1": 0.1918,
+              "flagged_rows": 15,
+              "confusion_matrix_tn_fp_fn_tp": [
+                220,
+                1,
+                117,
+                14
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 1.0,
+              "recall": 0.0458,
+              "f1": 0.0876,
+              "flagged_rows": 6,
+              "confusion_matrix_tn_fp_fn_tp": [
+                221,
+                0,
+                125,
+                6
+              ]
+            }
+          ]
+        },
+        "RF classifier depth 10": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.7647,
+              "recall": 0.7939,
+              "f1": 0.779,
+              "flagged_rows": 136,
+              "confusion_matrix_tn_fp_fn_tp": [
+                189,
+                32,
+                27,
+                104
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.8151,
+              "recall": 0.7405,
+              "f1": 0.776,
+              "flagged_rows": 119,
+              "confusion_matrix_tn_fp_fn_tp": [
+                199,
+                22,
+                34,
+                97
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.8667,
+              "recall": 0.4962,
+              "f1": 0.6311,
+              "flagged_rows": 75,
+              "confusion_matrix_tn_fp_fn_tp": [
+                211,
+                10,
+                66,
+                65
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.8438,
+              "recall": 0.2061,
+              "f1": 0.3313,
+              "flagged_rows": 32,
+              "confusion_matrix_tn_fp_fn_tp": [
+                216,
+                5,
+                104,
+                27
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.9333,
+              "recall": 0.1069,
+              "f1": 0.1918,
+              "flagged_rows": 15,
+              "confusion_matrix_tn_fp_fn_tp": [
+                220,
+                1,
+                117,
+                14
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 1.0,
+              "recall": 0.0534,
+              "f1": 0.1014,
+              "flagged_rows": 7,
+              "confusion_matrix_tn_fp_fn_tp": [
+                221,
+                0,
+                124,
+                7
+              ]
+            }
+          ]
+        },
+        "RF classifier conservative": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.7626,
+              "recall": 0.8092,
+              "f1": 0.7852,
+              "flagged_rows": 139,
+              "confusion_matrix_tn_fp_fn_tp": [
+                188,
+                33,
+                25,
+                106
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.8362,
+              "recall": 0.7405,
+              "f1": 0.7854,
+              "flagged_rows": 116,
+              "confusion_matrix_tn_fp_fn_tp": [
+                202,
+                19,
+                34,
+                97
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.8701,
+              "recall": 0.5115,
+              "f1": 0.6442,
+              "flagged_rows": 77,
+              "confusion_matrix_tn_fp_fn_tp": [
+                211,
+                10,
+                64,
+                67
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.8718,
+              "recall": 0.2595,
+              "f1": 0.4,
+              "flagged_rows": 39,
+              "confusion_matrix_tn_fp_fn_tp": [
+                216,
+                5,
+                97,
+                34
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.9412,
+              "recall": 0.1221,
+              "f1": 0.2162,
+              "flagged_rows": 17,
+              "confusion_matrix_tn_fp_fn_tp": [
+                220,
+                1,
+                115,
+                16
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 1.0,
+              "recall": 0.0534,
+              "f1": 0.1014,
+              "flagged_rows": 7,
+              "confusion_matrix_tn_fp_fn_tp": [
+                221,
+                0,
+                124,
+                7
+              ]
+            }
+          ]
+        },
+        "RF classifier balanced": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.7181,
+              "recall": 0.8168,
+              "f1": 0.7643,
+              "flagged_rows": 149,
+              "confusion_matrix_tn_fp_fn_tp": [
+                179,
+                42,
+                24,
+                107
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.7647,
+              "recall": 0.7939,
+              "f1": 0.779,
+              "flagged_rows": 136,
+              "confusion_matrix_tn_fp_fn_tp": [
+                189,
+                32,
+                27,
+                104
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.7963,
+              "recall": 0.6565,
+              "f1": 0.7197,
+              "flagged_rows": 108,
+              "confusion_matrix_tn_fp_fn_tp": [
+                199,
+                22,
+                45,
+                86
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.8611,
+              "recall": 0.4733,
+              "f1": 0.6108,
+              "flagged_rows": 72,
+              "confusion_matrix_tn_fp_fn_tp": [
+                211,
+                10,
+                69,
+                62
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.8485,
+              "recall": 0.2137,
+              "f1": 0.3415,
+              "flagged_rows": 33,
+              "confusion_matrix_tn_fp_fn_tp": [
+                216,
+                5,
+                103,
+                28
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 1.0,
+              "recall": 0.084,
+              "f1": 0.1549,
+              "flagged_rows": 11,
+              "confusion_matrix_tn_fp_fn_tp": [
+                221,
+                0,
+                120,
+                11
+              ]
+            }
+          ]
+        },
+        "RF classifier balanced conservative": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.7143,
+              "recall": 0.8397,
+              "f1": 0.7719,
+              "flagged_rows": 154,
+              "confusion_matrix_tn_fp_fn_tp": [
+                177,
+                44,
+                21,
+                110
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.7394,
+              "recall": 0.8015,
+              "f1": 0.7692,
+              "flagged_rows": 142,
+              "confusion_matrix_tn_fp_fn_tp": [
+                184,
+                37,
+                26,
+                105
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.8033,
+              "recall": 0.7481,
+              "f1": 0.7747,
+              "flagged_rows": 122,
+              "confusion_matrix_tn_fp_fn_tp": [
+                197,
+                24,
+                33,
+                98
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.8316,
+              "recall": 0.6031,
+              "f1": 0.6991,
+              "flagged_rows": 95,
+              "confusion_matrix_tn_fp_fn_tp": [
+                205,
+                16,
+                52,
+                79
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.8769,
+              "recall": 0.4351,
+              "f1": 0.5816,
+              "flagged_rows": 65,
+              "confusion_matrix_tn_fp_fn_tp": [
+                213,
+                8,
+                74,
+                57
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.8696,
+              "recall": 0.1527,
+              "f1": 0.2597,
+              "flagged_rows": 23,
+              "confusion_matrix_tn_fp_fn_tp": [
+                218,
+                3,
+                111,
+                20
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fold": 4,
+      "training_reference_start": "2018-02",
+      "training_reference_end": "2024-01",
+      "validation_reference_start": "2024-02",
+      "validation_reference_end": "2024-09",
+      "rows": 352,
+      "candidates": {
+        "RF classifier baseline": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.5549,
+              "recall": 0.9266,
+              "f1": 0.6942,
+              "flagged_rows": 182,
+              "confusion_matrix_tn_fp_fn_tp": [
+                162,
+                81,
+                8,
+                101
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.6267,
+              "recall": 0.8624,
+              "f1": 0.7259,
+              "flagged_rows": 150,
+              "confusion_matrix_tn_fp_fn_tp": [
+                187,
+                56,
+                15,
+                94
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.6897,
+              "recall": 0.7339,
+              "f1": 0.7111,
+              "flagged_rows": 116,
+              "confusion_matrix_tn_fp_fn_tp": [
+                207,
+                36,
+                29,
+                80
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.7439,
+              "recall": 0.5596,
+              "f1": 0.6387,
+              "flagged_rows": 82,
+              "confusion_matrix_tn_fp_fn_tp": [
+                222,
+                21,
+                48,
+                61
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.8148,
+              "recall": 0.4037,
+              "f1": 0.5399,
+              "flagged_rows": 54,
+              "confusion_matrix_tn_fp_fn_tp": [
+                233,
+                10,
+                65,
+                44
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.9048,
+              "recall": 0.1743,
+              "f1": 0.2923,
+              "flagged_rows": 21,
+              "confusion_matrix_tn_fp_fn_tp": [
+                241,
+                2,
+                90,
+                19
+              ]
+            }
+          ]
+        },
+        "RF classifier depth 10": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.5789,
+              "recall": 0.9083,
+              "f1": 0.7071,
+              "flagged_rows": 171,
+              "confusion_matrix_tn_fp_fn_tp": [
+                171,
+                72,
+                10,
+                99
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.6419,
+              "recall": 0.8716,
+              "f1": 0.7393,
+              "flagged_rows": 148,
+              "confusion_matrix_tn_fp_fn_tp": [
+                190,
+                53,
+                14,
+                95
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.7,
+              "recall": 0.7064,
+              "f1": 0.7032,
+              "flagged_rows": 110,
+              "confusion_matrix_tn_fp_fn_tp": [
+                210,
+                33,
+                32,
+                77
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.7625,
+              "recall": 0.5596,
+              "f1": 0.6455,
+              "flagged_rows": 80,
+              "confusion_matrix_tn_fp_fn_tp": [
+                224,
+                19,
+                48,
+                61
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.8039,
+              "recall": 0.3761,
+              "f1": 0.5125,
+              "flagged_rows": 51,
+              "confusion_matrix_tn_fp_fn_tp": [
+                233,
+                10,
+                68,
+                41
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.9091,
+              "recall": 0.1835,
+              "f1": 0.3053,
+              "flagged_rows": 22,
+              "confusion_matrix_tn_fp_fn_tp": [
+                241,
+                2,
+                89,
+                20
+              ]
+            }
+          ]
+        },
+        "RF classifier conservative": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.5858,
+              "recall": 0.9083,
+              "f1": 0.7122,
+              "flagged_rows": 169,
+              "confusion_matrix_tn_fp_fn_tp": [
+                173,
+                70,
+                10,
+                99
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.6333,
+              "recall": 0.8716,
+              "f1": 0.7336,
+              "flagged_rows": 150,
+              "confusion_matrix_tn_fp_fn_tp": [
+                188,
+                55,
+                14,
+                95
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.6949,
+              "recall": 0.7523,
+              "f1": 0.7225,
+              "flagged_rows": 118,
+              "confusion_matrix_tn_fp_fn_tp": [
+                207,
+                36,
+                27,
+                82
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.7333,
+              "recall": 0.6055,
+              "f1": 0.6633,
+              "flagged_rows": 90,
+              "confusion_matrix_tn_fp_fn_tp": [
+                219,
+                24,
+                43,
+                66
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.7966,
+              "recall": 0.4312,
+              "f1": 0.5595,
+              "flagged_rows": 59,
+              "confusion_matrix_tn_fp_fn_tp": [
+                231,
+                12,
+                62,
+                47
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.875,
+              "recall": 0.2569,
+              "f1": 0.3972,
+              "flagged_rows": 32,
+              "confusion_matrix_tn_fp_fn_tp": [
+                239,
+                4,
+                81,
+                28
+              ]
+            }
+          ]
+        },
+        "RF classifier balanced": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.6026,
+              "recall": 0.8349,
+              "f1": 0.7,
+              "flagged_rows": 151,
+              "confusion_matrix_tn_fp_fn_tp": [
+                183,
+                60,
+                18,
+                91
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.6641,
+              "recall": 0.7982,
+              "f1": 0.725,
+              "flagged_rows": 131,
+              "confusion_matrix_tn_fp_fn_tp": [
+                199,
+                44,
+                22,
+                87
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.7449,
+              "recall": 0.6697,
+              "f1": 0.7053,
+              "flagged_rows": 98,
+              "confusion_matrix_tn_fp_fn_tp": [
+                218,
+                25,
+                36,
+                73
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.7722,
+              "recall": 0.5596,
+              "f1": 0.6489,
+              "flagged_rows": 79,
+              "confusion_matrix_tn_fp_fn_tp": [
+                225,
+                18,
+                48,
+                61
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.7667,
+              "recall": 0.422,
+              "f1": 0.5444,
+              "flagged_rows": 60,
+              "confusion_matrix_tn_fp_fn_tp": [
+                229,
+                14,
+                63,
+                46
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.8182,
+              "recall": 0.3303,
+              "f1": 0.4706,
+              "flagged_rows": 44,
+              "confusion_matrix_tn_fp_fn_tp": [
+                235,
+                8,
+                73,
+                36
+              ]
+            }
+          ]
+        },
+        "RF classifier balanced conservative": {
+          "threshold_results": [
+            {
+              "probability_threshold": 0.3,
+              "precision": 0.5278,
+              "recall": 0.8716,
+              "f1": 0.6574,
+              "flagged_rows": 180,
+              "confusion_matrix_tn_fp_fn_tp": [
+                158,
+                85,
+                14,
+                95
+              ]
+            },
+            {
+              "probability_threshold": 0.4,
+              "precision": 0.6216,
+              "recall": 0.844,
+              "f1": 0.716,
+              "flagged_rows": 148,
+              "confusion_matrix_tn_fp_fn_tp": [
+                187,
+                56,
+                17,
+                92
+              ]
+            },
+            {
+              "probability_threshold": 0.5,
+              "precision": 0.6769,
+              "recall": 0.8073,
+              "f1": 0.7364,
+              "flagged_rows": 130,
+              "confusion_matrix_tn_fp_fn_tp": [
+                201,
+                42,
+                21,
+                88
+              ]
+            },
+            {
+              "probability_threshold": 0.6,
+              "precision": 0.7,
+              "recall": 0.7064,
+              "f1": 0.7032,
+              "flagged_rows": 110,
+              "confusion_matrix_tn_fp_fn_tp": [
+                210,
+                33,
+                32,
+                77
+              ]
+            },
+            {
+              "probability_threshold": 0.7,
+              "precision": 0.7558,
+              "recall": 0.5963,
+              "f1": 0.6667,
+              "flagged_rows": 86,
+              "confusion_matrix_tn_fp_fn_tp": [
+                222,
+                21,
+                44,
+                65
+              ]
+            },
+            {
+              "probability_threshold": 0.8,
+              "precision": 0.8269,
+              "recall": 0.3945,
+              "f1": 0.5342,
+              "flagged_rows": 52,
+              "confusion_matrix_tn_fp_fn_tp": [
+                234,
+                9,
+                66,
+                43
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "decision": "Exploratory only. Do not deploy a classifier or claim future 85% performance from these previously explored validation periods. Assess the selected candidate on a newly collected untouched future period."
+}

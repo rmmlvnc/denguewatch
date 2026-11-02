@@ -832,6 +832,7 @@
                                     <td>
 
                                         {{ user.email|default:"Not provided" }}
+                                        {% if user.email_verified %}<span class="badge bg-success ms-1">Email verified</span>{% else %}<span class="badge bg-warning text-dark ms-1">Email not verified</span>{% endif %}
 
                                     </td>
 
@@ -936,40 +937,20 @@
 
                                             <!-- APPROVE -->
 
-                                            <a
-                                                href="{% url 'approve_user' user.id %}"
-                                                class="btn-approve"
-                                                onclick="
-                                                    return confirm(
-                                                        'Approve {{ user.username }}?'
-                                                    );
-                                                "
-                                            >
-
-                                                <i class="fa-solid fa-check"></i>
-
-                                                Approve
-
-                                            </a>
+                                            <form method="post" action="{% url 'approve_user' user.id %}" class="d-inline" onsubmit="return confirm('Approve {{ user.username }}?');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="pending_requests">
+                                                <button type="submit" class="btn-approve" {% if not user.email_verified %}disabled title="The applicant must verify their email first."{% endif %}><i class="fa-solid fa-check"></i> Approve</button>
+                                            </form>
 
 
                                             <!-- REJECT -->
 
-                                            <a
-                                                href="{% url 'reject_user' user.id %}"
-                                                class="btn-reject"
-                                                onclick="
-                                                    return confirm(
-                                                        'Reject {{ user.username }}?'
-                                                    );
-                                                "
-                                            >
-
-                                                <i class="fa-solid fa-xmark"></i>
-
-                                                Reject
-
-                                            </a>
+                                            <form method="post" action="{% url 'reject_user' user.id %}" class="d-inline" onsubmit="return confirm('Reject {{ user.username }}?');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="pending_requests">
+                                                <button type="submit" class="btn-reject"><i class="fa-solid fa-xmark"></i> Reject</button>
+                                            </form>
 
 
                                         </div>
@@ -1073,6 +1054,7 @@
                                                     <div class="detail-value">
 
                                                         {{ user.email|default:"Not provided" }}
+                                                        {% if user.email_verified %}<span class="badge bg-success ms-1">Verified</span>{% else %}<span class="badge bg-warning text-dark ms-1">Not verified</span>{% endif %}
 
                                                     </div>
 
@@ -1187,28 +1169,18 @@
                                                 </button>
 
 
-                                                <a
-                                                    href="{% url 'approve_user' user.id %}"
-                                                    class="btn btn-success"
-                                                >
-
-                                                    <i class="fa-solid fa-check"></i>
-
-                                                    Approve
-
-                                                </a>
+                                                <form method="post" action="{% url 'approve_user' user.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="next" value="pending_requests">
+                                                    <button type="submit" class="btn btn-success" {% if not user.email_verified %}disabled title="The applicant must verify their email first."{% endif %}><i class="fa-solid fa-check"></i> Approve</button>
+                                                </form>
 
 
-                                                <a
-                                                    href="{% url 'reject_user' user.id %}"
-                                                    class="btn btn-danger"
-                                                >
-
-                                                    <i class="fa-solid fa-xmark"></i>
-
-                                                    Reject
-
-                                                </a>
+                                                <form method="post" action="{% url 'reject_user' user.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="next" value="pending_requests">
+                                                    <button type="submit" class="btn btn-danger"><i class="fa-solid fa-xmark"></i> Reject</button>
+                                                </form>
 
 
                                             </div>

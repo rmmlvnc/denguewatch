@@ -1,0 +1,2444 @@
+{
+  "dataset_rows": 4532,
+  "case_source_file": "WILBUR_DSO_dengue_2018_2026_authoritative.csv",
+  "case_source_quality_audit": "dengue_dataset_quality.json",
+  "case_source_original_dataset_files": [
+    "DENGUE DATASETS 2018_2026 - CHO Dengue Records.csv"
+  ],
+  "case_source_all_rows_retained": true,
+  "included_cho_historical_source_rows": 3684,
+  "cho_historical_source_attribution": "CHO verification confirmed by the project team for the uploaded 2018-2026 source.",
+  "cho_historical_exact_duplicate_extra_rows": 4,
+  "excluded_synthetic_supplement_rows": 3720,
+  "excluded_synthetic_supplement_years": [
+    2018,
+    2019
+  ],
+  "synthetic_supplement_requested_demo_rows": {
+    "2018": 1826,
+    "2019": 1894
+  },
+  "synthetic_supplement_training_policy": "The earlier explicitly synthetic 2018-2019 submissions remain archived and excluded; the newer 2018-2019 CHO-verified submissions are included in the active source.",
+  "weather_missing_months": [
+    "2018-01",
+    "2018-02",
+    "2018-03",
+    "2018-04",
+    "2018-05",
+    "2018-06",
+    "2018-07",
+    "2018-08",
+    "2018-09",
+    "2018-10",
+    "2018-11",
+    "2018-12",
+    "2019-01",
+    "2019-02",
+    "2019-03",
+    "2019-04",
+    "2019-05",
+    "2019-06",
+    "2019-07",
+    "2019-08",
+    "2019-09",
+    "2019-10",
+    "2019-11",
+    "2019-12"
+  ],
+  "weather_rows_with_missing_values": 1056,
+  "training_weather_source": "Cached Open-Meteo historical values (per-barangay representative points)",
+  "training_weather_source_status": "live_archive_unavailable_cached_per_barangay_archive_used",
+  "training_weather_scope": "One representative point per barangay; adjacent barangays may share weather grid cells.",
+  "training_weather_distinct_grid_cells": 8,
+  "source_no_record_month_cells": 0,
+  "source_zero_month_cells_under_user_completeness_confirmation": 1396,
+  "usable_rows": 4444,
+  "training_rows": 2508,
+  "validation_rows": 836,
+  "test_rows": 1100,
+  "outer_training_rows": 3344,
+  "outer_training_share_pct": 75.25,
+  "outer_test_share_pct": 24.75,
+  "outer_training_months": 76,
+  "outer_test_months": 25,
+  "outer_split_policy": "Chronological approximately 75/25 outer split by whole reference month; all barangays from a month remain in one partition. The earlier 75% development period is internally split into fitting and validation periods for model selection.",
+  "validation_scheme": "chronological_inner_validation_with_previously_inspected_later_holdout",
+  "outer_training_period_start": "2018-02",
+  "outer_training_period_end": "2024-05",
+  "training_period_start": "2018-02",
+  "training_period_end": "2022-10",
+  "validation_start": "2022-11",
+  "validation_end": "2024-05",
+  "final_test_start": "2024-06",
+  "final_test_end": "2026-06",
+  "final_test_target_start": "2024-07",
+  "final_test_target_end": "2026-07",
+  "validation_selected_parameters": {
+    "algorithm": "RandomForestRegressor",
+    "n_estimators": 500,
+    "min_samples_leaf": 10,
+    "max_features": 1.0,
+    "max_depth": 10
+  },
+  "validation_candidate_scores": [
+    {
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 300,
+        "min_samples_leaf": 3,
+        "max_features": 0.8,
+        "max_depth": 10
+      },
+      "validation_mae": 2.2167,
+      "validation_rmse": 3.8271,
+      "validation_hotspot": {
+        "rows": 836,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.8895,
+        "recall": 0.6787,
+        "f1": 0.7699,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.6491,
+            "recall": 0.8757,
+            "f1": 0.7456,
+            "support": 338
+          },
+          "hotspot": {
+            "precision": 0.8895,
+            "recall": 0.6787,
+            "f1": 0.7699,
+            "support": 498
+          }
+        },
+        "actual_hotspot_rows": 498,
+        "predicted_hotspot_rows": 380,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              296,
+              42
+            ],
+            [
+              160,
+              338
+            ]
+          ],
+          "true_negative": 296,
+          "false_positive": 42,
+          "false_negative": 160,
+          "true_positive": 338
+        }
+      }
+    },
+    {
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 400,
+        "min_samples_leaf": 5,
+        "max_features": 0.8,
+        "max_depth": 12
+      },
+      "validation_mae": 2.2272,
+      "validation_rmse": 3.8231,
+      "validation_hotspot": {
+        "rows": 836,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.9011,
+        "recall": 0.6767,
+        "f1": 0.7729,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.6515,
+            "recall": 0.8905,
+            "f1": 0.7525,
+            "support": 338
+          },
+          "hotspot": {
+            "precision": 0.9011,
+            "recall": 0.6767,
+            "f1": 0.7729,
+            "support": 498
+          }
+        },
+        "actual_hotspot_rows": 498,
+        "predicted_hotspot_rows": 374,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              301,
+              37
+            ],
+            [
+              161,
+              337
+            ]
+          ],
+          "true_negative": 301,
+          "false_positive": 37,
+          "false_negative": 161,
+          "true_positive": 337
+        }
+      }
+    },
+    {
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 500,
+        "min_samples_leaf": 3,
+        "max_features": 0.8
+      },
+      "validation_mae": 2.2304,
+      "validation_rmse": 3.8339,
+      "validation_hotspot": {
+        "rows": 836,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.8936,
+        "recall": 0.6747,
+        "f1": 0.7689,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.6478,
+            "recall": 0.8817,
+            "f1": 0.7469,
+            "support": 338
+          },
+          "hotspot": {
+            "precision": 0.8936,
+            "recall": 0.6747,
+            "f1": 0.7689,
+            "support": 498
+          }
+        },
+        "actual_hotspot_rows": 498,
+        "predicted_hotspot_rows": 376,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              298,
+              40
+            ],
+            [
+              162,
+              336
+            ]
+          ],
+          "true_negative": 298,
+          "false_positive": 40,
+          "false_negative": 162,
+          "true_positive": 336
+        }
+      }
+    },
+    {
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 500,
+        "min_samples_leaf": 5,
+        "max_features": 1.0
+      },
+      "validation_mae": 2.2323,
+      "validation_rmse": 3.8169,
+      "validation_hotspot": {
+        "rows": 836,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.8963,
+        "recall": 0.6767,
+        "f1": 0.7712,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.65,
+            "recall": 0.8846,
+            "f1": 0.7494,
+            "support": 338
+          },
+          "hotspot": {
+            "precision": 0.8963,
+            "recall": 0.6767,
+            "f1": 0.7712,
+            "support": 498
+          }
+        },
+        "actual_hotspot_rows": 498,
+        "predicted_hotspot_rows": 376,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              299,
+              39
+            ],
+            [
+              161,
+              337
+            ]
+          ],
+          "true_negative": 299,
+          "false_positive": 39,
+          "false_negative": 161,
+          "true_positive": 337
+        }
+      }
+    },
+    {
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 500,
+        "min_samples_leaf": 8,
+        "max_features": 0.8,
+        "max_depth": 10
+      },
+      "validation_mae": 2.2422,
+      "validation_rmse": 3.8443,
+      "validation_hotspot": {
+        "rows": 836,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.9027,
+        "recall": 0.6707,
+        "f1": 0.7696,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.6481,
+            "recall": 0.8935,
+            "f1": 0.7512,
+            "support": 338
+          },
+          "hotspot": {
+            "precision": 0.9027,
+            "recall": 0.6707,
+            "f1": 0.7696,
+            "support": 498
+          }
+        },
+        "actual_hotspot_rows": 498,
+        "predicted_hotspot_rows": 370,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              302,
+              36
+            ],
+            [
+              164,
+              334
+            ]
+          ],
+          "true_negative": 302,
+          "false_positive": 36,
+          "false_negative": 164,
+          "true_positive": 334
+        }
+      }
+    },
+    {
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 500,
+        "min_samples_leaf": 10,
+        "max_features": 1.0,
+        "max_depth": 10
+      },
+      "validation_mae": 2.2649,
+      "validation_rmse": 3.8727,
+      "validation_hotspot": {
+        "rows": 836,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.9041,
+        "recall": 0.6627,
+        "f1": 0.7648,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.6433,
+            "recall": 0.8964,
+            "f1": 0.7491,
+            "support": 338
+          },
+          "hotspot": {
+            "precision": 0.9041,
+            "recall": 0.6627,
+            "f1": 0.7648,
+            "support": 498
+          }
+        },
+        "actual_hotspot_rows": 498,
+        "predicted_hotspot_rows": 365,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              303,
+              35
+            ],
+            [
+              168,
+              330
+            ]
+          ],
+          "true_negative": 303,
+          "false_positive": 35,
+          "false_negative": 168,
+          "true_positive": 330
+        }
+      }
+    },
+    {
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 600,
+        "min_samples_leaf": 3,
+        "max_features": 1.0,
+        "max_depth": 16
+      },
+      "validation_mae": 2.2243,
+      "validation_rmse": 3.8099,
+      "validation_hotspot": {
+        "rows": 836,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.8892,
+        "recall": 0.6928,
+        "f1": 0.7788,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.6585,
+            "recall": 0.8728,
+            "f1": 0.7506,
+            "support": 338
+          },
+          "hotspot": {
+            "precision": 0.8892,
+            "recall": 0.6928,
+            "f1": 0.7788,
+            "support": 498
+          }
+        },
+        "actual_hotspot_rows": 498,
+        "predicted_hotspot_rows": 388,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              295,
+              43
+            ],
+            [
+              153,
+              345
+            ]
+          ],
+          "true_negative": 295,
+          "false_positive": 43,
+          "false_negative": 153,
+          "true_positive": 345
+        }
+      }
+    },
+    {
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "n_estimators": 700,
+        "min_samples_leaf": 5,
+        "max_features": 0.8,
+        "max_depth": 12
+      },
+      "validation_mae": 2.2255,
+      "validation_rmse": 3.8153,
+      "validation_hotspot": {
+        "rows": 836,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.9011,
+        "recall": 0.6767,
+        "f1": 0.7729,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.6515,
+            "recall": 0.8905,
+            "f1": 0.7525,
+            "support": 338
+          },
+          "hotspot": {
+            "precision": 0.9011,
+            "recall": 0.6767,
+            "f1": 0.7729,
+            "support": 498
+          }
+        },
+        "actual_hotspot_rows": 498,
+        "predicted_hotspot_rows": 374,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              301,
+              37
+            ],
+            [
+              161,
+              337
+            ]
+          ],
+          "true_negative": 301,
+          "false_positive": 37,
+          "false_negative": 161,
+          "true_positive": 337
+        }
+      }
+    }
+  ],
+  "validation_model_selection_rule": "Highest validation precision at the fixed predicted-count cutoff of 3, among candidates with precision >=85% and recall >=40%; tie-break by recall, then MAE and RMSE.",
+  "validation_precision_recall_constraints": {
+    "precision_at_least": 0.85,
+    "recall_at_least": 0.4,
+    "observed_hotspot_threshold_cases": 2,
+    "predicted_count_cutoff_cases": 3
+  },
+  "mae": 1.8961,
+  "rmse": 2.9147,
+  "r2": 0.5949,
+  "persistence_baseline_name": "Persistence (same as most recent month)",
+  "persistence_baseline_mae": 1.89,
+  "persistence_baseline_rmse": 3.1584,
+  "beats_persistence_baseline": false,
+  "baseline_comparison": {
+    "persistence": {
+      "overall": {
+        "rows": 1100,
+        "mae": 1.89,
+        "rmse": 3.1584
+      },
+      "four_month_test_blocks": [
+        {
+          "rows": 176,
+          "mae": 3.4034,
+          "rmse": 5.0017,
+          "target_period_start": "2024-07",
+          "target_period_end": "2024-10"
+        },
+        {
+          "rows": 176,
+          "mae": 2.0057,
+          "rmse": 2.982,
+          "target_period_start": "2024-11",
+          "target_period_end": "2025-02"
+        },
+        {
+          "rows": 176,
+          "mae": 2.0341,
+          "rmse": 2.8524,
+          "target_period_start": "2025-03",
+          "target_period_end": "2025-06"
+        },
+        {
+          "rows": 176,
+          "mae": 2.0568,
+          "rmse": 3.5818,
+          "target_period_start": "2025-07",
+          "target_period_end": "2025-10"
+        },
+        {
+          "rows": 176,
+          "mae": 1.2955,
+          "rmse": 2.3012,
+          "target_period_start": "2025-11",
+          "target_period_end": "2026-02"
+        },
+        {
+          "rows": 176,
+          "mae": 0.7955,
+          "rmse": 1.2836,
+          "target_period_start": "2026-03",
+          "target_period_end": "2026-06"
+        },
+        {
+          "rows": 44,
+          "mae": 0.8864,
+          "rmse": 1.4538,
+          "target_period_start": "2026-07",
+          "target_period_end": "2026-07"
+        }
+      ]
+    },
+    "seasonal_naive_same_month_last_year": {
+      "overall": {
+        "rows": 1100,
+        "mae": 3.3382,
+        "rmse": 5.2626
+      },
+      "four_month_test_blocks": [
+        {
+          "rows": 176,
+          "mae": 3.6875,
+          "rmse": 5.6594,
+          "target_period_start": "2024-07",
+          "target_period_end": "2024-10"
+        },
+        {
+          "rows": 176,
+          "mae": 3.3807,
+          "rmse": 5.291,
+          "target_period_start": "2024-11",
+          "target_period_end": "2025-02"
+        },
+        {
+          "rows": 176,
+          "mae": 2.5284,
+          "rmse": 4.1962,
+          "target_period_start": "2025-03",
+          "target_period_end": "2025-06"
+        },
+        {
+          "rows": 176,
+          "mae": 3.9602,
+          "rmse": 6.0392,
+          "target_period_start": "2025-07",
+          "target_period_end": "2025-10"
+        },
+        {
+          "rows": 176,
+          "mae": 3.4773,
+          "rmse": 5.3831,
+          "target_period_start": "2025-11",
+          "target_period_end": "2026-02"
+        },
+        {
+          "rows": 176,
+          "mae": 3.0,
+          "rmse": 4.505,
+          "target_period_start": "2026-03",
+          "target_period_end": "2026-06"
+        },
+        {
+          "rows": 44,
+          "mae": 3.3182,
+          "rmse": 6.2341,
+          "target_period_start": "2026-07",
+          "target_period_end": "2026-07"
+        }
+      ]
+    },
+    "trailing_3_month_mean": {
+      "overall": {
+        "rows": 1100,
+        "mae": 1.8403,
+        "rmse": 3.0077
+      },
+      "four_month_test_blocks": [
+        {
+          "rows": 176,
+          "mae": 3.1458,
+          "rmse": 4.8877,
+          "target_period_start": "2024-07",
+          "target_period_end": "2024-10"
+        },
+        {
+          "rows": 176,
+          "mae": 2.2367,
+          "rmse": 3.316,
+          "target_period_start": "2024-11",
+          "target_period_end": "2025-02"
+        },
+        {
+          "rows": 176,
+          "mae": 1.7955,
+          "rmse": 2.4977,
+          "target_period_start": "2025-03",
+          "target_period_end": "2025-06"
+        },
+        {
+          "rows": 176,
+          "mae": 1.7008,
+          "rmse": 2.6759,
+          "target_period_start": "2025-07",
+          "target_period_end": "2025-10"
+        },
+        {
+          "rows": 176,
+          "mae": 1.6856,
+          "rmse": 2.5653,
+          "target_period_start": "2025-11",
+          "target_period_end": "2026-02"
+        },
+        {
+          "rows": 176,
+          "mae": 0.6989,
+          "rmse": 1.055,
+          "target_period_start": "2026-03",
+          "target_period_end": "2026-06"
+        },
+        {
+          "rows": 44,
+          "mae": 0.9545,
+          "rmse": 1.4975,
+          "target_period_start": "2026-07",
+          "target_period_end": "2026-07"
+        }
+      ]
+    }
+  },
+  "hotspot_classification_evaluation": {
+    "task": "Flag barangays for planning review using the predicted-count cutoff; the observed hotspot label has a separate actual-case threshold.",
+    "threshold_cases": 2,
+    "predicted_count_cutoff": 3,
+    "positive_class": "at_least_2_observed_cases",
+    "model_overall": {
+      "rows": 1100,
+      "threshold_cases": 2,
+      "predicted_count_cutoff": 3,
+      "positive_class": "at_least_2_observed_cases",
+      "precision": 0.8468,
+      "recall": 0.7384,
+      "f1": 0.7889,
+      "per_class": {
+        "not_hotspot": {
+          "precision": 0.7762,
+          "recall": 0.8717,
+          "f1": 0.8212,
+          "support": 561
+        },
+        "hotspot": {
+          "precision": 0.8468,
+          "recall": 0.7384,
+          "f1": 0.7889,
+          "support": 539
+        }
+      },
+      "actual_hotspot_rows": 539,
+      "predicted_hotspot_rows": 470,
+      "confusion_matrix": {
+        "labels": [
+          "not_hotspot",
+          "hotspot"
+        ],
+        "rows_actual_columns_predicted": [
+          [
+            489,
+            72
+          ],
+          [
+            141,
+            398
+          ]
+        ],
+        "true_negative": 489,
+        "false_positive": 72,
+        "false_negative": 141,
+        "true_positive": 398
+      }
+    },
+    "model_four_month_test_blocks": [
+      {
+        "rows": 176,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.9423,
+        "recall": 0.7903,
+        "f1": 0.8596,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.6389,
+            "recall": 0.8846,
+            "f1": 0.7419,
+            "support": 52
+          },
+          "hotspot": {
+            "precision": 0.9423,
+            "recall": 0.7903,
+            "f1": 0.8596,
+            "support": 124
+          }
+        },
+        "actual_hotspot_rows": 124,
+        "predicted_hotspot_rows": 104,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              46,
+              6
+            ],
+            [
+              26,
+              98
+            ]
+          ],
+          "true_negative": 46,
+          "false_positive": 6,
+          "false_negative": 26,
+          "true_positive": 98
+        },
+        "target_period_start": "2024-07",
+        "target_period_end": "2024-10"
+      },
+      {
+        "rows": 176,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.9238,
+        "recall": 0.8435,
+        "f1": 0.8818,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.7465,
+            "recall": 0.8689,
+            "f1": 0.803,
+            "support": 61
+          },
+          "hotspot": {
+            "precision": 0.9238,
+            "recall": 0.8435,
+            "f1": 0.8818,
+            "support": 115
+          }
+        },
+        "actual_hotspot_rows": 115,
+        "predicted_hotspot_rows": 105,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              53,
+              8
+            ],
+            [
+              18,
+              97
+            ]
+          ],
+          "true_negative": 53,
+          "false_positive": 8,
+          "false_negative": 18,
+          "true_positive": 97
+        },
+        "target_period_start": "2024-11",
+        "target_period_end": "2025-02"
+      },
+      {
+        "rows": 176,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.8333,
+        "recall": 0.6667,
+        "f1": 0.7407,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.6196,
+            "recall": 0.8028,
+            "f1": 0.6994,
+            "support": 71
+          },
+          "hotspot": {
+            "precision": 0.8333,
+            "recall": 0.6667,
+            "f1": 0.7407,
+            "support": 105
+          }
+        },
+        "actual_hotspot_rows": 105,
+        "predicted_hotspot_rows": 84,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              57,
+              14
+            ],
+            [
+              35,
+              70
+            ]
+          ],
+          "true_negative": 57,
+          "false_positive": 14,
+          "false_negative": 35,
+          "true_positive": 70
+        },
+        "target_period_start": "2025-03",
+        "target_period_end": "2025-06"
+      },
+      {
+        "rows": 176,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.866,
+        "recall": 0.8,
+        "f1": 0.8317,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.7342,
+            "recall": 0.8169,
+            "f1": 0.7733,
+            "support": 71
+          },
+          "hotspot": {
+            "precision": 0.866,
+            "recall": 0.8,
+            "f1": 0.8317,
+            "support": 105
+          }
+        },
+        "actual_hotspot_rows": 105,
+        "predicted_hotspot_rows": 97,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              58,
+              13
+            ],
+            [
+              21,
+              84
+            ]
+          ],
+          "true_negative": 58,
+          "false_positive": 13,
+          "false_negative": 21,
+          "true_positive": 84
+        },
+        "target_period_start": "2025-07",
+        "target_period_end": "2025-10"
+      },
+      {
+        "rows": 176,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.6102,
+        "recall": 0.766,
+        "f1": 0.6792,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.906,
+            "recall": 0.8217,
+            "f1": 0.8618,
+            "support": 129
+          },
+          "hotspot": {
+            "precision": 0.6102,
+            "recall": 0.766,
+            "f1": 0.6792,
+            "support": 47
+          }
+        },
+        "actual_hotspot_rows": 47,
+        "predicted_hotspot_rows": 59,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              106,
+              23
+            ],
+            [
+              11,
+              36
+            ]
+          ],
+          "true_negative": 106,
+          "false_positive": 23,
+          "false_negative": 11,
+          "true_positive": 36
+        },
+        "target_period_start": "2025-11",
+        "target_period_end": "2026-02"
+      },
+      {
+        "rows": 176,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.65,
+        "recall": 0.4062,
+        "f1": 0.5,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.8782,
+            "recall": 0.9514,
+            "f1": 0.9133,
+            "support": 144
+          },
+          "hotspot": {
+            "precision": 0.65,
+            "recall": 0.4062,
+            "f1": 0.5,
+            "support": 32
+          }
+        },
+        "actual_hotspot_rows": 32,
+        "predicted_hotspot_rows": 20,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              137,
+              7
+            ],
+            [
+              19,
+              13
+            ]
+          ],
+          "true_negative": 137,
+          "false_positive": 7,
+          "false_negative": 19,
+          "true_positive": 13
+        },
+        "target_period_start": "2026-03",
+        "target_period_end": "2026-06"
+      },
+      {
+        "rows": 44,
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 3,
+        "positive_class": "at_least_2_observed_cases",
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "per_class": {
+          "not_hotspot": {
+            "precision": 0.7442,
+            "recall": 0.9697,
+            "f1": 0.8421,
+            "support": 33
+          },
+          "hotspot": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 11
+          }
+        },
+        "actual_hotspot_rows": 11,
+        "predicted_hotspot_rows": 1,
+        "confusion_matrix": {
+          "labels": [
+            "not_hotspot",
+            "hotspot"
+          ],
+          "rows_actual_columns_predicted": [
+            [
+              32,
+              1
+            ],
+            [
+              11,
+              0
+            ]
+          ],
+          "true_negative": 32,
+          "false_positive": 1,
+          "false_negative": 11,
+          "true_positive": 0
+        },
+        "target_period_start": "2026-07",
+        "target_period_end": "2026-07"
+      }
+    ],
+    "simple_baseline_comparison": {
+      "persistence": {
+        "overall": {
+          "rows": 1100,
+          "threshold_cases": 2,
+          "predicted_count_cutoff": 3,
+          "positive_class": "at_least_2_observed_cases",
+          "precision": 0.8565,
+          "recall": 0.6976,
+          "f1": 0.7689,
+          "per_class": {
+            "not_hotspot": {
+              "precision": 0.7534,
+              "recall": 0.8877,
+              "f1": 0.8151,
+              "support": 561
+            },
+            "hotspot": {
+              "precision": 0.8565,
+              "recall": 0.6976,
+              "f1": 0.7689,
+              "support": 539
+            }
+          },
+          "actual_hotspot_rows": 539,
+          "predicted_hotspot_rows": 439,
+          "confusion_matrix": {
+            "labels": [
+              "not_hotspot",
+              "hotspot"
+            ],
+            "rows_actual_columns_predicted": [
+              [
+                498,
+                63
+              ],
+              [
+                163,
+                376
+              ]
+            ],
+            "true_negative": 498,
+            "false_positive": 63,
+            "false_negative": 163,
+            "true_positive": 376
+          }
+        },
+        "four_month_test_blocks": [
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.951,
+            "recall": 0.7823,
+            "f1": 0.8584,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.6351,
+                "recall": 0.9038,
+                "f1": 0.746,
+                "support": 52
+              },
+              "hotspot": {
+                "precision": 0.951,
+                "recall": 0.7823,
+                "f1": 0.8584,
+                "support": 124
+              }
+            },
+            "actual_hotspot_rows": 124,
+            "predicted_hotspot_rows": 102,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  47,
+                  5
+                ],
+                [
+                  27,
+                  97
+                ]
+              ],
+              "true_negative": 47,
+              "false_positive": 5,
+              "false_negative": 27,
+              "true_positive": 97
+            },
+            "target_period_start": "2024-07",
+            "target_period_end": "2024-10"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.9307,
+            "recall": 0.8174,
+            "f1": 0.8704,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.72,
+                "recall": 0.8852,
+                "f1": 0.7941,
+                "support": 61
+              },
+              "hotspot": {
+                "precision": 0.9307,
+                "recall": 0.8174,
+                "f1": 0.8704,
+                "support": 115
+              }
+            },
+            "actual_hotspot_rows": 115,
+            "predicted_hotspot_rows": 101,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  54,
+                  7
+                ],
+                [
+                  21,
+                  94
+                ]
+              ],
+              "true_negative": 54,
+              "false_positive": 7,
+              "false_negative": 21,
+              "true_positive": 94
+            },
+            "target_period_start": "2024-11",
+            "target_period_end": "2025-02"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.7766,
+            "recall": 0.6952,
+            "f1": 0.7337,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.6098,
+                "recall": 0.7042,
+                "f1": 0.6536,
+                "support": 71
+              },
+              "hotspot": {
+                "precision": 0.7766,
+                "recall": 0.6952,
+                "f1": 0.7337,
+                "support": 105
+              }
+            },
+            "actual_hotspot_rows": 105,
+            "predicted_hotspot_rows": 94,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  50,
+                  21
+                ],
+                [
+                  32,
+                  73
+                ]
+              ],
+              "true_negative": 50,
+              "false_positive": 21,
+              "false_negative": 32,
+              "true_positive": 73
+            },
+            "target_period_start": "2025-03",
+            "target_period_end": "2025-06"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.8765,
+            "recall": 0.6762,
+            "f1": 0.7634,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.6421,
+                "recall": 0.8592,
+                "f1": 0.7349,
+                "support": 71
+              },
+              "hotspot": {
+                "precision": 0.8765,
+                "recall": 0.6762,
+                "f1": 0.7634,
+                "support": 105
+              }
+            },
+            "actual_hotspot_rows": 105,
+            "predicted_hotspot_rows": 81,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  61,
+                  10
+                ],
+                [
+                  34,
+                  71
+                ]
+              ],
+              "true_negative": 61,
+              "false_positive": 10,
+              "false_negative": 34,
+              "true_positive": 71
+            },
+            "target_period_start": "2025-07",
+            "target_period_end": "2025-10"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.6739,
+            "recall": 0.6596,
+            "f1": 0.6667,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.8769,
+                "recall": 0.8837,
+                "f1": 0.8803,
+                "support": 129
+              },
+              "hotspot": {
+                "precision": 0.6739,
+                "recall": 0.6596,
+                "f1": 0.6667,
+                "support": 47
+              }
+            },
+            "actual_hotspot_rows": 47,
+            "predicted_hotspot_rows": 46,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  114,
+                  15
+                ],
+                [
+                  16,
+                  31
+                ]
+              ],
+              "true_negative": 114,
+              "false_positive": 15,
+              "false_negative": 16,
+              "true_positive": 31
+            },
+            "target_period_start": "2025-11",
+            "target_period_end": "2026-02"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.5556,
+            "recall": 0.1562,
+            "f1": 0.2439,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.8383,
+                "recall": 0.9722,
+                "f1": 0.9003,
+                "support": 144
+              },
+              "hotspot": {
+                "precision": 0.5556,
+                "recall": 0.1562,
+                "f1": 0.2439,
+                "support": 32
+              }
+            },
+            "actual_hotspot_rows": 32,
+            "predicted_hotspot_rows": 9,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  140,
+                  4
+                ],
+                [
+                  27,
+                  5
+                ]
+              ],
+              "true_negative": 140,
+              "false_positive": 4,
+              "false_negative": 27,
+              "true_positive": 5
+            },
+            "target_period_start": "2026-03",
+            "target_period_end": "2026-06"
+          },
+          {
+            "rows": 44,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.8333,
+            "recall": 0.4545,
+            "f1": 0.5882,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.8421,
+                "recall": 0.9697,
+                "f1": 0.9014,
+                "support": 33
+              },
+              "hotspot": {
+                "precision": 0.8333,
+                "recall": 0.4545,
+                "f1": 0.5882,
+                "support": 11
+              }
+            },
+            "actual_hotspot_rows": 11,
+            "predicted_hotspot_rows": 6,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  32,
+                  1
+                ],
+                [
+                  6,
+                  5
+                ]
+              ],
+              "true_negative": 32,
+              "false_positive": 1,
+              "false_negative": 6,
+              "true_positive": 5
+            },
+            "target_period_start": "2026-07",
+            "target_period_end": "2026-07"
+          }
+        ]
+      },
+      "seasonal_naive_same_month_last_year": {
+        "overall": {
+          "rows": 1100,
+          "threshold_cases": 2,
+          "predicted_count_cutoff": 3,
+          "positive_class": "at_least_2_observed_cases",
+          "precision": 0.6746,
+          "recall": 0.7848,
+          "f1": 0.7256,
+          "per_class": {
+            "not_hotspot": {
+              "precision": 0.7548,
+              "recall": 0.6364,
+              "f1": 0.6905,
+              "support": 561
+            },
+            "hotspot": {
+              "precision": 0.6746,
+              "recall": 0.7848,
+              "f1": 0.7256,
+              "support": 539
+            }
+          },
+          "actual_hotspot_rows": 539,
+          "predicted_hotspot_rows": 627,
+          "confusion_matrix": {
+            "labels": [
+              "not_hotspot",
+              "hotspot"
+            ],
+            "rows_actual_columns_predicted": [
+              [
+                357,
+                204
+              ],
+              [
+                116,
+                423
+              ]
+            ],
+            "true_negative": 357,
+            "false_positive": 204,
+            "false_negative": 116,
+            "true_positive": 423
+          }
+        },
+        "four_month_test_blocks": [
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.9245,
+            "recall": 0.7903,
+            "f1": 0.8522,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.6286,
+                "recall": 0.8462,
+                "f1": 0.7213,
+                "support": 52
+              },
+              "hotspot": {
+                "precision": 0.9245,
+                "recall": 0.7903,
+                "f1": 0.8522,
+                "support": 124
+              }
+            },
+            "actual_hotspot_rows": 124,
+            "predicted_hotspot_rows": 106,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  44,
+                  8
+                ],
+                [
+                  26,
+                  98
+                ]
+              ],
+              "true_negative": 44,
+              "false_positive": 8,
+              "false_negative": 26,
+              "true_positive": 98
+            },
+            "target_period_start": "2024-07",
+            "target_period_end": "2024-10"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.8435,
+            "recall": 0.8435,
+            "f1": 0.8435,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.7049,
+                "recall": 0.7049,
+                "f1": 0.7049,
+                "support": 61
+              },
+              "hotspot": {
+                "precision": 0.8435,
+                "recall": 0.8435,
+                "f1": 0.8435,
+                "support": 115
+              }
+            },
+            "actual_hotspot_rows": 115,
+            "predicted_hotspot_rows": 115,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  43,
+                  18
+                ],
+                [
+                  18,
+                  97
+                ]
+              ],
+              "true_negative": 43,
+              "false_positive": 18,
+              "false_negative": 18,
+              "true_positive": 97
+            },
+            "target_period_start": "2024-11",
+            "target_period_end": "2025-02"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.8276,
+            "recall": 0.6857,
+            "f1": 0.75,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.6292,
+                "recall": 0.7887,
+                "f1": 0.7,
+                "support": 71
+              },
+              "hotspot": {
+                "precision": 0.8276,
+                "recall": 0.6857,
+                "f1": 0.75,
+                "support": 105
+              }
+            },
+            "actual_hotspot_rows": 105,
+            "predicted_hotspot_rows": 87,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  56,
+                  15
+                ],
+                [
+                  33,
+                  72
+                ]
+              ],
+              "true_negative": 56,
+              "false_positive": 15,
+              "false_negative": 33,
+              "true_positive": 72
+            },
+            "target_period_start": "2025-03",
+            "target_period_end": "2025-06"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.7928,
+            "recall": 0.8381,
+            "f1": 0.8148,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.7385,
+                "recall": 0.6761,
+                "f1": 0.7059,
+                "support": 71
+              },
+              "hotspot": {
+                "precision": 0.7928,
+                "recall": 0.8381,
+                "f1": 0.8148,
+                "support": 105
+              }
+            },
+            "actual_hotspot_rows": 105,
+            "predicted_hotspot_rows": 111,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  48,
+                  23
+                ],
+                [
+                  17,
+                  88
+                ]
+              ],
+              "true_negative": 48,
+              "false_positive": 23,
+              "false_negative": 17,
+              "true_positive": 88
+            },
+            "target_period_start": "2025-07",
+            "target_period_end": "2025-10"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.3673,
+            "recall": 0.766,
+            "f1": 0.4966,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.859,
+                "recall": 0.5194,
+                "f1": 0.6473,
+                "support": 129
+              },
+              "hotspot": {
+                "precision": 0.3673,
+                "recall": 0.766,
+                "f1": 0.4966,
+                "support": 47
+              }
+            },
+            "actual_hotspot_rows": 47,
+            "predicted_hotspot_rows": 98,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  67,
+                  62
+                ],
+                [
+                  11,
+                  36
+                ]
+              ],
+              "true_negative": 67,
+              "false_positive": 62,
+              "false_negative": 11,
+              "true_positive": 36
+            },
+            "target_period_start": "2025-11",
+            "target_period_end": "2026-02"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.2809,
+            "recall": 0.7812,
+            "f1": 0.4132,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.9195,
+                "recall": 0.5556,
+                "f1": 0.6926,
+                "support": 144
+              },
+              "hotspot": {
+                "precision": 0.2809,
+                "recall": 0.7812,
+                "f1": 0.4132,
+                "support": 32
+              }
+            },
+            "actual_hotspot_rows": 32,
+            "predicted_hotspot_rows": 89,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  80,
+                  64
+                ],
+                [
+                  7,
+                  25
+                ]
+              ],
+              "true_negative": 80,
+              "false_positive": 64,
+              "false_negative": 7,
+              "true_positive": 25
+            },
+            "target_period_start": "2026-03",
+            "target_period_end": "2026-06"
+          },
+          {
+            "rows": 44,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.3333,
+            "recall": 0.6364,
+            "f1": 0.4375,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.8261,
+                "recall": 0.5758,
+                "f1": 0.6786,
+                "support": 33
+              },
+              "hotspot": {
+                "precision": 0.3333,
+                "recall": 0.6364,
+                "f1": 0.4375,
+                "support": 11
+              }
+            },
+            "actual_hotspot_rows": 11,
+            "predicted_hotspot_rows": 21,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  19,
+                  14
+                ],
+                [
+                  4,
+                  7
+                ]
+              ],
+              "true_negative": 19,
+              "false_positive": 14,
+              "false_negative": 4,
+              "true_positive": 7
+            },
+            "target_period_start": "2026-07",
+            "target_period_end": "2026-07"
+          }
+        ]
+      },
+      "trailing_3_month_mean": {
+        "overall": {
+          "rows": 1100,
+          "threshold_cases": 2,
+          "predicted_count_cutoff": 3,
+          "positive_class": "at_least_2_observed_cases",
+          "precision": 0.8679,
+          "recall": 0.6827,
+          "f1": 0.7643,
+          "per_class": {
+            "not_hotspot": {
+              "precision": 0.747,
+              "recall": 0.9002,
+              "f1": 0.8165,
+              "support": 561
+            },
+            "hotspot": {
+              "precision": 0.8679,
+              "recall": 0.6827,
+              "f1": 0.7643,
+              "support": 539
+            }
+          },
+          "actual_hotspot_rows": 539,
+          "predicted_hotspot_rows": 424,
+          "confusion_matrix": {
+            "labels": [
+              "not_hotspot",
+              "hotspot"
+            ],
+            "rows_actual_columns_predicted": [
+              [
+                505,
+                56
+              ],
+              [
+                171,
+                368
+              ]
+            ],
+            "true_negative": 505,
+            "false_positive": 56,
+            "false_negative": 171,
+            "true_positive": 368
+          }
+        },
+        "four_month_test_blocks": [
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.949,
+            "recall": 0.75,
+            "f1": 0.8378,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.6026,
+                "recall": 0.9038,
+                "f1": 0.7231,
+                "support": 52
+              },
+              "hotspot": {
+                "precision": 0.949,
+                "recall": 0.75,
+                "f1": 0.8378,
+                "support": 124
+              }
+            },
+            "actual_hotspot_rows": 124,
+            "predicted_hotspot_rows": 98,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  47,
+                  5
+                ],
+                [
+                  31,
+                  93
+                ]
+              ],
+              "true_negative": 47,
+              "false_positive": 5,
+              "false_negative": 31,
+              "true_positive": 93
+            },
+            "target_period_start": "2024-07",
+            "target_period_end": "2024-10"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.951,
+            "recall": 0.8435,
+            "f1": 0.894,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.7568,
+                "recall": 0.918,
+                "f1": 0.8296,
+                "support": 61
+              },
+              "hotspot": {
+                "precision": 0.951,
+                "recall": 0.8435,
+                "f1": 0.894,
+                "support": 115
+              }
+            },
+            "actual_hotspot_rows": 115,
+            "predicted_hotspot_rows": 102,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  56,
+                  5
+                ],
+                [
+                  18,
+                  97
+                ]
+              ],
+              "true_negative": 56,
+              "false_positive": 5,
+              "false_negative": 18,
+              "true_positive": 97
+            },
+            "target_period_start": "2024-11",
+            "target_period_end": "2025-02"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.8293,
+            "recall": 0.6476,
+            "f1": 0.7273,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.6064,
+                "recall": 0.8028,
+                "f1": 0.6909,
+                "support": 71
+              },
+              "hotspot": {
+                "precision": 0.8293,
+                "recall": 0.6476,
+                "f1": 0.7273,
+                "support": 105
+              }
+            },
+            "actual_hotspot_rows": 105,
+            "predicted_hotspot_rows": 82,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  57,
+                  14
+                ],
+                [
+                  37,
+                  68
+                ]
+              ],
+              "true_negative": 57,
+              "false_positive": 14,
+              "false_negative": 37,
+              "true_positive": 68
+            },
+            "target_period_start": "2025-03",
+            "target_period_end": "2025-06"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.92,
+            "recall": 0.6571,
+            "f1": 0.7667,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.6436,
+                "recall": 0.9155,
+                "f1": 0.7558,
+                "support": 71
+              },
+              "hotspot": {
+                "precision": 0.92,
+                "recall": 0.6571,
+                "f1": 0.7667,
+                "support": 105
+              }
+            },
+            "actual_hotspot_rows": 105,
+            "predicted_hotspot_rows": 75,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  65,
+                  6
+                ],
+                [
+                  36,
+                  69
+                ]
+              ],
+              "true_negative": 65,
+              "false_positive": 6,
+              "false_negative": 36,
+              "true_positive": 69
+            },
+            "target_period_start": "2025-07",
+            "target_period_end": "2025-10"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.5833,
+            "recall": 0.7447,
+            "f1": 0.6542,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.8966,
+                "recall": 0.8062,
+                "f1": 0.849,
+                "support": 129
+              },
+              "hotspot": {
+                "precision": 0.5833,
+                "recall": 0.7447,
+                "f1": 0.6542,
+                "support": 47
+              }
+            },
+            "actual_hotspot_rows": 47,
+            "predicted_hotspot_rows": 60,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  104,
+                  25
+                ],
+                [
+                  12,
+                  35
+                ]
+              ],
+              "true_negative": 104,
+              "false_positive": 25,
+              "false_negative": 12,
+              "true_positive": 35
+            },
+            "target_period_start": "2025-11",
+            "target_period_end": "2026-02"
+          },
+          {
+            "rows": 176,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 1.0,
+            "recall": 0.1875,
+            "f1": 0.3158,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.8471,
+                "recall": 1.0,
+                "f1": 0.9172,
+                "support": 144
+              },
+              "hotspot": {
+                "precision": 1.0,
+                "recall": 0.1875,
+                "f1": 0.3158,
+                "support": 32
+              }
+            },
+            "actual_hotspot_rows": 32,
+            "predicted_hotspot_rows": 6,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  144,
+                  0
+                ],
+                [
+                  26,
+                  6
+                ]
+              ],
+              "true_negative": 144,
+              "false_positive": 0,
+              "false_negative": 26,
+              "true_positive": 6
+            },
+            "target_period_start": "2026-03",
+            "target_period_end": "2026-06"
+          },
+          {
+            "rows": 44,
+            "threshold_cases": 2,
+            "predicted_count_cutoff": 3,
+            "positive_class": "at_least_2_observed_cases",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "per_class": {
+              "not_hotspot": {
+                "precision": 0.7442,
+                "recall": 0.9697,
+                "f1": 0.8421,
+                "support": 33
+              },
+              "hotspot": {
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1": 0.0,
+                "support": 11
+              }
+            },
+            "actual_hotspot_rows": 11,
+            "predicted_hotspot_rows": 1,
+            "confusion_matrix": {
+              "labels": [
+                "not_hotspot",
+                "hotspot"
+              ],
+              "rows_actual_columns_predicted": [
+                [
+                  32,
+                  1
+                ],
+                [
+                  11,
+                  0
+                ]
+              ],
+              "true_negative": 32,
+              "false_positive": 1,
+              "false_negative": 11,
+              "true_positive": 0
+            },
+            "target_period_start": "2026-07",
+            "target_period_end": "2026-07"
+          }
+        ]
+      }
+    }
+  },
+  "hotspot_precision_target_pct": 85.0,
+  "validation_hotspot_classification": {
+    "rows": 836,
+    "threshold_cases": 2,
+    "predicted_count_cutoff": 3,
+    "positive_class": "at_least_2_observed_cases",
+    "precision": 0.9041,
+    "recall": 0.6627,
+    "f1": 0.7648,
+    "per_class": {
+      "not_hotspot": {
+        "precision": 0.6433,
+        "recall": 0.8964,
+        "f1": 0.7491,
+        "support": 338
+      },
+      "hotspot": {
+        "precision": 0.9041,
+        "recall": 0.6627,
+        "f1": 0.7648,
+        "support": 498
+      }
+    },
+    "actual_hotspot_rows": 498,
+    "predicted_hotspot_rows": 365,
+    "confusion_matrix": {
+      "labels": [
+        "not_hotspot",
+        "hotspot"
+      ],
+      "rows_actual_columns_predicted": [
+        [
+          303,
+          35
+        ],
+        [
+          168,
+          330
+        ]
+      ],
+      "true_negative": 303,
+      "false_positive": 35,
+      "false_negative": 168,
+      "true_positive": 330
+    }
+  },
+  "unweighted_validation_hotspot_classification": {
+    "rows": 836,
+    "threshold_cases": 2,
+    "predicted_count_cutoff": 3,
+    "positive_class": "at_least_2_observed_cases",
+    "precision": 0.8984,
+    "recall": 0.6747,
+    "f1": 0.7706,
+    "per_class": {
+      "not_hotspot": {
+        "precision": 0.6494,
+        "recall": 0.8876,
+        "f1": 0.75,
+        "support": 338
+      },
+      "hotspot": {
+        "precision": 0.8984,
+        "recall": 0.6747,
+        "f1": 0.7706,
+        "support": 498
+      }
+    },
+    "actual_hotspot_rows": 498,
+    "predicted_hotspot_rows": 374,
+    "confusion_matrix": {
+      "labels": [
+        "not_hotspot",
+        "hotspot"
+      ],
+      "rows_actual_columns_predicted": [
+        [
+          300,
+          38
+        ],
+        [
+          162,
+          336
+        ]
+      ],
+      "true_negative": 300,
+      "false_positive": 38,
+      "false_negative": 162,
+      "true_positive": 336
+    }
+  },
+  "hotspot_balance_policy": "During fitting, RandomForestRegressor receives sample weights so next-month target rows with at least the observed-hotspot threshold and rows below it each contribute half the total fitting weight. No rows are duplicated, synthesized, or removed. Weights are computed separately from each training partition only.",
+  "fit_training_hotspot_rows": 1330,
+  "fit_training_non_hotspot_rows": 1178,
+  "fit_training_hotspot_weight": 0.9429,
+  "fit_training_non_hotspot_weight": 1.0645,
+  "validation_hotspot_precision_target_met": true,
+  "final_test_hotspot_precision_target_met": false,
+  "model_four_month_test_blocks": [
+    {
+      "rows": 176,
+      "mae": 2.9061,
+      "rmse": 4.529,
+      "target_period_start": "2024-07",
+      "target_period_end": "2024-10"
+    },
+    {
+      "rows": 176,
+      "mae": 1.9895,
+      "rmse": 2.7846,
+      "target_period_start": "2024-11",
+      "target_period_end": "2025-02"
+    },
+    {
+      "rows": 176,
+      "mae": 1.7081,
+      "rmse": 2.3829,
+      "target_period_start": "2025-03",
+      "target_period_end": "2025-06"
+    },
+    {
+      "rows": 176,
+      "mae": 1.9098,
+      "rmse": 2.9942,
+      "target_period_start": "2025-07",
+      "target_period_end": "2025-10"
+    },
+    {
+      "rows": 176,
+      "mae": 1.9054,
+      "rmse": 2.7295,
+      "target_period_start": "2025-11",
+      "target_period_end": "2026-02"
+    },
+    {
+      "rows": 176,
+      "mae": 1.1341,
+      "rmse": 1.4363,
+      "target_period_start": "2026-03",
+      "target_period_end": "2026-06"
+    },
+    {
+      "rows": 44,
+      "mae": 1.1902,
+      "rmse": 1.6436,
+      "target_period_start": "2026-07",
+      "target_period_end": "2026-07"
+    }
+  ],
+  "baseline_comparison_rule": "Retain as a candidate for further evaluation only if model MAE and RMSE both beat persistence, seasonal-naive, and trailing-3-month-mean baselines over the full final test and every consecutive four-month block.",
+  "beats_all_baselines_overall": false,
+  "beats_all_baselines_each_test_block": false,
+  "mae_change_vs_baseline_pct": -0.3,
+  "hotspot_classification_retention_rule": "The model must also have a higher hotspot F1 than persistence, seasonal-naive, and trailing-3-month-mean baselines overall and in every consecutive four-month test block. Precision, recall, F1, and confusion counts are reported separately from count errors.",
+  "beats_all_hotspot_baselines_overall": true,
+  "beats_all_hotspot_baselines_each_test_block": false,
+  "deployment_status": "planning_support_only",
+  "blood_type_feature_policy": "Blood type remains available only for aggregate historical profile display; it is excluded from machine-learning inputs because it is not part of the study prediction framework.",
+  "weather_feature_policy": "Uses rainfall, mean temperature, and mean relative humidity observed through the forecast issue month, plus their one-month lags. Missing weather values are imputed within the training-fitted pipeline.",
+  "geographic_feature_policy": "Uses official barangay identity and boundary-derived representative latitude/longitude as geographic inputs; GIS polygons remain the map visualization layer.",
+  "privacy_protections": [
+    "Use only de-identified barangay-month aggregates.",
+    "Lag aggregate features by one month to prevent future-data leakage.",
+    "Do not include individual blood-type values in forecast outputs."
+  ],
+  "features": [
+    "barangay",
+    "year",
+    "month",
+    "case_count",
+    "rainfall_mm",
+    "temperature_c",
+    "humidity_pct",
+    "requested_latitude",
+    "requested_longitude",
+    "cases_lag_1",
+    "cases_lag_2",
+    "cases_lag_3",
+    "cases_lag_6",
+    "cases_lag_12",
+    "cases_roll_3",
+    "cases_roll_6",
+    "rainfall_lag_1",
+    "temperature_lag_1",
+    "humidity_lag_1",
+    "month_sin",
+    "month_cos"
+  ],
+  "target": "recorded dengue case count in the next calendar month",
+  "forecast_horizon": "one calendar month ahead",
+  "geographic_unit": "each of Iligan City's 44 barangays",
+  "hotspot_definition": "At a forecast issue cutoff in calendar month t, DengueWatch uses the dengue case and weather information available by that cutoff to estimate the recorded dengue case count in calendar month t+1 for each of Iligan City's 44 barangays (one barangay-month prediction, one calendar month ahead). The target is the observed case-record count in the following month, not a risk label calculated from the input month's count. A barangay is flagged for planning review if its estimated t+1 count is at least 3; evaluation labels an observed hotspot at 2 or more actual cases. These are internal project thresholds, not official DOH outbreak definitions. If month t is still underway, confirmed month-to-date cases are used and the estimate is provisional. Forecasts support planning and require health-personnel review before operational action.",
+  "hotspot_threshold_cases": 2,
+  "predicted_hotspot_cutoff_cases": 3,
+  "algorithm": "RandomForestRegressor",
+  "scikit_learn_version": "1.9.0",
+  "pandas_version": "3.0.6",
+  "preprocessing_fit_policy": "For candidate selection, preprocessing is fitted on training months only and applied to validation months. For the final test evaluation, preprocessing is fitted on the earlier training plus validation months; final-test rows are never used to fit preprocessing or select parameters.",
+  "temporal_partition_policy": "Partitions are chronological and grouped by whole reference calendar month, so all barangays from the same month remain in one partition.",
+  "final_test_policy": "Hyperparameters are selected on validation data; the later-period holdout is not used for parameter selection within a run. This holdout has been inspected in prior project iterations and is not an untouched independent test for new changes. Deployment refitting occurs only after metrics are recorded.",
+  "forecast_issue_information_policy": "Predictors are limited to the issue-month case/weather values and lagged values available at that forecast cutoff; the next-month target and all later observations are excluded from features.",
+  "final_deployment_fit_policy": "After the test score is recorded, the deployment pipeline is refit on all available usable historical rows using the same training-only hotspot sample-weight rule.",
+  "random_state": 42,
+  "warning": "Planning-support forecast only; validate with authorized health personnel. It must not be used as a confirmed outbreak or an automatic alert.",
+  "source_data_quality_note": "No unverified empty barangay-month cells were used for this training run. 1396 empty cells were treated as zero under the user's dataset-completeness confirmation; no separate CHO zero-report register was provided."
+}

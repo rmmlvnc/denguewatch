@@ -1,0 +1,455 @@
+{
+  "analysis_type": "exploratory_chronological_validation_only",
+  "validation_reference_month_start": "2023-02",
+  "validation_reference_month_end": "2024-10",
+  "validation_target_month_start": "2023-03",
+  "validation_target_month_end": "2024-11",
+  "validation_rows": 924,
+  "observed_hotspot_definition": "observed next-month count >= 6",
+  "candidate_predicted_count_cutoffs": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    15
+  ],
+  "model_parameters": {
+    "algorithm": "RandomForestRegressor",
+    "n_estimators": 500,
+    "min_samples_leaf": 5,
+    "max_features": 1.0
+  },
+  "momentum_definition": "cases_lag_1 - cases_lag_2; derived only from prior completed monthly counts",
+  "validation_was_previously_used_for_parameter_selection": true,
+  "validation_split_policy": "Matches current training workflow: chronological outer 80/20 by whole month; the outer development period is split into an earlier fit period and later validation period.",
+  "feature_experiments": [
+    "current_features",
+    "with_case_momentum",
+    "without_weather",
+    "momentum_without_weather"
+  ],
+  "final_test_scored_or_loaded": false,
+  "interpretation": "Exploratory validation diagnostics only. The validation period was already used for model selection. Selecting a cutoff or feature from these results requires a new future evaluation period for confirmatory performance claims. A higher predicted cutoff can increase precision while reducing recall and the number flagged.",
+  "variants": {
+    "current_features": {
+      "mae": 2.4077,
+      "rmse": 4.0806,
+      "thresholds": [
+        {
+          "predicted_count_cutoff": 6,
+          "precision": 0.8284,
+          "precision_pct": 82.84,
+          "recall": 0.5868,
+          "recall_pct": 58.68,
+          "f1": 0.687,
+          "f1_pct": 68.7,
+          "flagged_barangay_months": 204,
+          "true_positives": 169,
+          "false_positives": 35,
+          "false_negatives": 119
+        },
+        {
+          "predicted_count_cutoff": 7,
+          "precision": 0.8593,
+          "precision_pct": 85.93,
+          "recall": 0.4028,
+          "recall_pct": 40.28,
+          "f1": 0.5485,
+          "f1_pct": 54.85,
+          "flagged_barangay_months": 135,
+          "true_positives": 116,
+          "false_positives": 19,
+          "false_negatives": 172
+        },
+        {
+          "predicted_count_cutoff": 8,
+          "precision": 0.8505,
+          "precision_pct": 85.05,
+          "recall": 0.316,
+          "recall_pct": 31.6,
+          "f1": 0.4608,
+          "f1_pct": 46.08,
+          "flagged_barangay_months": 107,
+          "true_positives": 91,
+          "false_positives": 16,
+          "false_negatives": 197
+        },
+        {
+          "predicted_count_cutoff": 9,
+          "precision": 0.8667,
+          "precision_pct": 86.67,
+          "recall": 0.2708,
+          "recall_pct": 27.08,
+          "f1": 0.4127,
+          "f1_pct": 41.27,
+          "flagged_barangay_months": 90,
+          "true_positives": 78,
+          "false_positives": 12,
+          "false_negatives": 210
+        },
+        {
+          "predicted_count_cutoff": 10,
+          "precision": 0.8871,
+          "precision_pct": 88.71,
+          "recall": 0.191,
+          "recall_pct": 19.1,
+          "f1": 0.3143,
+          "f1_pct": 31.43,
+          "flagged_barangay_months": 62,
+          "true_positives": 55,
+          "false_positives": 7,
+          "false_negatives": 233
+        },
+        {
+          "predicted_count_cutoff": 12,
+          "precision": 1.0,
+          "precision_pct": 100.0,
+          "recall": 0.0938,
+          "recall_pct": 9.38,
+          "f1": 0.1714,
+          "f1_pct": 17.14,
+          "flagged_barangay_months": 27,
+          "true_positives": 27,
+          "false_positives": 0,
+          "false_negatives": 261
+        },
+        {
+          "predicted_count_cutoff": 15,
+          "precision": 1.0,
+          "precision_pct": 100.0,
+          "recall": 0.0556,
+          "recall_pct": 5.56,
+          "f1": 0.1053,
+          "f1_pct": 10.53,
+          "flagged_barangay_months": 16,
+          "true_positives": 16,
+          "false_positives": 0,
+          "false_negatives": 272
+        }
+      ],
+      "cutoffs_meeting_85_percent_precision": [
+        7,
+        8,
+        9,
+        10,
+        12,
+        15
+      ]
+    },
+    "with_case_momentum": {
+      "mae": 2.4063,
+      "rmse": 4.0829,
+      "thresholds": [
+        {
+          "predicted_count_cutoff": 6,
+          "precision": 0.8308,
+          "precision_pct": 83.08,
+          "recall": 0.5799,
+          "recall_pct": 57.99,
+          "f1": 0.683,
+          "f1_pct": 68.3,
+          "flagged_barangay_months": 201,
+          "true_positives": 167,
+          "false_positives": 34,
+          "false_negatives": 121
+        },
+        {
+          "predicted_count_cutoff": 7,
+          "precision": 0.8571,
+          "precision_pct": 85.71,
+          "recall": 0.4167,
+          "recall_pct": 41.67,
+          "f1": 0.5607,
+          "f1_pct": 56.07,
+          "flagged_barangay_months": 140,
+          "true_positives": 120,
+          "false_positives": 20,
+          "false_negatives": 168
+        },
+        {
+          "predicted_count_cutoff": 8,
+          "precision": 0.8611,
+          "precision_pct": 86.11,
+          "recall": 0.3229,
+          "recall_pct": 32.29,
+          "f1": 0.4697,
+          "f1_pct": 46.97,
+          "flagged_barangay_months": 108,
+          "true_positives": 93,
+          "false_positives": 15,
+          "false_negatives": 195
+        },
+        {
+          "predicted_count_cutoff": 9,
+          "precision": 0.8652,
+          "precision_pct": 86.52,
+          "recall": 0.2674,
+          "recall_pct": 26.74,
+          "f1": 0.4085,
+          "f1_pct": 40.85,
+          "flagged_barangay_months": 89,
+          "true_positives": 77,
+          "false_positives": 12,
+          "false_negatives": 211
+        },
+        {
+          "predicted_count_cutoff": 10,
+          "precision": 0.8889,
+          "precision_pct": 88.89,
+          "recall": 0.1944,
+          "recall_pct": 19.44,
+          "f1": 0.3191,
+          "f1_pct": 31.91,
+          "flagged_barangay_months": 63,
+          "true_positives": 56,
+          "false_positives": 7,
+          "false_negatives": 232
+        },
+        {
+          "predicted_count_cutoff": 12,
+          "precision": 1.0,
+          "precision_pct": 100.0,
+          "recall": 0.0938,
+          "recall_pct": 9.38,
+          "f1": 0.1714,
+          "f1_pct": 17.14,
+          "flagged_barangay_months": 27,
+          "true_positives": 27,
+          "false_positives": 0,
+          "false_negatives": 261
+        },
+        {
+          "predicted_count_cutoff": 15,
+          "precision": 1.0,
+          "precision_pct": 100.0,
+          "recall": 0.0556,
+          "recall_pct": 5.56,
+          "f1": 0.1053,
+          "f1_pct": 10.53,
+          "flagged_barangay_months": 16,
+          "true_positives": 16,
+          "false_positives": 0,
+          "false_negatives": 272
+        }
+      ],
+      "cutoffs_meeting_85_percent_precision": [
+        7,
+        8,
+        9,
+        10,
+        12,
+        15
+      ]
+    },
+    "without_weather": {
+      "mae": 2.4385,
+      "rmse": 4.1118,
+      "thresholds": [
+        {
+          "predicted_count_cutoff": 6,
+          "precision": 0.8227,
+          "precision_pct": 82.27,
+          "recall": 0.5799,
+          "recall_pct": 57.99,
+          "f1": 0.6802,
+          "f1_pct": 68.02,
+          "flagged_barangay_months": 203,
+          "true_positives": 167,
+          "false_positives": 36,
+          "false_negatives": 121
+        },
+        {
+          "predicted_count_cutoff": 7,
+          "precision": 0.8299,
+          "precision_pct": 82.99,
+          "recall": 0.4236,
+          "recall_pct": 42.36,
+          "f1": 0.5609,
+          "f1_pct": 56.09,
+          "flagged_barangay_months": 147,
+          "true_positives": 122,
+          "false_positives": 25,
+          "false_negatives": 166
+        },
+        {
+          "predicted_count_cutoff": 8,
+          "precision": 0.8636,
+          "precision_pct": 86.36,
+          "recall": 0.3299,
+          "recall_pct": 32.99,
+          "f1": 0.4774,
+          "f1_pct": 47.74,
+          "flagged_barangay_months": 110,
+          "true_positives": 95,
+          "false_positives": 15,
+          "false_negatives": 193
+        },
+        {
+          "predicted_count_cutoff": 9,
+          "precision": 0.8667,
+          "precision_pct": 86.67,
+          "recall": 0.2708,
+          "recall_pct": 27.08,
+          "f1": 0.4127,
+          "f1_pct": 41.27,
+          "flagged_barangay_months": 90,
+          "true_positives": 78,
+          "false_positives": 12,
+          "false_negatives": 210
+        },
+        {
+          "predicted_count_cutoff": 10,
+          "precision": 0.8657,
+          "precision_pct": 86.57,
+          "recall": 0.2014,
+          "recall_pct": 20.14,
+          "f1": 0.3268,
+          "f1_pct": 32.68,
+          "flagged_barangay_months": 67,
+          "true_positives": 58,
+          "false_positives": 9,
+          "false_negatives": 230
+        },
+        {
+          "predicted_count_cutoff": 12,
+          "precision": 0.9667,
+          "precision_pct": 96.67,
+          "recall": 0.1007,
+          "recall_pct": 10.07,
+          "f1": 0.1824,
+          "f1_pct": 18.24,
+          "flagged_barangay_months": 30,
+          "true_positives": 29,
+          "false_positives": 1,
+          "false_negatives": 259
+        },
+        {
+          "predicted_count_cutoff": 15,
+          "precision": 1.0,
+          "precision_pct": 100.0,
+          "recall": 0.0625,
+          "recall_pct": 6.25,
+          "f1": 0.1176,
+          "f1_pct": 11.76,
+          "flagged_barangay_months": 18,
+          "true_positives": 18,
+          "false_positives": 0,
+          "false_negatives": 270
+        }
+      ],
+      "cutoffs_meeting_85_percent_precision": [
+        8,
+        9,
+        10,
+        12,
+        15
+      ]
+    },
+    "momentum_without_weather": {
+      "mae": 2.4378,
+      "rmse": 4.1168,
+      "thresholds": [
+        {
+          "predicted_count_cutoff": 6,
+          "precision": 0.8186,
+          "precision_pct": 81.86,
+          "recall": 0.5799,
+          "recall_pct": 57.99,
+          "f1": 0.6789,
+          "f1_pct": 67.89,
+          "flagged_barangay_months": 204,
+          "true_positives": 167,
+          "false_positives": 37,
+          "false_negatives": 121
+        },
+        {
+          "predicted_count_cutoff": 7,
+          "precision": 0.8267,
+          "precision_pct": 82.67,
+          "recall": 0.4306,
+          "recall_pct": 43.06,
+          "f1": 0.5662,
+          "f1_pct": 56.62,
+          "flagged_barangay_months": 150,
+          "true_positives": 124,
+          "false_positives": 26,
+          "false_negatives": 164
+        },
+        {
+          "predicted_count_cutoff": 8,
+          "precision": 0.8661,
+          "precision_pct": 86.61,
+          "recall": 0.3368,
+          "recall_pct": 33.68,
+          "f1": 0.485,
+          "f1_pct": 48.5,
+          "flagged_barangay_months": 112,
+          "true_positives": 97,
+          "false_positives": 15,
+          "false_negatives": 191
+        },
+        {
+          "predicted_count_cutoff": 9,
+          "precision": 0.8667,
+          "precision_pct": 86.67,
+          "recall": 0.2708,
+          "recall_pct": 27.08,
+          "f1": 0.4127,
+          "f1_pct": 41.27,
+          "flagged_barangay_months": 90,
+          "true_positives": 78,
+          "false_positives": 12,
+          "false_negatives": 210
+        },
+        {
+          "predicted_count_cutoff": 10,
+          "precision": 0.8714,
+          "precision_pct": 87.14,
+          "recall": 0.2118,
+          "recall_pct": 21.18,
+          "f1": 0.3408,
+          "f1_pct": 34.08,
+          "flagged_barangay_months": 70,
+          "true_positives": 61,
+          "false_positives": 9,
+          "false_negatives": 227
+        },
+        {
+          "predicted_count_cutoff": 12,
+          "precision": 0.9667,
+          "precision_pct": 96.67,
+          "recall": 0.1007,
+          "recall_pct": 10.07,
+          "f1": 0.1824,
+          "f1_pct": 18.24,
+          "flagged_barangay_months": 30,
+          "true_positives": 29,
+          "false_positives": 1,
+          "false_negatives": 259
+        },
+        {
+          "predicted_count_cutoff": 15,
+          "precision": 1.0,
+          "precision_pct": 100.0,
+          "recall": 0.0625,
+          "recall_pct": 6.25,
+          "f1": 0.1176,
+          "f1_pct": 11.76,
+          "flagged_barangay_months": 18,
+          "true_positives": 18,
+          "false_positives": 0,
+          "false_negatives": 270
+        }
+      ],
+      "cutoffs_meeting_85_percent_precision": [
+        8,
+        9,
+        10,
+        12,
+        15
+      ]
+    }
+  }
+}

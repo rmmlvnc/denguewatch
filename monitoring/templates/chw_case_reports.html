@@ -15,29 +15,76 @@
   <header class="topbar"><div><h5>Suspected Case Reports</h5><small class="subtitle">CHW case reporting and CHO verification workflow</small></div><div class="text-end"><strong>{{ current_user_name }}</strong><br><small class="subtitle">{{ current_user_role }}</small></div></header>
   <div class="content">
     <h1 class="h3 mb-1">{% if form_case %}Update suspected case{% else %}Report a suspected case{% endif %}</h1><p class="subtitle">Save incomplete information as a draft. Validate the required information before sending it to CHO for final verification.</p>
-    <div class="notice"><strong><i class="fa-solid fa-shield-heart"></i> Privacy and verification</strong><div>Do not enter the patient’s name. Use only the minimum age, sex, symptoms, and location information needed for public-health follow-up. A CHO officer makes the final confirmed/rejected decision.</div></div>
+    <div class="notice"><strong><i class="fa-solid fa-shield-heart"></i> Privacy and verification</strong><div>Do not enter the patient’s name. Enter birthdate only when available and needed for case follow-up. A CHO officer makes the final confirmed/rejected decision.</div></div>
     {% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}
     <section class="card">
-      <h2>{% if form_case %}Review draft before sending{% else %}Case information{% endif %}</h2>
+      <h2>{% if form_case %}Review and update report{% else %}Case information{% endif %}</h2>
       <form method="post" {% if form_case %}action="{% url 'update_chw_case_report' form_case.dengue_case_id %}"{% endif %}>{% csrf_token %}
         <div class="row g-3">
           <div class="col-md-3"><label class="form-label" for="patient_age">Patient age</label><input id="patient_age" class="form-control" type="number" min="0" max="130" name="patient_age" required value="{{ form_values.patient_age }}"></div>
+          <div class="col-md-3"><label class="form-label" for="patient_birth_date">Birthdate <span class="muted">optional</span></label><input id="patient_birth_date" class="form-control" type="date" name="patient_birth_date" max="{% now 'Y-m-d' %}" value="{{ form_values.patient_birth_date }}"></div>
           <div class="col-md-3"><label class="form-label" for="patient_sex">Patient sex</label><select id="patient_sex" class="form-select" name="patient_sex" required><option value="">Select</option><option value="Female" {% if form_values.patient_sex == 'Female' %}selected{% endif %}>Female</option><option value="Male" {% if form_values.patient_sex == 'Male' %}selected{% endif %}>Male</option><option value="Other" {% if form_values.patient_sex == 'Other' %}selected{% endif %}>Other</option></select></div>
           <div class="col-md-3"><label class="form-label" for="patient_blood_type">Blood type <span class="muted">optional clinical record</span></label><input id="patient_blood_type" class="form-control" maxlength="5" name="patient_blood_type" value="{{ form_values.patient_blood_type }}" placeholder="e.g., O+"><div class="form-text">Never used to determine individual dengue risk or diagnosis.</div></div>
           <div class="col-md-3"><label class="form-label" for="date_reported">Report date</label><input id="date_reported" class="form-control" type="date" name="date_reported" required value="{{ form_values.date_reported }}"></div>
           <div class="col-md-6"><label class="form-label" for="barangay_id">Barangay</label><select id="barangay_id" class="form-select" name="barangay_id" required><option value="">Select barangay</option>{% for barangay in barangays %}<option value="{{ barangay.pk }}" {% if form_values.barangay_id|stringformat:'s' == barangay.pk|stringformat:'s' %}selected{% endif %}>{{ barangay.barangay_name }}</option>{% endfor %}</select></div>
-          <div class="col-md-6"><label class="form-label" for="purok_id">Purok / Sitio <span class="muted">optional</span></label><select id="purok_id" class="form-select" name="purok_id"><option value="">Select barangay first</option>{% for purok in puroks %}<option value="{{ purok.pk }}" data-barangay="{{ purok.barangay_id }}" {% if form_values.purok_id|stringformat:'s' == purok.pk|stringformat:'s' %}selected{% endif %}>{{ purok.purok_name }}</option>{% endfor %}</select></div>
+          <div class="col-md-6"><label class="form-label" for="purok_search">Purok / Sitio <span class="muted">optional</span></label><input id="purok_search" class="form-control mb-2" type="search" placeholder="Search Purok / Sitio" autocomplete="off" aria-controls="purok_id" aria-describedby="purok_help"><select id="purok_id" class="form-select" name="purok_id" aria-describedby="purok_help"><option value="">Select barangay first</option>{% for purok in puroks %}<option value="{{ purok.pk }}" data-barangay="{{ purok.barangay_id }}" {% if form_values.purok_id|stringformat:'s' == purok.pk|stringformat:'s' %}selected{% endif %}>{{ purok.purok_name }}</option>{% endfor %}</select><div id="purok_help" class="form-text">Choose a barangay to see its Purok / Sitio list. If the location is not listed, include it in Exact location / landmark below.</div><div id="purok_match_count" class="form-text" aria-live="polite"></div></div>
           <div class="col-12"><label class="form-label" for="location_details">Exact location / landmark</label><textarea id="location_details" class="form-control" name="location_details" rows="2" placeholder="Street, zone, landmark, or other follow-up location details">{{ form_values.location_details }}</textarea></div>
-          <div class="col-12"><label class="form-label" for="symptoms">Observed or reported symptoms</label><textarea id="symptoms" class="form-control" name="symptoms" rows="3" placeholder="For example: fever for 3 days, headache, body pain, rash, nausea">{{ form_values.symptoms }}</textarea></div>
           <div class="col-12"><label class="form-label" for="remarks">Additional notes <span class="muted">optional</span></label><textarea id="remarks" class="form-control" name="remarks" rows="2">{{ form_values.remarks }}</textarea></div>
         </div>
         <div class="mt-4"><button class="btn btn-outline-secondary" name="action" value="draft"><i class="fa-solid fa-floppy-disk"></i> Save draft</button><button class="btn btn-success ms-2" name="action" value="submit"><i class="fa-solid fa-paper-plane"></i> Validate and send to CHO</button>{% if form_case %}<a class="btn btn-link" href="{% url 'chw_case_reports' %}">Cancel edit</a>{% endif %}</div>
       </form>
     </section>
     <section class="card"><div class="d-flex justify-content-between align-items-center"><h2 class="mb-0">My submitted reports</h2><span class="muted">{{ reports|length }} record{{ reports|pluralize }}</span></div>
-      <div class="table-responsive mt-3"><table class="table table-hover"><thead><tr><th>ID</th><th>Location</th><th>Reported</th><th>Status</th><th>CHO response</th><th>Audit trail</th><th></th></tr></thead><tbody>{% for report in reports %}<tr><td>#{{ report.dengue_case_id }}</td><td>{{ report.barangay.barangay_name }}{% if report.purok %}<br><small class="muted">{{ report.purok.purok_name }}</small>{% endif %}</td><td>{{ report.date_reported }}</td><td><span class="status status-{{ report.case_status|lower }}">{{ report.get_case_status_display }}</span></td><td>{% if report.cho_review_note %}{{ report.cho_review_note }}<br><small class="muted">{{ report.reviewed_at }}</small>{% else %}<span class="muted">Awaiting CHO review</span>{% endif %}</td><td>{% for audit in report.audit_logs.all %}<small class="d-block muted">{{ audit.get_action_display }} by {{ audit.actor.get_full_name|default:audit.actor.username|default:"System" }}<br>{{ audit.created_at|date:"M d, Y g:i a" }}</small>{% empty %}<small class="muted">No events</small>{% endfor %}</td><td>{% if report.case_status == 'Draft' %}<a class="btn btn-sm btn-outline-success" href="{% url 'chw_case_reports' %}?edit={{ report.dengue_case_id }}">Edit</a>{% endif %}</td></tr>{% empty %}<tr><td colspan="7" class="text-center muted py-4">No suspected case reports yet.</td></tr>{% endfor %}</tbody></table></div>
+      <p class="muted small mt-2 mb-0">You can delete drafts or reports awaiting CHO review. CHO-confirmed cases are retained as official records.</p>
+      <div class="table-responsive mt-3"><table class="table table-hover"><thead><tr><th>ID</th><th>Location</th><th>Reported</th><th>Status</th><th>CHO response</th><th>Audit trail</th><th>Actions</th></tr></thead><tbody>{% for report in reports %}<tr><td>#{{ report.dengue_case_id }}</td><td>{{ report.barangay.barangay_name }}{% if report.purok %}<br><small class="muted">{{ report.purok.purok_name }}</small>{% endif %}</td><td>{{ report.date_reported }}</td><td><span class="status status-{{ report.case_status|lower }}">{{ report.get_case_status_display }}</span></td><td>{% if report.cho_review_note %}{{ report.cho_review_note }}<br><small class="muted">{{ report.reviewed_at }}</small>{% else %}<span class="muted">Awaiting CHO review</span>{% endif %}</td><td>{% for audit in report.audit_logs.all %}<small class="d-block muted">{{ audit.get_action_display }} by {{ audit.actor.get_full_name|default:audit.actor.username|default:"System" }}<br>{{ audit.created_at|date:"M d, Y g:i a" }}</small>{% empty %}<small class="muted">No events</small>{% endfor %}</td><td class="text-nowrap"><a class="btn btn-sm btn-outline-primary" href="{% url 'chw_case_reports' %}?view={{ report.dengue_case_id }}"><i class="fa-solid fa-eye"></i> View</a>{% if report.case_status == 'Draft' or report.case_status == 'Pending' or report.case_status == 'Rejected' %}<a class="btn btn-sm btn-outline-success ms-1" href="{% url 'chw_case_reports' %}?edit={{ report.dengue_case_id }}"><i class="fa-solid fa-pen"></i> Edit</a>{% endif %}{% if report.case_status == 'Draft' or report.case_status == 'Pending' %}<form method="post" action="{% url 'delete_chw_case_report' report.dengue_case_id %}" class="d-inline" onsubmit="return confirm('Delete suspected case report #{{ report.dengue_case_id }}? This cannot be undone.');">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-danger ms-1"><i class="fa-solid fa-trash"></i> Delete</button></form>{% endif %}</td></tr>{% empty %}<tr><td colspan="7" class="text-center muted py-4">No suspected case reports yet.</td></tr>{% endfor %}</tbody></table></div>
     </section>
+    {% if view_case %}<div class="modal fade" id="case-detail-modal" tabindex="-1" aria-labelledby="case-detail-title" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5" id="case-detail-title">Suspected case #{{ view_case.dengue_case_id }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><div class="d-flex justify-content-between align-items-center mb-3"><span class="status status-{{ view_case.case_status|lower }}">{{ view_case.get_case_status_display }}</span><span class="muted">Reported {{ view_case.date_reported }}</span></div><div class="row g-3"><div class="col-sm-6"><strong>Age</strong><div>{{ view_case.patient_age }}</div></div><div class="col-sm-6"><strong>Birthdate</strong><div>{{ view_case.patient_birth_date|date:"M d, Y"|default:"Not provided" }}</div></div><div class="col-sm-6"><strong>Sex</strong><div>{{ view_case.patient_sex }}</div></div><div class="col-sm-6"><strong>Blood type</strong><div>{{ view_case.patient_blood_type|default:"Not reported" }}</div></div><div class="col-sm-6"><strong>Barangay</strong><div>{{ view_case.barangay.barangay_name|default:"Not recorded" }}</div></div><div class="col-sm-6"><strong>Purok / Sitio</strong><div>{{ view_case.purok.purok_name|default:"Not provided" }}</div></div><div class="col-12"><strong>Exact location / landmark</strong><div>{{ view_case.location_details|default:"Not provided"|linebreaksbr }}</div></div><div class="col-12"><strong>Additional notes</strong><div>{{ view_case.remarks|default:"None"|linebreaksbr }}</div></div>{% if view_case.cho_review_note %}<div class="col-12"><strong>CHO response</strong><div>{{ view_case.cho_review_note|linebreaksbr }}{% if view_case.reviewed_at %}<small class="d-block muted mt-1">{{ view_case.reviewed_at|date:"M d, Y g:i a" }}</small>{% endif %}</div></div>{% endif %}<div class="col-12"><strong>Report history</strong>{% for audit in view_case.audit_logs.all %}<div class="muted mt-1">{{ audit.created_at|date:"M d, Y g:i a" }} · {{ audit.get_action_display }} by {{ audit.actor.get_full_name|default:audit.actor.username|default:"System" }}{% if audit.details %}: {{ audit.details }}{% endif %}</div>{% empty %}<div class="muted">No history recorded.</div>{% endfor %}</div></div></div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>{% if view_case.case_status == 'Draft' or view_case.case_status == 'Pending' or view_case.case_status == 'Rejected' %}<a class="btn btn-success" href="{% url 'chw_case_reports' %}?edit={{ view_case.dengue_case_id }}">Edit report</a>{% endif %}</div></div></div></div>{% endif %}
   </div>
 </main></div>
-<script>const barangay=document.getElementById('barangay_id'),purok=document.getElementById('purok_id');function filterPuroks(){const selected=barangay.value;for(const option of purok.options){if(!option.dataset.barangay)continue;option.hidden=!!selected&&option.dataset.barangay!==selected;if(option.hidden&&option.selected)option.selected=false;}if(!selected)purok.value='';}barangay.addEventListener('change',filterPuroks);filterPuroks();</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const barangay = document.getElementById('barangay_id');
+const purok = document.getElementById('purok_id');
+const purokSearch = document.getElementById('purok_search');
+const purokMatchCount = document.getElementById('purok_match_count');
+const purokPlaceholder = purok.options[0];
+
+function filterPuroks(clearSelection = false) {
+  const selectedBarangay = barangay.value;
+  const query = purokSearch.value.trim().toLocaleLowerCase();
+  let visibleCount = 0;
+  let selectedWasHidden = false;
+
+  purokPlaceholder.textContent = selectedBarangay
+    ? 'Select Purok / Sitio (optional)'
+    : 'Select barangay first';
+  purokSearch.disabled = !selectedBarangay;
+  purok.disabled = !selectedBarangay;
+
+  for (const option of Array.from(purok.options).slice(1)) {
+    const belongsToBarangay = option.dataset.barangay === selectedBarangay;
+    const matchesSearch = !query || option.textContent.toLocaleLowerCase().includes(query);
+    const visible = Boolean(selectedBarangay) && belongsToBarangay && matchesSearch;
+    option.hidden = !visible;
+    option.disabled = !visible;
+    if (visible) visibleCount += 1;
+    if (!visible && option.selected) selectedWasHidden = true;
+  }
+
+  if (clearSelection || selectedWasHidden) purok.value = '';
+  purokMatchCount.textContent = !selectedBarangay
+    ? ''
+    : visibleCount
+      ? `${visibleCount} Purok / Sitio option${visibleCount === 1 ? '' : 's'}`
+      : 'No matching Purok / Sitio. Add the location under Exact location / landmark.';
+}
+
+barangay.addEventListener('change', () => {
+  purokSearch.value = '';
+  filterPuroks(true);
+});
+purokSearch.addEventListener('input', () => filterPuroks());
+filterPuroks();
+{% if view_case %}bootstrap.Modal.getOrCreateInstance(document.getElementById('case-detail-modal')).show();{% endif %}
+</script>
 </body></html>

@@ -17,6 +17,7 @@
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     >
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
     <style>
         * {
@@ -528,6 +529,11 @@
             font-size: 12px;
         }
 
+        #forecastHotspotMap { height: 540px; width: 100%; border-radius: 0 0 12px 12px; background-color: #edf5f3; background-image: linear-gradient(rgba(15,118,110,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(15,118,110,.08) 1px, transparent 1px); background-size: 32px 32px; }
+        .forecast-map-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; color: #475569; font-size: 13px; }
+        .forecast-map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+        .forecast-map-swatch { width: 13px; height: 13px; border-radius: 3px; display: inline-block; }
+
         .workflow-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -915,7 +921,7 @@
                 <h2>AI-Assisted Hotspot Prediction</h2>
 
                 <p>
-                    Random Forest forecasts using historical dengue cases
+                    Machine-learning forecasts using historical dengue cases
                     and weather information.
                 </p>
 
@@ -928,7 +934,7 @@
 
                     <i class="fa-solid fa-circle-check"></i>
 
-                    Random Forest model loaded
+                    Tree-ensemble model loaded
 
                 </div>
 
@@ -1007,6 +1013,79 @@
 
         {% endif %}
 
+
+        <section class="box mb-3">
+            <div class="box-head">
+                <h5><i class="fa-solid fa-bullseye me-2 text-success"></i>One-Month-Ahead Barangay Case Forecast</h5>
+                <p>Estimates next calendar month's recorded case count for each of Iligan City's 44 barangays.</p>
+            </div>
+            {% if model_ready %}
+                <div class="box-body risk-guide">
+                    <div class="metric-grid">
+                        <div class="metric-item"><span>Potential hotspots for {{ forecast_period }}</span><strong>{{ planning_summary.potential_hotspot_count|default:"0" }}</strong></div>
+                        <div class="metric-item"><span>Latest data through</span><strong>{{ case_data_period }}</strong></div>
+                        <div class="metric-item"><span>Planning flag threshold</span><strong>{{ predicted_hotspot_threshold }}+ estimated cases</strong></div>
+                    </div>
+                    {% if prediction_input_provisional %}<p class="source text-warning-emphasis"><strong>Provisional month-to-date forecast:</strong> This month is still underway. Confirmed cases may change the estimate as CHO approves more reports.</p>{% endif %}
+                    <div class="row g-3 mt-1">
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-2">
+                                <div>
+                                    <h6 id="hotspotMapHeading">Hotspot map · {{ forecast_period }}</h6>
+                                    <p class="source mb-0">Use Month to view {{ hotspot_map_start_period }} through {{ hotspot_map_end_period|default:forecast_period }}. Historical estimates use the previous month's confirmed count; after confirmed coverage, the baseline carries forward the last complete month's count. Actual data is confirmed through {{ actual_coverage_period }}. Current-month actuals are partial and provisional; gray areas have no comparable actual or estimate.</p>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <label class="source mb-0">Month
+                                        <select id="hotspotMonthSelect" class="form-select form-select-sm">
+                                            {% for month in hotspot_map_months %}<option value="{{ month.key }}"{% if month.period == hotspot_map_default_period %} selected{% endif %}>{{ month.period }}</option>{% endfor %}
+                                        </select>
+                                    </label>
+                                    <label class="source mb-0">Map layer
+                                        <select id="hotspotLayerSelect" class="form-select form-select-sm">
+                                            <option value="comparison" selected>Actual vs prediction</option>
+                                            <option value="actual">Actual confirmed cases</option>
+                                            <option value="prediction">Prediction / baseline</option>
+                                        </select>
+                                    </label>
+                                </div>
+                            </div>
+                            {% if forecast_map_geojson %}
+                                <div id="forecastHotspotMap" role="img" aria-label="Monthly dengue case and prediction comparison map"></div>
+                                <div id="forecastMapLegend" class="forecast-map-legend">
+                                    <span><i class="forecast-map-swatch" style="background:#16a34a"></i>Actual matches rounded estimate</span>
+                                    <span><i class="forecast-map-swatch" style="background:#dc2626"></i>Actual differs from rounded estimate</span>
+                                    <span><i class="forecast-map-swatch" style="background:#d1d5db"></i>Forecast unavailable or actual pending</span>
+                                </div>
+                                <p id="forecastMapNotice" class="source mt-2 mb-0"></p>
+                            {% else %}
+                                <p class="muted">Forecast map boundaries are unavailable.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h6>Monthly actuals and predictions</h6>
+                        <p class="source">Citywide totals across Iligan City's barangays. Historical actuals are shown through confirmed dataset coverage; months without confirmed records remain pending, not zero. Current-month actuals show confirmed system reports month to date only; they are provisional and are not used as a complete model-input month. Historical comparisons use a persistence benchmark: each barangay's previous month's confirmed count. Beyond complete dataset coverage, the last complete month's count is carried forward as a comparison baseline; this is not an ML forecast. Future system forecasts are saved separately. A match means the actual total equals the estimate rounded to the nearest whole case.</p>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead><tr><th>Month</th><th>Actual cases</th><th>Predicted cases</th><th>Data status</th></tr></thead>
+                                <tbody>
+                                    {% for month in monthly_comparison %}
+                                        <tr>
+                                            <td><strong>{{ month.period }}</strong></td>
+                                            <td>{% if month.actual_cases != None %}{{ month.actual_cases }}{% else %}<span class="muted">Pending data</span>{% endif %}</td>
+                                            <td>{% if month.predicted_cases != None %}{{ month.predicted_cases }}{% elif month.actual_cases != None %}<span class="muted">Not captured</span>{% else %}<span class="muted">Unavailable</span>{% endif %}</td>
+                                            <td><strong>{{ month.status }}</strong><br><span class="source">{{ month.detail }}</span></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="box-body"><p class="muted mb-0">Potential hotspot estimates are unavailable until the prediction model and monthly dataset are ready.</p></div>
+            {% endif %}
+        </section>
 
         <!-- =========================
              STATISTICS
@@ -1126,7 +1205,7 @@
 
             <div class="box-head">
                 <h5><i class="fa-solid fa-list-check me-2 text-success"></i>Decision-support priorities</h5>
-                <p>Ranked planning information for {{ forecast_period }}; validate before action.</p>
+                <p>Potential hotspot planning flags for {{ forecast_period }}; validate before action.</p>
             </div>
 
             <div class="box-body risk-guide">
@@ -1140,7 +1219,7 @@
                     <div class="risk-row">
                         <div>
                             <strong>{{ forloop.counter }}. {{ row.barangay }}</strong>
-                            <div class="source mt-1">Historical month: {{ row.current_cases }} cases · Forecast: {{ row.predicted_cases }} · {{ row.trend }}. {{ row.recommendation }}</div>
+                            <div class="source mt-1">{{ case_data_period }} observed: {{ row.current_cases }} cases · {{ forecast_period }} estimate: {{ row.predicted_cases }} cases · {{ row.trend }}. {{ row.recommendation }}</div>
                         </div>
                         <span class="risk-badge badge-{{ row.risk_level|lower }}">{{ row.risk_level }}</span>
                     </div>
@@ -1240,10 +1319,10 @@
 
                 <div class="profile-card">
 
-                    <span>Common reported area</span>
+                    <span>Common barangay</span>
 
                     <strong>
-                        {{ demographic_summary.common_purok|default:"N/A" }}
+                        {{ demographic_summary.common_barangay|default:"N/A" }}
                     </strong>
 
                 </div>
@@ -1294,7 +1373,7 @@
 
                     <p>
                         Weather for the selected day is shown separately
-                        from the monthly Random Forest forecast.
+                        from the monthly machine-learning forecast.
                     </p>
 
                 </div>
@@ -1484,7 +1563,7 @@
                         Latest dengue cases:
                         {{ case_data_period|default:"N/A" }}
 
-                        · Random Forest forecast:
+                        · machine-learning forecast:
                         {{ forecast_period|default:"N/A" }}.
 
                     </p>
@@ -1522,7 +1601,7 @@
                     </h5>
 
                     <p>
-                        Same thresholds used by the hotspot map
+                        Categories apply to each barangay's estimated case count for {{ forecast_period }}. These are internal planning bands, not official outbreak classifications.
                     </p>
 
                 </div>
@@ -1540,7 +1619,7 @@
 
                         </div>
 
-                        <strong>1–5 Cases</strong>
+                        <strong>0–5 Estimated Cases</strong>
 
                     </div>
 
@@ -1555,7 +1634,7 @@
 
                         </div>
 
-                        <strong>6–50 Cases</strong>
+                        <strong>6–50 Estimated Cases</strong>
 
                     </div>
 
@@ -1570,7 +1649,7 @@
 
                         </div>
 
-                        <strong>51–100 Cases</strong>
+                        <strong>51–100 Estimated Cases</strong>
 
                     </div>
 
@@ -1585,124 +1664,16 @@
 
                         </div>
 
-                        <strong>101+ Cases</strong>
+                        <strong>101+ Estimated Cases</strong>
 
                     </div>
+
+                        <p class="source mt-2 mb-0">These four bands describe the estimated count. Separately, {{ predicted_hotspot_threshold|default:"2" }} or more estimated cases creates an internal planning-review flag, while evaluation labels {{ observed_hotspot_threshold|default:"2" }} or more observed cases as a hotspot. The thresholds are internal, not official DOH categories.</p>
 
 
                 </div>
 
             </article>
-
-        </section>
-
-
-        <!-- =========================
-             MODEL EVALUATION
-        ========================= -->
-
-        <section class="box mb-3">
-
-            <div class="box-head">
-
-                <h5>
-
-                    <i class="fa-solid fa-chart-column me-2 text-success"></i>
-
-                    Model Evaluation
-
-                </h5>
-
-                <p>
-                    Later-period chronological validation
-                </p>
-
-            </div>
-
-
-            <div class="box-body">
-
-                <div class="metric-grid">
-
-                    <div class="metric-item">
-
-                        <span>Mean Absolute Error</span>
-
-                        <strong>
-                            {{ model_metrics.mae|default:"N/A" }}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="metric-item">
-
-                        <span>Root Mean Squared Error</span>
-
-                        <strong>
-                            {{ model_metrics.rmse|default:"N/A" }}
-                        </strong>
-
-                    </div>
-
-                    <div class="metric-item">
-
-                        <span>Persistence Baseline MAE</span>
-
-                        <strong>
-                            {{ model_evaluation.baseline_mae|default:"N/A" }}
-                        </strong>
-
-                    </div>
-
-                    <div class="metric-item">
-
-                        <span>Persistence Baseline RMSE</span>
-
-                        <strong>
-                            {{ model_evaluation.baseline_rmse|default:"N/A" }}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="metric-item">
-
-                        <span>R² Score</span>
-
-                        <strong>
-                            {{ model_metrics.r2|default:"N/A" }}
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <p class="source">
-
-                    Test rows:
-                    {{ model_metrics.test_rows|default:"N/A" }}
-
-                    · Validation starts:
-                    {{ model_metrics.validation_start|default:"N/A" }}
-
-                    · Baseline: {{ model_evaluation.baseline_name }}
-
-                    <br>
-
-                    Lower MAE/RMSE is better. {{ model_evaluation.comparison_message }}
-
-                    <br><br>
-
-                    <strong>Use limitation:</strong>
-                    Forecasts are planning support only. They are not confirmed
-                    dengue cases, outbreak declarations, or automatic alerts.
-                    CHO validation is required before any public-health action.
-
-                </p>
-
-            </div>
 
         </section>
 
@@ -1721,8 +1692,8 @@
 
                     <div class="source mt-1">
 
-                        Ranked by predicted cases for
-                        {{ forecast_period|default:"the selected forecast period" }}
+                        Ranked one-month-ahead estimates for {{ forecast_period|default:"the selected forecast period" }}. Potential hotspot threshold: {{ predicted_hotspot_threshold|default:"2" }} estimated cases.
+                        Weather columns use the <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">Open-Meteo historical archive</a> for the latest complete month at representative barangay coordinates; nearby places may still share a grid estimate. These display values do not change model inputs.
 
                     </div>
 
@@ -1780,8 +1751,8 @@
 
                             <th>Rank</th>
                             <th>Barangay</th>
-                            <th>Current Cases</th>
-                            <th>Predicted Cases</th>
+                            <th>Observed Cases<br><small>{{ case_data_period }}</small></th>
+                            <th>Random Forest forecast<br><small>{{ forecast_period }}</small></th>
                             <th>Expected Change</th>
                             <th>Risk Level</th>
                             <th>Historical Case Profile</th>
@@ -1830,6 +1801,7 @@
                                 </strong>
 
                             </td>
+
 
 
                             <td>
@@ -1906,24 +1878,24 @@
                             </td>
 
 
-                            <td>
+                            <td title="{{ row.weather_source }} · {{ row.weather_period|default:'unavailable' }}">
 
-                                {{ row.rainfall_mm|default:"0" }}
+                                {{ row.rainfall_mm|default:"—" }}
                                 mm
 
                             </td>
 
 
-                            <td>
+                            <td title="{{ row.weather_source }} · {{ row.weather_period|default:'unavailable' }}">
 
-                                {{ row.temperature_c|default:"0" }}°C
+                                {{ row.temperature_c|default:"—" }}°C
 
                             </td>
 
 
-                            <td>
+                            <td title="{{ row.weather_source }} · {{ row.weather_period|default:'unavailable' }}">
 
-                                {{ row.humidity_pct|default:"0" }}%
+                                {{ row.humidity_pct|default:"—" }}%
 
                             </td>
 
@@ -1946,7 +1918,7 @@
                                     <p>
                                         The AI prediction results could not
                                         be generated. Check that the
-                                        Random Forest model is available and
+                                        Machine-learning model is available and
                                         compatible with the current Django
                                         environment.
                                     </p>
@@ -2025,5 +1997,130 @@
 
 </script>
 
+{% if model_ready and forecast_map_geojson %}
+{{ forecast_map_geojson|json_script:"forecast-map-data" }}
+{{ monthly_hotspot_map_data|json_script:"monthly-hotspot-map-data" }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(() => {
+    const mapElement = document.getElementById('forecastHotspotMap');
+    const source = document.getElementById('forecast-map-data');
+    if (!mapElement || !source || !window.L) return;
+    const geojson = JSON.parse(source.textContent);
+    const monthSource = document.getElementById('monthly-hotspot-map-data');
+    const monthData = monthSource ? JSON.parse(monthSource.textContent) : {};
+    const monthSelect = document.getElementById('hotspotMonthSelect');
+    const layerSelect = document.getElementById('hotspotLayerSelect');
+    const heading = document.getElementById('hotspotMapHeading');
+    const notice = document.getElementById('forecastMapNotice');
+    const legend = document.getElementById('forecastMapLegend');
+    const map = L.map(mapElement, { zoomControl: true, minZoom: 10, maxZoom: 18, scrollWheelZoom: false })
+        .setView([8.2280, 124.2452], 12);
+    map.attributionControl.setPrefix(false);
+    const mapMode = L.control({ position: 'bottomleft' });
+    mapMode.onAdd = () => {
+        const element = L.DomUtil.create('div', 'leaflet-control');
+        element.style.cssText = 'background:rgba(255,255,255,.92);padding:6px 9px;border-radius:4px;font-size:11px;color:#475569;box-shadow:0 1px 4px rgba(0,0,0,.18);';
+        element.textContent = 'Street map + predicted barangay boundaries';
+        mapMode.label = element;
+        return element;
+    };
+    mapMode.addTo(map);
+    const streetBasemap = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: 'Tiles &copy; Esri' }
+    ).addTo(map);
+    let streetMapAvailable = true;
+    streetBasemap.on('tileerror', () => {
+        if (!streetMapAvailable) return;
+        streetMapAvailable = false;
+        map.removeLayer(streetBasemap);
+        if (mapMode.label) mapMode.label.textContent = 'Official barangay boundary view (street map unavailable)';
+    });
+    const riskColors = { 'Critical': '#b91c1c', 'High': '#dc2626', 'Moderate': '#f59e0b', 'Low': '#16a34a' };
+    const nameKey = value => String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    let layer;
+    const selectedMonth = () => monthSelect ? monthSelect.value : '';
+    const selectedMode = () => layerSelect ? layerSelect.value : 'comparison';
+    const monthLabel = () => monthSelect?.selectedOptions?.[0]?.textContent || '';
+    const displayMode = () => {
+        const mode = selectedMode();
+        if (mode !== 'comparison') return mode;
+        const values = Object.values(monthData[selectedMonth()] || {});
+        const hasActual = values.some(value => value.actual_cases !== null && value.actual_cases !== undefined);
+        const hasPrediction = values.some(value => value.predicted_cases !== null && value.predicted_cases !== undefined);
+        const hasComparison = values.some(value => value.match !== null && value.match !== undefined);
+        // A current partial month cannot be compared yet. Show the available
+        // forecast or confirmed actual layer instead of leaving the map gray.
+        if (hasComparison) return mode;
+        if (hasPrediction) return 'prediction';
+        if (hasActual) return 'actual';
+        return mode;
+    };
+    const valuesFor = feature => {
+        const monthValues = monthData[selectedMonth()] || {};
+        const targetName = nameKey(feature.properties.brgy_name);
+        return monthValues[targetName] || Object.entries(monthValues).find(([name]) => nameKey(name) === targetName)?.[1] || {};
+    };
+    const styleFeature = feature => {
+        const values = valuesFor(feature);
+        let color = '#d1d5db';
+        let available = false;
+        if (displayMode() === 'actual' && values.actual_cases !== null && values.actual_cases !== undefined) {
+            color = riskColors[values.actual_risk] || '#16a34a'; available = true;
+        } else if (displayMode() === 'prediction' && values.predicted_cases !== null && values.predicted_cases !== undefined) {
+            color = riskColors[values.predicted_risk] || '#16a34a'; available = true;
+        } else if (displayMode() === 'comparison' && values.match !== null && values.match !== undefined) {
+            color = values.match ? '#16a34a' : '#dc2626'; available = true;
+        }
+        return { color: '#ffffff', weight: 1.5, fillColor: color, fillOpacity: available ? 0.78 : 0.24 };
+    };
+    const renderMap = () => {
+        if (layer) map.removeLayer(layer);
+        const mode = selectedMode();
+        const visibleMode = displayMode();
+        const periodValues = monthData[selectedMonth()] || {};
+        const hasPrediction = Object.values(periodValues).some(value => value.predicted_cases !== null && value.predicted_cases !== undefined);
+        const hasActual = Object.values(periodValues).some(value => value.actual_cases !== null && value.actual_cases !== undefined);
+        if (heading) heading.textContent = `Hotspot map · ${monthLabel()}`;
+        const hasComparison = Object.values(periodValues).some(value => value.match !== null && value.match !== undefined);
+        if (notice) {
+            notice.textContent = mode === 'comparison' && !hasComparison && hasPrediction
+                ? 'A complete actual-versus-prediction comparison is not available yet. Forecast or persistence-estimate risk colors are shown; current-month actuals are provisional.'
+                : mode === 'comparison' && !hasComparison && hasActual
+                    ? 'No forecast is available for this month. Confirmed actual colors are shown.'
+                    : mode === 'comparison' && !hasPrediction
+                        ? 'No forecast was saved for this month.'
+                    : mode === 'prediction' && !hasPrediction
+                        ? 'No forecast was saved for this month.'
+                        : mode === 'actual' && !hasActual
+                            ? 'Confirmed actual counts are not available for this month yet.'
+                            : '';
+        }
+        if (legend) legend.innerHTML = visibleMode === 'comparison'
+            ? '<span><i class="forecast-map-swatch" style="background:#16a34a"></i>Actual matches rounded estimate</span><span><i class="forecast-map-swatch" style="background:#dc2626"></i>Actual differs from rounded estimate</span><span><i class="forecast-map-swatch" style="background:#d1d5db"></i>Estimate unavailable or actual pending</span>'
+            : '<span><i class="forecast-map-swatch" style="background:#dc2626"></i>High / Critical</span><span><i class="forecast-map-swatch" style="background:#f59e0b"></i>Moderate</span><span><i class="forecast-map-swatch" style="background:#16a34a"></i>Low</span><span>Gray means data unavailable.</span>';
+        layer = L.geoJSON(geojson, {
+        style: styleFeature,
+        onEachFeature: (feature, polygon) => {
+            const p = feature.properties;
+            const values = valuesFor(feature);
+            const actual = values.actual_cases === null || values.actual_cases === undefined ? 'Unavailable' : `${values.actual_cases} cases`;
+            const predicted = values.predicted_cases === null || values.predicted_cases === undefined ? 'No forecast available' : `${values.predicted_cases} estimated cases`;
+            const comparison = values.match === null || values.match === undefined ? 'Cannot compare' : (values.match ? 'Match' : 'Different');
+            polygon.bindPopup(`<strong>${p.brgy_name}</strong><br>${monthLabel()} actual: ${actual}<br>${monthLabel()} prediction: ${predicted}<br>Prediction source: ${values.prediction_source || 'Unavailable'}<br>Comparison: ${comparison}`);
+            polygon.bindTooltip(`${p.brgy_name}: ${displayMode() === 'actual' ? actual : displayMode() === 'prediction' ? predicted : comparison}`);
+            polygon.on('mouseover', () => polygon.setStyle({ weight: 2.5, fillOpacity: 0.92 }));
+            polygon.on('mouseout', () => layer.resetStyle(polygon));
+        }
+        }).addTo(map);
+    };
+    monthSelect?.addEventListener('change', renderMap);
+    layerSelect?.addEventListener('change', renderMap);
+    renderMap();
+    if (layer.getBounds().isValid()) map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+})();
+</script>
+{% endif %}
 </body>
 </html>

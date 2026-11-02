@@ -1,0 +1,81 @@
+{
+  "source": "latest CHO dataset; inner validation only",
+  "fit_reference_start": "2018-02",
+  "fit_reference_end": "2023-01",
+  "validation_reference_start": "2023-02",
+  "validation_reference_end": "2024-10",
+  "rows": 924,
+  "observed_hotspot_definition": "actual next-month count >= 6",
+  "cutoffs": [
+    {
+      "predicted_count_cutoff": 6,
+      "precision": 0.8284,
+      "recall": 0.5868,
+      "f1": 0.687,
+      "flagged": 204,
+      "tp": 169,
+      "fp": 35,
+      "fn": 119
+    },
+    {
+      "predicted_count_cutoff": 7,
+      "precision": 0.763,
+      "recall": 0.4274,
+      "f1": 0.5479,
+      "flagged": 135,
+      "tp": 103,
+      "fp": 32,
+      "fn": 138
+    },
+    {
+      "predicted_count_cutoff": 8,
+      "precision": 0.6729,
+      "recall": 0.3547,
+      "f1": 0.4645,
+      "flagged": 107,
+      "tp": 72,
+      "fp": 35,
+      "fn": 131
+    },
+    {
+      "predicted_count_cutoff": 9,
+      "precision": 0.6667,
+      "recall": 0.3468,
+      "f1": 0.4563,
+      "flagged": 90,
+      "tp": 60,
+      "fp": 30,
+      "fn": 113
+    },
+    {
+      "predicted_count_cutoff": 10,
+      "precision": 0.6613,
+      "recall": 0.2908,
+      "f1": 0.4039,
+      "flagged": 62,
+      "tp": 41,
+      "fp": 21,
+      "fn": 100
+    },
+    {
+      "predicted_count_cutoff": 12,
+      "precision": 0.7778,
+      "recall": 0.2121,
+      "f1": 0.3333,
+      "flagged": 27,
+      "tp": 21,
+      "fp": 6,
+      "fn": 78
+    },
+    {
+      "predicted_count_cutoff": 15,
+      "precision": 0.8125,
+      "recall": 0.2203,
+      "f1": 0.3467,
+      "flagged": 16,
+      "tp": 13,
+      "fp": 3,
+      "fn": 46
+    }
+  ]
+}

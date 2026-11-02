@@ -239,7 +239,7 @@
 
                 <label for="id_username">
 
-                    Username
+                    Username or email
 
                 </label>
 
@@ -254,7 +254,7 @@
                         name="username"
                         id="id_username"
                         class="form-control"
-                        placeholder="Enter your username"
+                        placeholder="Enter your username or registered email"
                         required
                         autofocus
                     >
@@ -362,6 +362,8 @@
 
         </form>
 
+        <p class="text-center mt-3 mb-0"><a href="{% url 'resend_verification' %}">Resend staff email verification</a></p>
+
 
 
         <!-- =================================================
@@ -439,6 +441,11 @@
                 This website is for authorized
                 DengueWatch personnel only.
 
+            </p>
+
+            <p class="mb-3">
+                Need an account?
+                <a href="{% url 'register' %}">Register for authorized access</a>
             </p>
 
 

@@ -11,7 +11,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Field Worker Assignments | DengueWatch</title>
+    <title>BHW and CHW Accounts | DengueWatch</title>
 
     <!-- Bootstrap -->
     <link
@@ -331,6 +331,13 @@
             vertical-align: middle;
         }
 
+        .assignment-table .worker-address {
+            min-width: 180px;
+            max-width: 280px;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
         .assignment-table tbody tr:hover {
             background: #f9fafb;
         }
@@ -513,7 +520,7 @@
         <div>
 
             <h4>
-                Field Worker Assignments
+                BHW and CHW Accounts
             </h4>
 
             <small>
@@ -582,7 +589,7 @@
         <div class="page-title">
 
             <h2>
-                Field Worker Area Assignments
+                BHW and CHW Accounts
             </h2>
 
             <p>
@@ -762,6 +769,10 @@
                                 </th>
 
                                 <th>
+                                    Registration Address
+                                </th>
+
+                                <th>
                                     Assigned Barangay
                                 </th>
 
@@ -818,6 +829,15 @@
                                     <td>
 
                                         {{ bhw.username }}
+
+                                    </td>
+
+
+                                    <!-- REGISTRATION ADDRESS -->
+
+                                    <td class="worker-address">
+
+                                        {{ bhw.address|default:"Not provided" }}
 
                                     </td>
 
@@ -1037,7 +1057,7 @@
                                                         <label
                                                             class="modal-label"
                                                         >
-                                                            Field Worker Account
+                                                            Worker Account
                                                         </label>
 
                                                         <input

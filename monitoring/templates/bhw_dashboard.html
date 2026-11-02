@@ -783,8 +783,13 @@
                     </h3>
 
                     <p>
-                        Recorded Cases in Assigned Barangay
+                        CHO-Recorded Cases (All Available Periods)
                     </p>
+
+                    <small class="text-muted">
+                        {{ historical_case_records|default:"0" }} historical ·
+                        {{ new_confirmed_case_records|default:"0" }} CHO-reviewed system cases
+                    </small>
 
                 </div>
 

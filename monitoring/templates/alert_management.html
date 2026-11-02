@@ -1,4 +1,227 @@
-{% load static %}
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>DengueWatch | Alert Management</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><link rel="stylesheet" href="{% static 'css/style.css' %}"><style>body{margin:0;background:#f4f7f9;color:#1f2937;font-family:"Segoe UI",Arial,sans-serif}.layout{min-height:100vh;display:flex}.sidebar{width:260px;min-height:100vh;background:#0f766e;color:#fff;position:fixed;inset:0 auto 0 0;padding:25px 18px;overflow-y:auto}.sidebar a{color:#fff;padding:12px;border-radius:8px;margin-bottom:5px;font-size:14px}.sidebar a:hover,.sidebar a.active{background:rgba(255,255,255,.18)}.main{margin-left:260px;width:calc(100% - 260px)}.topbar{min-height:75px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:14px 35px}.topbar h5{margin:0;font-weight:700}.content{max-width:1250px;padding:35px}.subtitle,.meta{color:#64748b}.notice{background:#e6f4f1;border-left:4px solid #0f766e;border-radius:8px;padding:15px 18px;margin:22px 0}.card{border:1px solid #e5e7eb;border-radius:12px}.status{border-radius:999px;padding:4px 9px;font-size:11px;font-weight:700}.active-status{background:#dcfce7;color:#166534}.inactive-status{background:#e5e7eb;color:#475569}@media(max-width:700px){.layout{display:block}.sidebar{position:static;width:100%;min-height:auto}.main{margin:0;width:100%}.topbar,.content{padding-left:20px;padding-right:20px}}</style></head>
-<body><div class="layout">{% include 'includes/role_sidebar.html' %}<main class="main"><header class="topbar"><div><h5>Alert Management</h5><small class="subtitle">CHO-controlled resident health alerts</small></div><div class="text-end"><strong>{{ current_user_name }}</strong><br><small class="subtitle">{{ current_user_role }}</small></div></header><div class="content"><h1 class="h3 mb-1">Publish resident alerts</h1><p class="subtitle">Only CHO can publish, withdraw, or re-activate alerts. Active alerts are delivered through the resident mobile app.</p><div class="notice"><strong><i class="fa-solid fa-shield-heart"></i> CHO final authority</strong><div>Case confirmation, user management, report verification, public alerts, and barangay/purok data corrections are finalized by CHO.</div></div>{% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}<section class="card p-4 mb-4"><h2 class="h5">New alert</h2><form method="post" action="{% url 'create_alert' %}" class="row g-3">{% csrf_token %}<div class="col-md-6"><label class="form-label" for="title">Title</label><input id="title" name="title" maxlength="150" required class="form-control" placeholder="e.g., Remove standing water"></div><div class="col-md-3"><label class="form-label" for="risk-level">Risk level</label><select id="risk-level" name="risk_level" required class="form-select">{% for value, label in risk_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div><div class="col-md-3"><label class="form-label" for="barangay">Target area</label><select id="barangay" name="barangay_id" class="form-select"><option value="">All Iligan City</option>{% for barangay in barangays %}<option value="{{ barangay.pk }}">{{ barangay.barangay_name }}</option>{% endfor %}</select></div><div class="col-12"><label class="form-label" for="message">Message</label><textarea id="message" name="message" required class="form-control" rows="3" placeholder="State the verified health guidance for residents."></textarea></div><div class="col-12"><button class="btn btn-success"><i class="fa-solid fa-paper-plane"></i> Publish alert</button></div></form></section><section class="card p-4"><h2 class="h5 mb-3">Published alerts</h2><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Alert</th><th>Risk</th><th>Area</th><th>Published by</th><th>Status</th><th></th></tr></thead><tbody>{% for alert in alerts %}<tr><td><strong>{{ alert.title }}</strong><div class="meta">{{ alert.message }}</div><small class="meta">{{ alert.created_at|date:"M d, Y g:i a" }}</small></td><td>{{ alert.get_risk_level_display }}</td><td>{% if alert.barangay %}{{ alert.barangay.barangay_name }}{% else %}All Iligan City{% endif %}</td><td>{{ alert.created_by.get_full_name|default:alert.created_by.username|default:'System' }}</td><td><span class="status {% if alert.is_active %}active-status{% else %}inactive-status{% endif %}">{% if alert.is_active %}Active{% else %}Withdrawn{% endif %}</span></td><td><form method="post" action="{% url 'toggle_alert' alert.alert_id %}">{% csrf_token %}<button class="btn btn-sm {% if alert.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">{% if alert.is_active %}Withdraw{% else %}Re-activate{% endif %}</button></form></td></tr>{% empty %}<tr><td colspan="6" class="text-center subtitle py-4">No alerts have been published.</td></tr>{% endfor %}</tbody></table></div></section></div></main></div></body></html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alert Management | DengueWatch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #f4f7f9; color: #1f2937; }
+        .review-topbar { min-height: 75px; background: #fff; border-bottom: 1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 28px; }
+        .review-topbar h1 { margin:0; font-size:20px; font-weight:700; }
+        .review-topbar small { color:#6b7280; }
+        .review-identity { display:flex; align-items:center; gap:12px; }
+        .review-identity-text { text-align:right; line-height:1.15; }
+        .review-identity-text strong { display:block; font-size:14px; }
+        .review-role { color:#0f766e; background:#e6f4f1; padding:5px 10px; border-radius:20px; font-size:11px; }
+        .review-avatar { width:40px; height:40px; display:grid; place-items:center; border-radius:50%; color:#0f766e; background:#e6f4f1; border:1px solid #cbe7df; font-weight:700; }
+        .review-content { padding:28px; }
+        .review-page-title { margin-bottom:22px; }
+        .review-page-title h2 { margin:0 0 5px; font-size:24px; font-weight:700; }
+        .review-page-title p { margin:0; color:#6b7280; font-size:13px; }
+        .review-notice { padding:15px 18px; margin-bottom:22px; border-left:4px solid #0f766e; border-radius:8px; background:#e6f4f1; font-size:13px; }
+        .review-notice strong { color:#0f766e; }
+        .review-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-bottom:22px; }
+        .review-stat { display:flex; align-items:center; gap:15px; min-width:0; padding:20px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+        .review-stat-icon { width:45px; height:45px; flex:0 0 45px; display:grid; place-items:center; border-radius:9px; background:#e6f4f1; color:#0f766e; font-size:18px; }
+        .review-stat h3 { margin:0; font-size:23px; font-weight:700; }
+        .review-stat p { margin:2px 0 0; color:#6b7280; font-size:12px; }
+        .review-card { padding:22px; margin-bottom:22px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+        .review-card-title { display:flex; align-items:center; gap:8px; margin-bottom:5px; font-size:16px; font-weight:700; }
+        .review-card-title i { color:#0f766e; }
+        .review-card-subtitle { margin-bottom:18px; color:#6b7280; font-size:12px; }
+        .review-alert-table { width:100%; min-width:1050px; border-collapse:collapse; }
+        .review-alert-table th { padding:12px; border-bottom:1px solid #e5e7eb; background:#f8fafc; color:#6b7280; font-size:11px; white-space:nowrap; }
+        .review-alert-table td { padding:12px; border-bottom:1px solid #f1f1f1; vertical-align:top; font-size:12px; }
+        .review-alert-table tbody tr:hover { background:#f9fafb; }
+        .review-muted { color:#64748b; }
+        .review-status { display:inline-block; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; }
+        .review-status.active { color:#166534; background:#dcfce7; }
+        .review-note { max-width:250px; white-space:pre-wrap; overflow-wrap:anywhere; }
+        .review-actions { min-width:120px; }
+        .review-empty { padding:48px 20px; color:#6b7280; text-align:center; }
+        .review-empty i { display:block; margin-bottom:12px; color:#0f766e; font-size:32px; }
+        .review-toolbar { display:flex; justify-content:space-between; align-items:end; gap:16px; flex-wrap:wrap; margin:18px 0; }
+        .review-toolbar form { display:flex; align-items:end; gap:8px; flex-wrap:wrap; }
+        .review-toolbar .search-field { width:min(360px,42vw); }
+        .review-count { color:#64748b; }
+        .review-pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding-top:16px; }
+        .alert-modal .modal-content { border:0; border-radius:14px; overflow:hidden; }
+        .alert-modal .modal-header { background:#e6f4f1; border-bottom:1px solid #cbe7df; }
+        .alert-preview { padding:16px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; }
+        .alert-preview dd { white-space:pre-wrap; overflow-wrap:anywhere; }
+        .risk-level-badge { display:inline-flex; align-items:center; padding:5px 11px; border-radius:999px; font-size:12px; font-weight:700; white-space:nowrap; }
+        .risk-level-badge.low { color:#166534; background:#dcfce7; }
+        .risk-level-badge.moderate { color:#92400e; background:#fef3c7; }
+        .risk-level-badge.high { color:#9a3412; background:#ffedd5; }
+        .risk-level-badge.critical { color:#991b1b; background:#fee2e2; }
+        @media (max-width:1100px) { .review-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media (max-width:700px) {
+            .review-content { padding:16px; }
+            .review-topbar { padding:12px 16px; }
+            .review-role { display:none; }
+            .review-stats { grid-template-columns:1fr; gap:10px; }
+            .review-card { padding:16px; }
+            .review-toolbar { align-items:stretch; }
+            .review-toolbar form { width:100%; }
+            .review-toolbar .search-field { width:100%; flex:1 1 100%; }
+        }
+    </style>
+</head>
+<body>
+{% include 'includes/role_sidebar.html' %}
+<main class="main-content">
+    <header class="review-topbar">
+        <div><h1>Alert Management</h1><small>CHO-controlled resident health alerts</small></div>
+        <div class="review-identity">
+            <div class="review-identity-text"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><span class="review-role">{{ request.user.get_role_display }}</span></div>
+            <span class="review-avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</span>
+        </div>
+    </header>
+
+    <div class="review-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <section class="review-page-title">
+            <h2>Publish resident alerts</h2>
+            <p>Create verified health guidance and manage the alerts delivered to resident accounts.</p>
+        </section>
+
+        <section class="review-notice">
+            <strong><i class="fa-solid fa-shield-halved"></i> CHO publication review</strong><br>
+            Review the alert content and provide a short approval note before publishing. Active alerts are delivered through the resident mobile app.
+        </section>
+
+        <section class="review-stats" aria-label="Alert summary">
+            <div class="review-stat"><div class="review-stat-icon"><i class="fa-solid fa-bell-concierge"></i></div><div><h3>{{ active_count }}</h3><p>Active alerts</p></div></div>
+            <div class="review-stat"><div class="review-stat-icon"><i class="fa-solid fa-clipboard-list"></i></div><div><h3>{{ pending_review_count }}</h3><p>Needs CHO review</p></div></div>
+            <div class="review-stat"><div class="review-stat-icon"><i class="fa-solid fa-clipboard-check"></i></div><div><h3>{{ reviewed_count }}</h3><p>CHO reviewed</p></div></div>
+        </section>
+
+        <section class="review-card">
+            <div class="review-card-title"><i class="fa-solid fa-bullhorn"></i> New alert</div>
+            <div class="review-card-subtitle">Enter the resident-facing guidance, then review it before publishing.</div>
+            <form id="new-alert-form" method="post" action="{% url 'create_alert' %}" class="row g-3">
+                {% csrf_token %}
+                <div class="col-lg-6"><label class="form-label" for="title">Title</label><input id="title" name="title" maxlength="150" required class="form-control" placeholder="e.g., Remove standing water"></div>
+                <div class="col-lg-3 col-sm-6"><label class="form-label" for="risk-level">Risk level</label><select id="risk-level" name="risk_level" required class="form-select">{% for value, label in risk_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+                <div class="col-lg-3 col-sm-6"><label class="form-label" for="barangay">Target area</label><select id="barangay" name="barangay_id" class="form-select"><option value="">All Iligan City</option>{% for barangay in barangays %}<option value="{{ barangay.pk }}">{{ barangay.barangay_name }}</option>{% endfor %}</select></div>
+                <div class="col-12"><label class="form-label" for="message">Message</label><textarea id="message" name="message" required class="form-control" rows="4" placeholder="State the verified health guidance for residents."></textarea></div>
+                <div class="col-12"><button id="open-alert-review" type="button" class="btn btn-outline-success"><i class="fa-solid fa-clipboard-check"></i> Review alert details</button></div>
+            </form>
+        </section>
+
+        <section class="review-card">
+            <div class="review-card-title"><i class="fa-solid fa-list-check"></i> Published alerts</div>
+            <div class="review-card-subtitle">View active alerts and their CHO review record. Withdrawn alerts are hidden from this list.</div>
+            <div class="review-toolbar">
+                <div class="review-count"><strong class="text-dark">{{ filtered_count }}</strong> matching alerts</div>
+                <form method="get">
+                    <div class="search-field"><label class="form-label mb-1" for="alert-search">Search alerts</label><input id="alert-search" class="form-control" type="search" name="search" value="{{ search }}" placeholder="Title, message, or barangay"></div>
+                    <button class="btn btn-success" type="submit"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a class="btn btn-outline-secondary" href="{% url 'alert_management' %}">Clear</a>
+                </form>
+            </div>
+
+            {% if alerts %}
+            <div class="table-responsive">
+                <table class="review-alert-table">
+                    <thead><tr><th>Alert</th><th>Risk</th><th>Target area</th><th>Published by</th><th>CHO review</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for alert in alerts %}
+                        <tr>
+                            <td><strong>{{ alert.title }}</strong><div class="review-muted mt-1">{{ alert.message|truncatechars:180 }}</div><small class="review-muted">{{ alert.created_at|date:"M d, Y g:i a" }}</small></td>
+                            <td>{{ alert.get_risk_level_display }}</td>
+                            <td>{% if alert.barangay %}{{ alert.barangay.barangay_name }}{% else %}All Iligan City{% endif %}</td>
+                            <td>{{ alert.created_by.get_full_name|default:alert.created_by.username|default:"System" }}</td>
+                            <td>{% if alert.cho_review_confirmed %}<strong>{{ alert.cho_reviewed_by.get_full_name|default:alert.cho_reviewed_by.username|default:"CHO" }}</strong><div class="review-muted">{{ alert.cho_reviewed_at|date:"M d, Y g:i a" }}</div><div class="review-note">{{ alert.cho_review_note }}</div>{% else %}<span class="text-danger">Needs CHO review</span>{% endif %}</td>
+                            <td><span class="review-status active">Active</span></td>
+                            <td class="review-actions"><button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#alert-details-{{ alert.pk }}"><i class="fa-solid fa-eye"></i> View</button></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% for alert in alerts %}
+            <div class="modal fade alert-modal" id="alert-details-{{ alert.pk }}" tabindex="-1" aria-labelledby="alert-details-title-{{ alert.pk }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+                    <div class="modal-header"><div><h2 class="modal-title fs-5" id="alert-details-title-{{ alert.pk }}">Alert details</h2><small class="text-muted">Full resident-facing alert and publication review</small></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                    <div class="modal-body">
+                        <div class="alert-preview">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-3">Title</dt><dd class="col-sm-9"><strong>{{ alert.title }}</strong></dd>
+                                <dt class="col-sm-3">Message</dt><dd class="col-sm-9">{{ alert.message|linebreaksbr }}</dd>
+                                <dt class="col-sm-3">Risk level</dt><dd class="col-sm-9"><span class="risk-level-badge {% if alert.risk_level == 'LOW' %}low{% elif alert.risk_level == 'MODERATE' %}moderate{% elif alert.risk_level == 'HIGH' %}high{% elif alert.risk_level == 'CRITICAL' %}critical{% endif %}">{{ alert.get_risk_level_display }}</span></dd>
+                                <dt class="col-sm-3">Target area</dt><dd class="col-sm-9">{% if alert.barangay %}{{ alert.barangay.barangay_name }}{% else %}All Iligan City{% endif %}</dd>
+                                <dt class="col-sm-3">Status</dt><dd class="col-sm-9"><span class="review-status active">Active</span></dd>
+                                <dt class="col-sm-3">Published by</dt><dd class="col-sm-9">{{ alert.created_by.get_full_name|default:alert.created_by.username|default:"System" }}</dd>
+                                <dt class="col-sm-3">Created</dt><dd class="col-sm-9">{{ alert.created_at|date:"M d, Y g:i a" }}</dd>
+                                <dt class="col-sm-3">CHO review</dt><dd class="col-sm-9">{% if alert.cho_review_confirmed %}{{ alert.cho_reviewed_by.get_full_name|default:alert.cho_reviewed_by.username|default:"CHO" }}{% if alert.cho_reviewed_at %} · {{ alert.cho_reviewed_at|date:"M d, Y g:i a" }}{% endif %}{% else %}Needs CHO review{% endif %}</dd>
+                                {% if alert.cho_review_note %}<dt class="col-sm-3">Review note</dt><dd class="col-sm-9">{{ alert.cho_review_note|linebreaksbr }}</dd>{% endif %}
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
+                </div></div>
+            </div>
+            {% endfor %}
+            {% else %}
+                <div class="review-empty"><i class="fa-solid fa-bullhorn"></i><strong>No alerts found</strong><div>{% if search %}Try another search term or clear the filter.{% else %}Published alerts will appear here.{% endif %}</div></div>
+            {% endif %}
+
+            {% if alerts_page.paginator.num_pages > 1 %}
+            <nav class="review-pagination" aria-label="Alert pages">
+                <span class="review-muted">Showing {{ alerts_page.start_index }}–{{ alerts_page.end_index }} of {{ filtered_count }}</span>
+                <div class="btn-group" role="group" aria-label="Pagination controls">
+                    {% if alerts_page.has_previous %}<a class="btn btn-outline-secondary btn-sm" href="?{% if search %}search={{ search|urlencode }}&amp;{% endif %}page={{ alerts_page.previous_page_number }}"><i class="fa-solid fa-chevron-left"></i> Previous</a>{% else %}<span class="btn btn-outline-secondary btn-sm disabled">Previous</span>{% endif %}
+                    <span class="btn btn-light btn-sm disabled">Page {{ alerts_page.number }} of {{ alerts_page.paginator.num_pages }}</span>
+                    {% if alerts_page.has_next %}<a class="btn btn-outline-secondary btn-sm" href="?{% if search %}search={{ search|urlencode }}&amp;{% endif %}page={{ alerts_page.next_page_number }}">Next <i class="fa-solid fa-chevron-right"></i></a>{% else %}<span class="btn btn-outline-secondary btn-sm disabled">Next</span>{% endif %}
+                </div>
+            </nav>
+            {% endif %}
+        </section>
+    </div>
+</main>
+
+<div class="modal fade alert-modal" id="alert-review-modal" tabindex="-1" aria-labelledby="alert-review-heading" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><div><h2 class="modal-title fs-5" id="alert-review-heading">Review alert before publishing</h2><small class="text-muted">Confirm the resident-facing details and CHO approval.</small></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+            <div class="alert-preview mb-4"><dl class="row mb-0"><dt class="col-sm-3">Title</dt><dd class="col-sm-9" id="review-alert-title"></dd><dt class="col-sm-3">Risk level</dt><dd class="col-sm-9" id="review-alert-risk"></dd><dt class="col-sm-3">Target area</dt><dd class="col-sm-9" id="review-alert-area"></dd><dt class="col-sm-3">Message</dt><dd class="col-sm-9" id="review-alert-message"></dd></dl></div>
+            <h3 class="h6">CHO authorization</h3><p class="text-muted small">Record the review and confirm that the alert is approved for publication.</p>
+            <label class="form-label" for="cho-review-note">Review note</label><textarea id="cho-review-note" name="cho_review_note" form="new-alert-form" minlength="20" required class="form-control mb-3" rows="3" placeholder="Record which case reports or forecast were reviewed and why this alert is approved."></textarea>
+            <div class="form-check"><input id="cho-review-confirmed" name="cho_review_confirmed" form="new-alert-form" type="checkbox" class="form-check-input" required><label class="form-check-label" for="cho-review-confirmed">I completed the CHO review and authorize publishing this alert.</label></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Back to edit</button><button type="submit" form="new-alert-form" class="btn btn-success"><i class="fa-solid fa-paper-plane"></i> Review and publish alert</button></div>
+    </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const openButton = document.getElementById('open-alert-review');
+    const title = document.getElementById('title');
+    const risk = document.getElementById('risk-level');
+    const area = document.getElementById('barangay');
+    const message = document.getElementById('message');
+    const modalElement = document.getElementById('alert-review-modal');
+    const reviewModal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    openButton.addEventListener('click', function () {
+        const invalidInput = [title, risk, message].find((input) => !input.checkValidity());
+        if (invalidInput) { invalidInput.reportValidity(); invalidInput.focus(); return; }
+        document.getElementById('review-alert-title').textContent = title.value.trim();
+        document.getElementById('review-alert-risk').textContent = risk.options[risk.selectedIndex].text;
+        document.getElementById('review-alert-area').textContent = area.options[area.selectedIndex].text;
+        document.getElementById('review-alert-message').textContent = message.value.trim();
+        reviewModal.show();
+    });
+});
+</script>
+</body>
+</html>

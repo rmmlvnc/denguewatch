@@ -1,0 +1,1250 @@
+{
+  "analysis_type": "exploratory_expanding_window_validation_only",
+  "source_cutoff_inclusive": "2024-05",
+  "validation_reference_start": "2021-11",
+  "validation_reference_end": "2024-04",
+  "validation_windows": 4,
+  "validation_rows": 1320,
+  "partition_policy": "Expanding chronological training windows; validation blocks do not overlap; all barangays for a reference month remain together.",
+  "preprocessing_policy": "A fresh imputer and encoder are fitted on each fold's training rows only.",
+  "case_feature_policy": "Lag, rolling-average, and momentum features are calculated separately per barangay, from prior completed monthly records only. Rolling means use shift(1), so the current reference-month count is excluded from those rolling features. All rows from each reference month remain in the same fold.",
+  "hotspot_evaluation_policy": "Observed hotspot = next-month case count >= 2; predicted hotspot = model forecast >= 2.7. These are the project's current internal review thresholds.",
+  "feature_variants": {
+    "active_features": [
+      "barangay",
+      "year",
+      "month",
+      "case_count",
+      "rainfall_mm",
+      "temperature_c",
+      "humidity_pct",
+      "requested_latitude",
+      "requested_longitude",
+      "cases_lag_1",
+      "rainfall_lag_1",
+      "temperature_lag_1",
+      "humidity_lag_1",
+      "month_sin",
+      "month_cos"
+    ],
+    "active_plus_longer_case_lags": [
+      "barangay",
+      "year",
+      "month",
+      "case_count",
+      "rainfall_mm",
+      "temperature_c",
+      "humidity_pct",
+      "requested_latitude",
+      "requested_longitude",
+      "cases_lag_1",
+      "rainfall_lag_1",
+      "temperature_lag_1",
+      "humidity_lag_1",
+      "month_sin",
+      "month_cos",
+      "cases_lag_2",
+      "cases_lag_3",
+      "cases_lag_6",
+      "cases_lag_12"
+    ],
+    "longer_lags_plus_rolling_averages": [
+      "barangay",
+      "year",
+      "month",
+      "case_count",
+      "rainfall_mm",
+      "temperature_c",
+      "humidity_pct",
+      "requested_latitude",
+      "requested_longitude",
+      "cases_lag_1",
+      "rainfall_lag_1",
+      "temperature_lag_1",
+      "humidity_lag_1",
+      "month_sin",
+      "month_cos",
+      "cases_lag_2",
+      "cases_lag_3",
+      "cases_lag_6",
+      "cases_lag_12",
+      "cases_roll_3",
+      "cases_roll_6"
+    ],
+    "longer_lags_rolling_averages_and_momentum": [
+      "barangay",
+      "year",
+      "month",
+      "case_count",
+      "rainfall_mm",
+      "temperature_c",
+      "humidity_pct",
+      "requested_latitude",
+      "requested_longitude",
+      "cases_lag_1",
+      "rainfall_lag_1",
+      "temperature_lag_1",
+      "humidity_lag_1",
+      "month_sin",
+      "month_cos",
+      "cases_lag_2",
+      "cases_lag_3",
+      "cases_lag_6",
+      "cases_lag_12",
+      "cases_roll_3",
+      "cases_roll_6",
+      "case_momentum"
+    ]
+  },
+  "later_holdout_start": "2024-06",
+  "later_period_holdout_scored": false,
+  "later_period_rows_used_for_features_or_tuning": false,
+  "validation_previously_used_for_model_selection": true,
+  "selected_by_validation_mae_then_rmse": {
+    "model": "Selected Random Forest (fixed settings)",
+    "feature_variant": "active_features"
+  },
+  "baseline_results": {
+    "persistence": {
+      "rows": 1320,
+      "mae": 2.022,
+      "rmse": 3.3265,
+      "r2": 0.4819,
+      "hotspot": {
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 2.7,
+        "accuracy": 0.7568,
+        "precision": 0.8617,
+        "recall": 0.6813,
+        "f1": 0.761,
+        "predicted_hotspot_rows": 593,
+        "confusion_matrix_actual_rows_predicted_columns": [
+          [
+            488,
+            82
+          ],
+          [
+            239,
+            511
+          ]
+        ]
+      }
+    },
+    "seasonal_naive": {
+      "rows": 1320,
+      "mae": 2.2947,
+      "rmse": 3.8499,
+      "r2": 0.306,
+      "hotspot": {
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 2.7,
+        "accuracy": 0.6932,
+        "precision": 0.8601,
+        "recall": 0.5493,
+        "f1": 0.6705,
+        "predicted_hotspot_rows": 479,
+        "confusion_matrix_actual_rows_predicted_columns": [
+          [
+            503,
+            67
+          ],
+          [
+            338,
+            412
+          ]
+        ]
+      }
+    },
+    "trailing_3_month_mean": {
+      "rows": 1320,
+      "mae": 1.8121,
+      "rmse": 2.981,
+      "r2": 0.5839,
+      "hotspot": {
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 2.7,
+        "accuracy": 0.7674,
+        "precision": 0.8991,
+        "recall": 0.6653,
+        "f1": 0.7648,
+        "predicted_hotspot_rows": 555,
+        "confusion_matrix_actual_rows_predicted_columns": [
+          [
+            514,
+            56
+          ],
+          [
+            251,
+            499
+          ]
+        ]
+      }
+    }
+  },
+  "candidate_results": [
+    {
+      "name": "Selected Random Forest (fixed settings)",
+      "feature_variant": "active_features",
+      "features": [
+        "barangay",
+        "year",
+        "month",
+        "case_count",
+        "rainfall_mm",
+        "temperature_c",
+        "humidity_pct",
+        "requested_latitude",
+        "requested_longitude",
+        "cases_lag_1",
+        "rainfall_lag_1",
+        "temperature_lag_1",
+        "humidity_lag_1",
+        "month_sin",
+        "month_cos"
+      ],
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "criterion": "absolute_error",
+        "n_estimators": 200,
+        "min_samples_leaf": 1,
+        "max_features": 0.8,
+        "max_depth": 10
+      },
+      "rows": 1320,
+      "mae": 1.7101,
+      "rmse": 2.9286,
+      "r2": 0.5984,
+      "hotspot": {
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 2.7,
+        "accuracy": 0.7598,
+        "precision": 0.9155,
+        "recall": 0.636,
+        "f1": 0.7506,
+        "predicted_hotspot_rows": 521,
+        "confusion_matrix_actual_rows_predicted_columns": [
+          [
+            526,
+            44
+          ],
+          [
+            273,
+            477
+          ]
+        ]
+      },
+      "fold_mae": [
+        1.2424,
+        1.2448,
+        1.6757,
+        2.4627
+      ],
+      "fold_rmse": [
+        1.8344,
+        1.8897,
+        2.9072,
+        4.0768
+      ]
+    },
+    {
+      "name": "Selected Random Forest (fixed settings)",
+      "feature_variant": "active_plus_longer_case_lags",
+      "features": [
+        "barangay",
+        "year",
+        "month",
+        "case_count",
+        "rainfall_mm",
+        "temperature_c",
+        "humidity_pct",
+        "requested_latitude",
+        "requested_longitude",
+        "cases_lag_1",
+        "rainfall_lag_1",
+        "temperature_lag_1",
+        "humidity_lag_1",
+        "month_sin",
+        "month_cos",
+        "cases_lag_2",
+        "cases_lag_3",
+        "cases_lag_6",
+        "cases_lag_12"
+      ],
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "criterion": "absolute_error",
+        "n_estimators": 200,
+        "min_samples_leaf": 1,
+        "max_features": 0.8,
+        "max_depth": 10
+      },
+      "rows": 1320,
+      "mae": 1.712,
+      "rmse": 2.9203,
+      "r2": 0.6007,
+      "hotspot": {
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 2.7,
+        "accuracy": 0.7682,
+        "precision": 0.9126,
+        "recall": 0.6547,
+        "f1": 0.7624,
+        "predicted_hotspot_rows": 538,
+        "confusion_matrix_actual_rows_predicted_columns": [
+          [
+            523,
+            47
+          ],
+          [
+            259,
+            491
+          ]
+        ]
+      },
+      "fold_mae": [
+        1.1993,
+        1.2333,
+        1.7063,
+        2.4875
+      ],
+      "fold_rmse": [
+        1.762,
+        1.8812,
+        2.9496,
+        4.0611
+      ]
+    },
+    {
+      "name": "Selected Random Forest (fixed settings)",
+      "feature_variant": "longer_lags_plus_rolling_averages",
+      "features": [
+        "barangay",
+        "year",
+        "month",
+        "case_count",
+        "rainfall_mm",
+        "temperature_c",
+        "humidity_pct",
+        "requested_latitude",
+        "requested_longitude",
+        "cases_lag_1",
+        "rainfall_lag_1",
+        "temperature_lag_1",
+        "humidity_lag_1",
+        "month_sin",
+        "month_cos",
+        "cases_lag_2",
+        "cases_lag_3",
+        "cases_lag_6",
+        "cases_lag_12",
+        "cases_roll_3",
+        "cases_roll_6"
+      ],
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "criterion": "absolute_error",
+        "n_estimators": 200,
+        "min_samples_leaf": 1,
+        "max_features": 0.8,
+        "max_depth": 10
+      },
+      "rows": 1320,
+      "mae": 1.7596,
+      "rmse": 3.0076,
+      "r2": 0.5765,
+      "hotspot": {
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 2.7,
+        "accuracy": 0.7682,
+        "precision": 0.8936,
+        "recall": 0.672,
+        "f1": 0.7671,
+        "predicted_hotspot_rows": 564,
+        "confusion_matrix_actual_rows_predicted_columns": [
+          [
+            510,
+            60
+          ],
+          [
+            246,
+            504
+          ]
+        ]
+      },
+      "fold_mae": [
+        1.201,
+        1.2483,
+        1.7244,
+        2.6191
+      ],
+      "fold_rmse": [
+        1.7956,
+        1.8625,
+        3.0292,
+        4.22
+      ]
+    },
+    {
+      "name": "Selected Random Forest (fixed settings)",
+      "feature_variant": "longer_lags_rolling_averages_and_momentum",
+      "features": [
+        "barangay",
+        "year",
+        "month",
+        "case_count",
+        "rainfall_mm",
+        "temperature_c",
+        "humidity_pct",
+        "requested_latitude",
+        "requested_longitude",
+        "cases_lag_1",
+        "rainfall_lag_1",
+        "temperature_lag_1",
+        "humidity_lag_1",
+        "month_sin",
+        "month_cos",
+        "cases_lag_2",
+        "cases_lag_3",
+        "cases_lag_6",
+        "cases_lag_12",
+        "cases_roll_3",
+        "cases_roll_6",
+        "case_momentum"
+      ],
+      "parameters": {
+        "algorithm": "RandomForestRegressor",
+        "criterion": "absolute_error",
+        "n_estimators": 200,
+        "min_samples_leaf": 1,
+        "max_features": 0.8,
+        "max_depth": 10
+      },
+      "rows": 1320,
+      "mae": 1.7597,
+      "rmse": 2.9997,
+      "r2": 0.5787,
+      "hotspot": {
+        "threshold_cases": 2,
+        "predicted_count_cutoff": 2.7,
+        "accuracy": 0.772,
+        "precision": 0.8932,
+        "recall": 0.68,
+        "f1": 0.7721,
+        "predicted_hotspot_rows": 571,
+        "confusion_matrix_actual_rows_predicted_columns": [
+          [
+            509,
+            61
+          ],
+          [
+            240,
+            510
+          ]
+        ]
+      },
+      "fold_mae": [
+        1.1936,
+        1.2325,
+        1.7413,
+        2.6243
+      ],
+      "fold_rmse": [
+        1.7846,
+        1.8581,
+        3.0447,
+        4.1977
+      ]
+    }
+  ],
+  "fold_results": [
+    {
+      "fold": 1,
+      "training_reference_start": "2018-02",
+      "training_reference_end": "2021-10",
+      "validation_reference_start": "2021-11",
+      "validation_reference_end": "2022-05",
+      "rows": 308,
+      "candidates": {
+        "Selected Random Forest (fixed settings)": {
+          "active_features": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos"
+            ],
+            "rows": 308,
+            "mae": 1.2424,
+            "rmse": 1.8344,
+            "r2": 0.6361,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.75,
+              "precision": 0.9239,
+              "recall": 0.5484,
+              "f1": 0.6883,
+              "predicted_hotspot_rows": 92,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  146,
+                  7
+                ],
+                [
+                  70,
+                  85
+                ]
+              ]
+            }
+          },
+          "active_plus_longer_case_lags": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12"
+            ],
+            "rows": 308,
+            "mae": 1.1993,
+            "rmse": 1.762,
+            "r2": 0.6643,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.7597,
+              "precision": 0.9355,
+              "recall": 0.5613,
+              "f1": 0.7016,
+              "predicted_hotspot_rows": 93,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  147,
+                  6
+                ],
+                [
+                  68,
+                  87
+                ]
+              ]
+            }
+          },
+          "longer_lags_plus_rolling_averages": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12",
+              "cases_roll_3",
+              "cases_roll_6"
+            ],
+            "rows": 308,
+            "mae": 1.201,
+            "rmse": 1.7956,
+            "r2": 0.6514,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.7532,
+              "precision": 0.9158,
+              "recall": 0.5613,
+              "f1": 0.696,
+              "predicted_hotspot_rows": 95,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  145,
+                  8
+                ],
+                [
+                  68,
+                  87
+                ]
+              ]
+            }
+          },
+          "longer_lags_rolling_averages_and_momentum": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12",
+              "cases_roll_3",
+              "cases_roll_6",
+              "case_momentum"
+            ],
+            "rows": 308,
+            "mae": 1.1936,
+            "rmse": 1.7846,
+            "r2": 0.6556,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.7565,
+              "precision": 0.9082,
+              "recall": 0.5742,
+              "f1": 0.7036,
+              "predicted_hotspot_rows": 98,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  144,
+                  9
+                ],
+                [
+                  66,
+                  89
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "fold": 2,
+      "training_reference_start": "2018-02",
+      "training_reference_end": "2022-05",
+      "validation_reference_start": "2022-06",
+      "validation_reference_end": "2022-12",
+      "rows": 308,
+      "candidates": {
+        "Selected Random Forest (fixed settings)": {
+          "active_features": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos"
+            ],
+            "rows": 308,
+            "mae": 1.2448,
+            "rmse": 1.8897,
+            "r2": 0.6816,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.7597,
+              "precision": 0.9135,
+              "recall": 0.5938,
+              "f1": 0.7197,
+              "predicted_hotspot_rows": 104,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  139,
+                  9
+                ],
+                [
+                  65,
+                  95
+                ]
+              ]
+            }
+          },
+          "active_plus_longer_case_lags": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12"
+            ],
+            "rows": 308,
+            "mae": 1.2333,
+            "rmse": 1.8812,
+            "r2": 0.6845,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.7662,
+              "precision": 0.9151,
+              "recall": 0.6062,
+              "f1": 0.7293,
+              "predicted_hotspot_rows": 106,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  139,
+                  9
+                ],
+                [
+                  63,
+                  97
+                ]
+              ]
+            }
+          },
+          "longer_lags_plus_rolling_averages": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12",
+              "cases_roll_3",
+              "cases_roll_6"
+            ],
+            "rows": 308,
+            "mae": 1.2483,
+            "rmse": 1.8625,
+            "r2": 0.6907,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.75,
+              "precision": 0.8673,
+              "recall": 0.6125,
+              "f1": 0.7179,
+              "predicted_hotspot_rows": 113,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  133,
+                  15
+                ],
+                [
+                  62,
+                  98
+                ]
+              ]
+            }
+          },
+          "longer_lags_rolling_averages_and_momentum": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12",
+              "cases_roll_3",
+              "cases_roll_6",
+              "case_momentum"
+            ],
+            "rows": 308,
+            "mae": 1.2325,
+            "rmse": 1.8581,
+            "r2": 0.6921,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.75,
+              "precision": 0.8673,
+              "recall": 0.6125,
+              "f1": 0.7179,
+              "predicted_hotspot_rows": 113,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  133,
+                  15
+                ],
+                [
+                  62,
+                  98
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "fold": 3,
+      "training_reference_start": "2018-02",
+      "training_reference_end": "2022-12",
+      "validation_reference_start": "2023-01",
+      "validation_reference_end": "2023-07",
+      "rows": 308,
+      "candidates": {
+        "Selected Random Forest (fixed settings)": {
+          "active_features": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos"
+            ],
+            "rows": 308,
+            "mae": 1.6757,
+            "rmse": 2.9072,
+            "r2": 0.54,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.7175,
+              "precision": 0.8922,
+              "recall": 0.5449,
+              "f1": 0.6766,
+              "predicted_hotspot_rows": 102,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  130,
+                  11
+                ],
+                [
+                  76,
+                  91
+                ]
+              ]
+            }
+          },
+          "active_plus_longer_case_lags": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12"
+            ],
+            "rows": 308,
+            "mae": 1.7063,
+            "rmse": 2.9496,
+            "r2": 0.5265,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.737,
+              "precision": 0.9057,
+              "recall": 0.5749,
+              "f1": 0.7033,
+              "predicted_hotspot_rows": 106,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  131,
+                  10
+                ],
+                [
+                  71,
+                  96
+                ]
+              ]
+            }
+          },
+          "longer_lags_plus_rolling_averages": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12",
+              "cases_roll_3",
+              "cases_roll_6"
+            ],
+            "rows": 308,
+            "mae": 1.7244,
+            "rmse": 3.0292,
+            "r2": 0.5006,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.7403,
+              "precision": 0.8991,
+              "recall": 0.5868,
+              "f1": 0.7101,
+              "predicted_hotspot_rows": 109,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  130,
+                  11
+                ],
+                [
+                  69,
+                  98
+                ]
+              ]
+            }
+          },
+          "longer_lags_rolling_averages_and_momentum": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12",
+              "cases_roll_3",
+              "cases_roll_6",
+              "case_momentum"
+            ],
+            "rows": 308,
+            "mae": 1.7413,
+            "rmse": 3.0447,
+            "r2": 0.4955,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.7532,
+              "precision": 0.9099,
+              "recall": 0.6048,
+              "f1": 0.7266,
+              "predicted_hotspot_rows": 111,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  131,
+                  10
+                ],
+                [
+                  66,
+                  101
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "fold": 4,
+      "training_reference_start": "2018-02",
+      "training_reference_end": "2023-07",
+      "validation_reference_start": "2023-08",
+      "validation_reference_end": "2024-04",
+      "rows": 396,
+      "candidates": {
+        "Selected Random Forest (fixed settings)": {
+          "active_features": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos"
+            ],
+            "rows": 396,
+            "mae": 2.4627,
+            "rmse": 4.0768,
+            "r2": 0.5405,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.8005,
+              "precision": 0.9238,
+              "recall": 0.7687,
+              "f1": 0.8391,
+              "predicted_hotspot_rows": 223,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  111,
+                  17
+                ],
+                [
+                  62,
+                  206
+                ]
+              ]
+            }
+          },
+          "active_plus_longer_case_lags": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12"
+            ],
+            "rows": 396,
+            "mae": 2.4875,
+            "rmse": 4.0611,
+            "r2": 0.5441,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.8005,
+              "precision": 0.9056,
+              "recall": 0.7873,
+              "f1": 0.8423,
+              "predicted_hotspot_rows": 233,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  106,
+                  22
+                ],
+                [
+                  57,
+                  211
+                ]
+              ]
+            }
+          },
+          "longer_lags_plus_rolling_averages": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12",
+              "cases_roll_3",
+              "cases_roll_6"
+            ],
+            "rows": 396,
+            "mae": 2.6191,
+            "rmse": 4.22,
+            "r2": 0.5077,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.8157,
+              "precision": 0.8947,
+              "recall": 0.8246,
+              "f1": 0.8583,
+              "predicted_hotspot_rows": 247,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  102,
+                  26
+                ],
+                [
+                  47,
+                  221
+                ]
+              ]
+            }
+          },
+          "longer_lags_rolling_averages_and_momentum": {
+            "features": [
+              "barangay",
+              "year",
+              "month",
+              "case_count",
+              "rainfall_mm",
+              "temperature_c",
+              "humidity_pct",
+              "requested_latitude",
+              "requested_longitude",
+              "cases_lag_1",
+              "rainfall_lag_1",
+              "temperature_lag_1",
+              "humidity_lag_1",
+              "month_sin",
+              "month_cos",
+              "cases_lag_2",
+              "cases_lag_3",
+              "cases_lag_6",
+              "cases_lag_12",
+              "cases_roll_3",
+              "cases_roll_6",
+              "case_momentum"
+            ],
+            "rows": 396,
+            "mae": 2.6243,
+            "rmse": 4.1977,
+            "r2": 0.5129,
+            "hotspot": {
+              "threshold_cases": 2,
+              "predicted_count_cutoff": 2.7,
+              "accuracy": 0.8157,
+              "precision": 0.8916,
+              "recall": 0.8284,
+              "f1": 0.8588,
+              "predicted_hotspot_rows": 249,
+              "confusion_matrix_actual_rows_predicted_columns": [
+                [
+                  101,
+                  27
+                ],
+                [
+                  46,
+                  222
+                ]
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "interpretation": "Exploratory only: prior development-period results have informed earlier model choices. Do not treat this as an independent final test or replace the deployed model solely on this result. Confirm the selected pipeline on a newly collected later period before claiming improved future performance."
+}

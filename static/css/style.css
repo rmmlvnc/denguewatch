@@ -29,6 +29,61 @@
     color: white;
 }
 
+.register-page .login-info {
+    justify-content: flex-start;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.register-page .login-info .brand {
+    font-size: 24px;
+}
+
+.register-page .login-info .brand i {
+    font-size: 32px;
+}
+
+.register-page .login-info h1 {
+    font-size: 36px;
+    margin-bottom: 20px;
+}
+
+.register-page .login-info > p {
+    font-size: 15px;
+    margin-bottom: 32px;
+}
+
+.register-page .login-info .feature strong {
+    font-size: 15px;
+}
+
+.register-page .login-info .feature small {
+    font-size: 13px;
+}
+
+.register-page .login-info .system-features {
+    width: 100%;
+    max-width: 600px;
+    align-items: center;
+    text-align: left;
+}
+
+.register-page .login-info .feature {
+    width: 370px;
+    max-width: 100%;
+    align-items: center;
+}
+
+.register-page .login-info .feature > i {
+    flex: 0 0 54px;
+    width: 54px;
+    height: 54px;
+    min-width: 54px;
+    display: grid;
+    place-items: center;
+    margin: 0;
+}
+
 .brand {
     display: flex;
     align-items: center;
@@ -330,6 +385,10 @@
         font-size: 34px;
     }
 
+    .register-page .login-info h1 {
+        font-size: 32px;
+    }
+
     .login-card {
         width: 100%;
         max-width: none;
@@ -350,6 +409,10 @@
 
     .login-info h1 {
         font-size: 29px;
+    }
+
+    .register-page .login-info h1 {
+        font-size: 28px;
     }
 
     .login-options {
